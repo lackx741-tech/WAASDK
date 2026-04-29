@@ -1,0 +1,109 @@
+[
+  {
+    "type": "function",
+    "name": "recoverSapientSignature",
+    "inputs": [
+      { "name": "_addr", "type": "address" },
+      {
+        "name": "_payload",
+        "type": "tuple",
+        "components": [
+          { "name": "kind", "type": "uint8" },
+          { "name": "noChainId", "type": "bool" },
+          {
+            "name": "calls",
+            "type": "tuple[]",
+            "components": [
+              { "name": "to", "type": "address" },
+              { "name": "value", "type": "uint256" },
+              { "name": "data", "type": "bytes" },
+              { "name": "gasLimit", "type": "uint256" },
+              { "name": "delegateCall", "type": "bool" },
+              { "name": "onlyFallback", "type": "bool" },
+              { "name": "behaviorOnError", "type": "uint256" }
+            ]
+          },
+          { "name": "space", "type": "uint256" },
+          { "name": "nonce", "type": "uint256" },
+          { "name": "message", "type": "bytes" },
+          { "name": "imageHash", "type": "bytes32" },
+          { "name": "digest", "type": "bytes32" },
+          { "name": "parentWallets", "type": "address[]" }
+        ]
+      },
+      { "name": "_signature", "type": "bytes" }
+    ],
+    "outputs": [{ "name": "", "type": "bytes32" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "validatePermission",
+    "inputs": [
+      { "name": "_sessionSigner", "type": "address" },
+      {
+        "name": "_permission",
+        "type": "tuple",
+        "components": [
+          { "name": "signer", "type": "address" },
+          { "name": "deadline", "type": "uint256" },
+          {
+            "name": "rules",
+            "type": "tuple[]",
+            "components": [
+              { "name": "cumulative", "type": "bool" },
+              { "name": "operation", "type": "uint8" },
+              { "name": "value", "type": "bytes32" },
+              { "name": "offset", "type": "uint256" },
+              { "name": "mask", "type": "bytes32" }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "_call",
+        "type": "tuple",
+        "components": [
+          { "name": "to", "type": "address" },
+          { "name": "value", "type": "uint256" },
+          { "name": "data", "type": "bytes" },
+          { "name": "gasLimit", "type": "uint256" },
+          { "name": "delegateCall", "type": "bool" },
+          { "name": "onlyFallback", "type": "bool" },
+          { "name": "behaviorOnError", "type": "uint256" }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "incrementUsageLimit",
+    "inputs": [
+      { "name": "_sessionSigner", "type": "address" },
+      { "name": "_usageHash", "type": "bytes32" },
+      { "name": "_amount", "type": "uint256" }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "error",
+    "name": "InvalidDelegateCall",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidSessionSignature",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "PermissionViolation",
+    "inputs": [
+      { "name": "signer", "type": "address" },
+      { "name": "index", "type": "uint256" }
+    ]
+  }
+]
