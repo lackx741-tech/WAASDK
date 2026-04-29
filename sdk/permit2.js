@@ -214,6 +214,8 @@ export const PERMIT2_ALLOWANCE_ABI = [
 /**
  * Sequence WaaS Permit2Executor contract address (CREATE2 singleton — same on all chains).
  * Used for executing Permit2-based gasless token approvals and transfers.
+ * Deployed on all major EVM-compatible chains via CREATE2; verify deployment
+ * at https://github.com/0xsequence/wallet-contracts before use on new chains.
  */
 export const PERMIT2_EXECUTOR_ADDRESS = CONTRACTS.Permit2Executor.address;
 
@@ -223,6 +225,8 @@ export const PERMIT2_EXECUTOR_ABI = CONTRACTS.Permit2Executor.abi;
 /**
  * Sequence WaaS ERC2612Executor contract address (CREATE2 singleton — same on all chains).
  * Used for executing ERC-2612 permit-based gasless token approvals and transfers.
+ * Deployed on all major EVM-compatible chains via CREATE2; verify deployment
+ * at https://github.com/0xsequence/wallet-contracts before use on new chains.
  */
 export const ERC2612_EXECUTOR_ADDRESS = CONTRACTS.ERC2612Executor.address;
 
