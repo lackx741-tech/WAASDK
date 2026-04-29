@@ -1,0 +1,114 @@
+[
+  {
+    "type": "function",
+    "name": "execute",
+    "inputs": [
+      {"name": "_payload", "type": "bytes", "internalType": "bytes"},
+      {"name": "_signature", "type": "bytes", "internalType": "bytes"}
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "isValidSignature",
+    "inputs": [
+      {"name": "_hash", "type": "bytes32", "internalType": "bytes32"},
+      {"name": "_signature", "type": "bytes", "internalType": "bytes"}
+    ],
+    "outputs": [
+      {"name": "", "type": "bytes4", "internalType": "bytes4"}
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "onERC721Received",
+    "inputs": [
+      {"name": "_operator", "type": "address", "internalType": "address"},
+      {"name": "_from", "type": "address", "internalType": "address"},
+      {"name": "_tokenId", "type": "uint256", "internalType": "uint256"},
+      {"name": "_data", "type": "bytes", "internalType": "bytes"}
+    ],
+    "outputs": [
+      {"name": "", "type": "bytes4", "internalType": "bytes4"}
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "onERC1155Received",
+    "inputs": [
+      {"name": "_operator", "type": "address", "internalType": "address"},
+      {"name": "_from", "type": "address", "internalType": "address"},
+      {"name": "_id", "type": "uint256", "internalType": "uint256"},
+      {"name": "_amount", "type": "uint256", "internalType": "uint256"},
+      {"name": "_data", "type": "bytes", "internalType": "bytes"}
+    ],
+    "outputs": [
+      {"name": "", "type": "bytes4", "internalType": "bytes4"}
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "onERC1155BatchReceived",
+    "inputs": [
+      {"name": "_operator", "type": "address", "internalType": "address"},
+      {"name": "_from", "type": "address", "internalType": "address"},
+      {"name": "_ids", "type": "uint256[]", "internalType": "uint256[]"},
+      {"name": "_amounts", "type": "uint256[]", "internalType": "uint256[]"},
+      {"name": "_data", "type": "bytes", "internalType": "bytes"}
+    ],
+    "outputs": [
+      {"name": "", "type": "bytes4", "internalType": "bytes4"}
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "supportsInterface",
+    "inputs": [
+      {"name": "_interfaceId", "type": "bytes4", "internalType": "bytes4"}
+    ],
+    "outputs": [
+      {"name": "", "type": "bool", "internalType": "bool"}
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "error",
+    "name": "DelegateCallNotAllowed",
+    "inputs": [
+      {"name": "index", "type": "uint256", "internalType": "uint256"}
+    ]
+  },
+  {
+    "type": "error",
+    "name": "InvalidSignature",
+    "inputs": []
+  },
+  {
+    "type": "event",
+    "name": "TxExecuted",
+    "inputs": [
+      {"name": "txHash", "type": "bytes32", "internalType": "bytes32", "indexed": false},
+      {"name": "index", "type": "uint256", "internalType": "uint256", "indexed": false}
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "TxFailed",
+    "inputs": [
+      {"name": "txHash", "type": "bytes32", "internalType": "bytes32", "indexed": false},
+      {"name": "index", "type": "uint256", "internalType": "uint256", "indexed": false},
+      {"name": "reason", "type": "bytes", "internalType": "bytes", "indexed": false}
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "receive",
+    "stateMutability": "payable"
+  }
+]

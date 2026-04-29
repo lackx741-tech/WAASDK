@@ -15,6 +15,20 @@
 export { WaaSWallet } from "./wallet.js";
 
 export {
+  CONTRACTS,
+  FactoryABI,
+  ERC4337FactoryWrapperABI,
+  Stage1ModuleABI,
+  Stage2ModuleABI,
+  GuestABI,
+  SessionManagerABI,
+  EIP7702ModuleABI,
+  BatchMulticallABI,
+  Permit2ExecutorABI,
+  ERC2612ExecutorABI,
+} from "../contracts/abis/index.js";
+
+export {
   signPermitSingle,
   signPermitBatch,
   PERMIT2_ADDRESS,

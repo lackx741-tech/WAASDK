@@ -1,0 +1,161 @@
+[
+  {
+    "type": "function",
+    "name": "collectBatch",
+    "inputs": [
+      {
+        "name": "_batch",
+        "type": "tuple",
+        "internalType": "struct Permit2Executor.BatchCollect",
+        "components": [
+          {
+            "name": "details",
+            "type": "tuple[]",
+            "internalType": "struct IAllowanceTransfer.AllowanceTransferDetails[]",
+            "components": [
+              {"name": "from", "type": "address", "internalType": "address"},
+              {"name": "to", "type": "address", "internalType": "address"},
+              {"name": "amount", "type": "uint160", "internalType": "uint160"},
+              {"name": "token", "type": "address", "internalType": "address"}
+            ]
+          },
+          {"name": "owner", "type": "address", "internalType": "address"},
+          {"name": "deadline", "type": "uint256", "internalType": "uint256"}
+        ]
+      },
+      {"name": "_signature", "type": "bytes", "internalType": "bytes"}
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "collectSingle",
+    "inputs": [
+      {
+        "name": "_collect",
+        "type": "tuple",
+        "internalType": "struct Permit2Executor.SingleCollect",
+        "components": [
+          {
+            "name": "permit",
+            "type": "tuple",
+            "internalType": "struct ISignatureTransfer.PermitTransferFrom",
+            "components": [
+              {
+                "name": "permitted",
+                "type": "tuple",
+                "internalType": "struct ISignatureTransfer.TokenPermissions",
+                "components": [
+                  {"name": "token", "type": "address", "internalType": "address"},
+                  {"name": "amount", "type": "uint256", "internalType": "uint256"}
+                ]
+              },
+              {"name": "nonce", "type": "uint256", "internalType": "uint256"},
+              {"name": "deadline", "type": "uint256", "internalType": "uint256"}
+            ]
+          },
+          {
+            "name": "transferDetails",
+            "type": "tuple",
+            "internalType": "struct ISignatureTransfer.SignatureTransferDetails",
+            "components": [
+              {"name": "to", "type": "address", "internalType": "address"},
+              {"name": "requestedAmount", "type": "uint256", "internalType": "uint256"}
+            ]
+          },
+          {"name": "owner", "type": "address", "internalType": "address"}
+        ]
+      },
+      {"name": "_signature", "type": "bytes", "internalType": "bytes"}
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "pullFromAllowance",
+    "inputs": [
+      {"name": "_token", "type": "address", "internalType": "address"},
+      {"name": "_from", "type": "address", "internalType": "address"},
+      {"name": "_to", "type": "address", "internalType": "address"},
+      {"name": "_amount", "type": "uint160", "internalType": "uint160"}
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "pullBatchFromAllowance",
+    "inputs": [
+      {
+        "name": "_pulls",
+        "type": "tuple[]",
+        "internalType": "struct IAllowanceTransfer.AllowanceTransferDetails[]",
+        "components": [
+          {"name": "from", "type": "address", "internalType": "address"},
+          {"name": "to", "type": "address", "internalType": "address"},
+          {"name": "amount", "type": "uint160", "internalType": "uint160"},
+          {"name": "token", "type": "address", "internalType": "address"}
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "setMaxAllowance",
+    "inputs": [
+      {"name": "_token", "type": "address", "internalType": "address"},
+      {"name": "_nonce", "type": "uint48", "internalType": "uint48"},
+      {"name": "_signature", "type": "bytes", "internalType": "bytes"}
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "setMaxAllowanceBatch",
+    "inputs": [
+      {"name": "_tokens", "type": "address[]", "internalType": "address[]"},
+      {"name": "_nonce", "type": "uint48", "internalType": "uint48"},
+      {"name": "_signature", "type": "bytes", "internalType": "bytes"}
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "getAllowance",
+    "inputs": [
+      {"name": "_token", "type": "address", "internalType": "address"},
+      {"name": "_owner", "type": "address", "internalType": "address"}
+    ],
+    "outputs": [
+      {"name": "amount", "type": "uint160", "internalType": "uint160"},
+      {"name": "expiration", "type": "uint48", "internalType": "uint48"},
+      {"name": "nonce", "type": "uint48", "internalType": "uint48"}
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "domainSeparator",
+    "inputs": [],
+    "outputs": [
+      {"name": "", "type": "bytes32", "internalType": "bytes32"}
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "error",
+    "name": "InvalidAllowance",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "TransferFailed",
+    "inputs": []
+  }
+]

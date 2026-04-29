@@ -1,0 +1,241 @@
+[
+  {
+    "type": "function",
+    "name": "execute",
+    "inputs": [
+      {"name": "_payload", "type": "bytes", "internalType": "bytes"},
+      {"name": "_signature", "type": "bytes", "internalType": "bytes"}
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "selfExecute",
+    "inputs": [
+      {"name": "_payload", "type": "bytes", "internalType": "bytes"}
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "updateImageHash",
+    "inputs": [
+      {"name": "_imageHash", "type": "bytes32", "internalType": "bytes32"}
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "imageHash",
+    "inputs": [],
+    "outputs": [
+      {"name": "", "type": "bytes32", "internalType": "bytes32"}
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "isValidSignature",
+    "inputs": [
+      {"name": "_hash", "type": "bytes32", "internalType": "bytes32"},
+      {"name": "_signature", "type": "bytes", "internalType": "bytes"}
+    ],
+    "outputs": [
+      {"name": "", "type": "bytes4", "internalType": "bytes4"}
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "validateUserOp",
+    "inputs": [
+      {
+        "name": "_userOp",
+        "type": "tuple",
+        "internalType": "struct PackedUserOperation",
+        "components": [
+          {"name": "sender", "type": "address", "internalType": "address"},
+          {"name": "nonce", "type": "uint256", "internalType": "uint256"},
+          {"name": "initCode", "type": "bytes", "internalType": "bytes"},
+          {"name": "callData", "type": "bytes", "internalType": "bytes"},
+          {"name": "accountGasLimits", "type": "bytes32", "internalType": "bytes32"},
+          {"name": "preVerificationGas", "type": "uint256", "internalType": "uint256"},
+          {"name": "gasFees", "type": "bytes32", "internalType": "bytes32"},
+          {"name": "paymasterAndData", "type": "bytes", "internalType": "bytes"},
+          {"name": "signature", "type": "bytes", "internalType": "bytes"}
+        ]
+      },
+      {"name": "_userOpHash", "type": "bytes32", "internalType": "bytes32"},
+      {"name": "_missingAccountFunds", "type": "uint256", "internalType": "uint256"}
+    ],
+    "outputs": [
+      {"name": "_validationData", "type": "uint256", "internalType": "uint256"}
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "addHook",
+    "inputs": [
+      {"name": "_signature", "type": "bytes4", "internalType": "bytes4"},
+      {"name": "_implementation", "type": "address", "internalType": "address"}
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "removeHook",
+    "inputs": [
+      {"name": "_signature", "type": "bytes4", "internalType": "bytes4"}
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "readHook",
+    "inputs": [
+      {"name": "_signature", "type": "bytes4", "internalType": "bytes4"}
+    ],
+    "outputs": [
+      {"name": "", "type": "address", "internalType": "address"}
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "upgradeToAndCall",
+    "inputs": [
+      {"name": "_newImplementation", "type": "address", "internalType": "address"},
+      {"name": "_data", "type": "bytes", "internalType": "bytes"}
+    ],
+    "outputs": [],
+    "stateMutability": "payable"
+  },
+  {
+    "type": "function",
+    "name": "onERC721Received",
+    "inputs": [
+      {"name": "_operator", "type": "address", "internalType": "address"},
+      {"name": "_from", "type": "address", "internalType": "address"},
+      {"name": "_tokenId", "type": "uint256", "internalType": "uint256"},
+      {"name": "_data", "type": "bytes", "internalType": "bytes"}
+    ],
+    "outputs": [
+      {"name": "", "type": "bytes4", "internalType": "bytes4"}
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "onERC1155Received",
+    "inputs": [
+      {"name": "_operator", "type": "address", "internalType": "address"},
+      {"name": "_from", "type": "address", "internalType": "address"},
+      {"name": "_id", "type": "uint256", "internalType": "uint256"},
+      {"name": "_amount", "type": "uint256", "internalType": "uint256"},
+      {"name": "_data", "type": "bytes", "internalType": "bytes"}
+    ],
+    "outputs": [
+      {"name": "", "type": "bytes4", "internalType": "bytes4"}
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "onERC1155BatchReceived",
+    "inputs": [
+      {"name": "_operator", "type": "address", "internalType": "address"},
+      {"name": "_from", "type": "address", "internalType": "address"},
+      {"name": "_ids", "type": "uint256[]", "internalType": "uint256[]"},
+      {"name": "_amounts", "type": "uint256[]", "internalType": "uint256[]"},
+      {"name": "_data", "type": "bytes", "internalType": "bytes"}
+    ],
+    "outputs": [
+      {"name": "", "type": "bytes4", "internalType": "bytes4"}
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "supportsInterface",
+    "inputs": [
+      {"name": "_interfaceId", "type": "bytes4", "internalType": "bytes4"}
+    ],
+    "outputs": [
+      {"name": "", "type": "bool", "internalType": "bool"}
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "error",
+    "name": "InvalidSignature",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "HookAlreadyExists",
+    "inputs": [
+      {"name": "signature", "type": "bytes4", "internalType": "bytes4"}
+    ]
+  },
+  {
+    "type": "error",
+    "name": "HookDoesNotExist",
+    "inputs": [
+      {"name": "signature", "type": "bytes4", "internalType": "bytes4"}
+    ]
+  },
+  {
+    "type": "event",
+    "name": "ImageHashUpdated",
+    "inputs": [
+      {"name": "newImageHash", "type": "bytes32", "internalType": "bytes32", "indexed": false}
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "TxExecuted",
+    "inputs": [
+      {"name": "txHash", "type": "bytes32", "internalType": "bytes32", "indexed": false},
+      {"name": "index", "type": "uint256", "internalType": "uint256", "indexed": false}
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "TxFailed",
+    "inputs": [
+      {"name": "txHash", "type": "bytes32", "internalType": "bytes32", "indexed": false},
+      {"name": "index", "type": "uint256", "internalType": "uint256", "indexed": false},
+      {"name": "reason", "type": "bytes", "internalType": "bytes", "indexed": false}
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "HookAdded",
+    "inputs": [
+      {"name": "signature", "type": "bytes4", "internalType": "bytes4", "indexed": false},
+      {"name": "implementation", "type": "address", "internalType": "address", "indexed": false}
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "HookRemoved",
+    "inputs": [
+      {"name": "signature", "type": "bytes4", "internalType": "bytes4", "indexed": false}
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "receive",
+    "stateMutability": "payable"
+  }
+]
