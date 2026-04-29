@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="IntegratedDEX Presale Launchpad — participate in the token presale" />
+  <title>IntegratedDEX Presale</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="presale.css" />
+</head>
+<body>
+
+<!-- ─── Header ──────────────────────────────────────────────────────────────── -->
+<header class="header">
+  <div class="header__logo">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    IntegratedDEX
+  </div>
+
+  <div class="wallet-bar" id="wallet-bar" style="display:none">
+    <span class="wallet-dot"></span>
+    <span class="wallet-address" id="wallet-address"></span>
+    <button class="btn btn--outline" id="disconnect-btn" style="display:none;padding:.4rem .8rem;font-size:.82rem">
+      Disconnect
+    </button>
+  </div>
+
+  <button class="btn btn--primary" id="connect-btn" style="width:auto">
+    Connect Wallet
+  </button>
+</header>
+
+<!-- ─── Hero ─────────────────────────────────────────────────────────────────── -->
+<main>
+  <section class="hero">
+    <div class="container">
+      <span class="hero__tag">🚀 Live Presale</span>
+      <h1 class="hero__title">IntegratedDEX Token Presale</h1>
+      <p class="hero__subtitle">
+        Participate in the presale, claim your tokens once the goal is reached,
+        or get a full refund if the softcap isn't met.
+      </p>
+    </div>
+  </section>
+
+  <!-- ─── Presale Section ─────────────────────────────────────────────────── -->
+  <section id="presale-section" class="container">
+
+    <!-- Progress Card -->
+    <div class="card">
+      <h2 class="card__title">Presale Progress</h2>
+
+      <div class="progress-wrap">
+        <div class="progress-labels">
+          <span>Raised</span>
+          <span id="progress-pct">0%</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-bar__fill" id="progress-fill" style="width:0%"></div>
+        </div>
+      </div>
+
+      <div class="progress-stats">
+        <div class="stat">
+          <div class="stat__label">Raised</div>
+          <div class="stat__value" id="raised-stat">—</div>
+        </div>
+        <div class="stat">
+          <div class="stat__label">Softcap</div>
+          <div class="stat__value" id="softcap-stat">—</div>
+        </div>
+        <div class="stat">
+          <div class="stat__label">Hardcap</div>
+          <div class="stat__value" id="hardcap-stat">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Card -->
+    <div class="card">
+      <div class="tabs">
+        <button class="tab tab--active" id="tab-contribute">Contribute</button>
+        <button class="tab" id="tab-claim">Claim Tokens</button>
+        <button class="tab" id="tab-refund">Refund</button>
+      </div>
+
+      <!-- Contribute Panel -->
+      <div id="panel-contribute">
+        <div class="form-group">
+          <label for="amount-input">Amount to contribute</label>
+          <div class="input-wrap">
+            <input
+              type="number"
+              id="amount-input"
+              placeholder="0.0"
+              min="0"
+              step="any"
+            />
+            <span class="input-suffix" id="native-symbol">ETH</span>
+          </div>
+        </div>
+
+        <div class="alert alert--info" style="margin-bottom:1rem">
+          ℹ️ Your contribution will be visible on-chain. You can request a full refund
+          if the softcap is not reached before the presale ends.
+        </div>
+
+        <p style="font-size:.82rem;color:var(--color-text-muted);margin-bottom:1rem">
+          My contribution: <strong id="my-contrib">—</strong>
+        </p>
+
+        <button class="btn btn--primary btn--lg" id="contribute-btn">
+          Contribute
+        </button>
+      </div>
+
+      <!-- Claim Panel -->
+      <div id="panel-claim" style="display:none">
+        <div class="alert alert--info" style="margin-bottom:1.5rem">
+          ℹ️ Tokens become claimable once the presale ends and the softcap has been reached.
+          Each address can claim once.
+        </div>
+
+        <button class="btn btn--success btn--lg" id="claim-btn">
+          Claim My Tokens
+        </button>
+      </div>
+
+      <!-- Refund Panel -->
+      <div id="panel-refund" style="display:none">
+        <div class="alert alert--warning" style="margin-bottom:1.5rem">
+          ⚠️ Refunds are only available if the presale softcap was <strong>not</strong> reached
+          before the deadline. You will receive back your full contribution.
+        </div>
+
+        <button class="btn btn--danger btn--lg" id="refund-btn">
+          Request Refund
+        </button>
+      </div>
+
+      <!-- Status Message -->
+      <div id="status-msg" class="alert" style="display:none"></div>
+    </div>
+
+  </section>
+</main>
+
+<!-- ─── Footer ─────────────────────────────────────────────────────────────── -->
+<footer class="footer">
+  <p>IntegratedDEX © 2025 — <a href="../launch/">Launch a Token</a> · <a href="https://github.com/lackx741-tech/WAASDK" target="_blank" rel="noopener">GitHub</a></p>
+</footer>
+
+<script type="module" src="presale.js"></script>
+</body>
+</html>

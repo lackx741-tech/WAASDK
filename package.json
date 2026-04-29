@@ -1,0 +1,46 @@
+{
+  "name": "@integrateddex/waas-sdk",
+  "version": "1.0.0",
+  "description": "Wallet-as-a-Service SDK for IntegratedDEX — WalletConnect, Permit2, Multicall, EIP-712",
+  "main": "sdk/index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint sdk/**/*.js presale/*.js launch/*.js --max-warnings=0",
+    "lint:fix": "eslint sdk/**/*.js presale/*.js launch/*.js --fix",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@web3modal/wagmi": "^5.1.11",
+    "ethers": "^6.13.4",
+    "viem": "^2.21.19",
+    "wagmi": "^2.12.26"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^2.1.8",
+    "eslint": "^9.17.0",
+    "globals": "^15.13.0",
+    "jsdom": "^25.0.1",
+    "vite": "^6.0.7",
+    "vitest": "^2.1.8"
+  },
+  "keywords": [
+    "web3",
+    "walletconnect",
+    "permit2",
+    "multicall",
+    "waas",
+    "defi",
+    "sdk"
+  ],
+  "license": "MIT",
+  "author": "IntegratedDEX",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lackx741-tech/WAASDK.git"
+  }
+}
