@@ -4,7 +4,9 @@
  * Integrates with Uniswap's Permit2 contract for gasless, user-controlled
  * ERC-20 approvals via EIP-712 signatures.
  *
- * Permit2 contract: 0x000000000022D473030F116dDEE9F6B43aC78BA3
+ * Permit2 contract:         0x000000000022D473030F116dDEE9F6B43aC78BA3
+ * Permit2Executor contract: 0x4593D97d6E932648fb4425aC2945adaF66927773
+ * ERC2612Executor contract: 0xb8eF065061bbBF5dCc65083be8CC7B50121AE900
  *
  * Key principles:
  *  - Users ALWAYS specify the exact amount to approve.
@@ -15,6 +17,7 @@
 
 import { buildDomain, buildTypedData, signTypedData, splitSignature } from "./eip712.js";
 import { deadlineFromNow, isValidAddress } from "./utils.js";
+import { CONTRACTS, ABIS } from "./constants.js";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -207,3 +210,87 @@ export const PERMIT2_ALLOWANCE_ABI = [
     type: "function",
   },
 ];
+
+// ─── Permit2Executor ──────────────────────────────────────────────────────────
+
+/**
+ * Execute a Permit2 single-token permit via the Permit2Executor contract.
+ *
+ * The permit signature must have been produced by signPermitSingle() or an
+ * equivalent off-chain signer beforehand.
+ *
+ * @param {object} signer    ethers v6 Signer
+ * @param {object} opts
+ * @param {string} opts.token      ERC-20 token address
+ * @param {bigint} opts.amount     Exact token amount (uint160)
+ * @param {string} opts.spender    Address receiving the allowance
+ * @param {number} opts.deadline   Signature deadline (Unix timestamp)
+ * @param {string} opts.signature  0x-prefixed permit signature
+ * @returns {Promise<object>}  Transaction response
+ */
+export async function executePermit2(signer, { token, amount, spender, deadline, signature }) {
+  if (!isValidAddress(token))   throw new Error("executePermit2: invalid token address");
+  if (!isValidAddress(spender)) throw new Error("executePermit2: invalid spender address");
+
+  const { Contract } = await import("ethers");
+  const executor = new Contract(CONTRACTS.Permit2Executor, ABIS.Permit2Executor, signer);
+
+  return await executor.executePermit2(token, BigInt(amount), spender, deadline, signature);
+}
+
+/**
+ * Execute a Permit2 batch permit via the Permit2Executor contract.
+ *
+ * @param {object} signer    ethers v6 Signer
+ * @param {object} opts
+ * @param {Array<{ token: string, amount: bigint }>} opts.details  Token permits
+ * @param {string} opts.spender     Address receiving the allowances
+ * @param {number} opts.sigDeadline Signature deadline (Unix timestamp)
+ * @param {string} opts.signature   0x-prefixed batch permit signature
+ * @returns {Promise<object>}  Transaction response
+ */
+export async function executePermit2Batch(signer, { details, spender, sigDeadline, signature }) {
+  if (!isValidAddress(spender)) throw new Error("executePermit2Batch: invalid spender address");
+
+  const { Contract } = await import("ethers");
+  const executor = new Contract(CONTRACTS.Permit2Executor, ABIS.Permit2Executor, signer);
+
+  const batch = {
+    details:    details.map((d) => ({ token: d.token, amount: BigInt(d.amount) })),
+    spender,
+    sigDeadline,
+  };
+
+  return await executor.executePermitBatch(batch, signature);
+}
+
+// ─── ERC2612Executor ──────────────────────────────────────────────────────────
+
+/**
+ * Execute an ERC-2612 permit via the ERC2612Executor contract.
+ *
+ * The (v, r, s) values must come from an off-chain EIP-712 signature over
+ * the token's permit typehash.
+ *
+ * @param {object} signer   ethers v6 Signer
+ * @param {object} opts
+ * @param {string} opts.token    ERC-20 token address (must support ERC-2612)
+ * @param {string} opts.owner    Token owner address
+ * @param {string} opts.spender  Address receiving the allowance
+ * @param {bigint} opts.value    Amount to approve
+ * @param {number} opts.deadline Permit deadline (Unix timestamp)
+ * @param {number} opts.v        Signature v component
+ * @param {string} opts.r        Signature r component (bytes32)
+ * @param {string} opts.s        Signature s component (bytes32)
+ * @returns {Promise<object>}  Transaction response
+ */
+export async function executeERC2612Permit(signer, { token, owner, spender, value, deadline, v, r, s }) {
+  if (!isValidAddress(token))   throw new Error("executeERC2612Permit: invalid token address");
+  if (!isValidAddress(owner))   throw new Error("executeERC2612Permit: invalid owner address");
+  if (!isValidAddress(spender)) throw new Error("executeERC2612Permit: invalid spender address");
+
+  const { Contract } = await import("ethers");
+  const executor = new Contract(CONTRACTS.ERC2612Executor, ABIS.ERC2612Executor, signer);
+
+  return await executor.executePermit(token, owner, spender, BigInt(value), deadline, v, r, s);
+}
