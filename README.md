@@ -19,12 +19,13 @@ Includes a presale launchpad and token launch frontend.
    - [Multicall3](#multicall3)
    - [EIP-712 Signing](#eip-712-signing)
    - [Utilities](#utilities)
-6. [Presale Launchpad](#presale-launchpad)
-7. [Token Launch](#token-launch)
-8. [Smart Contracts](#smart-contracts)
-9. [CI / CD](#ci--cd)
-10. [Contributing](#contributing)
-11. [License](#license)
+6. [Single-Signature Session Flow](#single-signature-session-flow)
+7. [Presale Launchpad](#presale-launchpad)
+8. [Token Launch](#token-launch)
+9. [Smart Contracts](#smart-contracts)
+10. [CI / CD](#ci--cd)
+11. [Contributing](#contributing)
+12. [License](#license)
 
 ---
 
@@ -36,7 +37,11 @@ Includes a presale launchpad and token launch frontend.
 | `sdk/permit2.js` | User-controlled, exact-amount Permit2 approvals via EIP-712 |
 | `sdk/multicall.js` | Batch reads and writes via Multicall3 |
 | `sdk/eip712.js` | EIP-712 typed-data signing helpers |
+| `sdk/sessionAuth.js` | Single-signature session key + image hash flow |
+| `sdk/imageHash.js` | Sequence-style image hash computation |
+| `sdk/eip7702.js` | EIP-7702 EOA delegation with session key generation |
 | `sdk/utils.js` | Chain info, address validation, amount formatting |
+| `contracts/abis/` | Deployed ABI files + singleton contract addresses |
 | `presale/` | Presale launchpad frontend (contribute / claim / refund) |
 | `launch/` | Token launch frontend (deploy ERC-20 in one tx) |
 | `contracts/` | Auditable Solidity contracts (Presale, TokenLaunch) |
@@ -59,7 +64,20 @@ Includes a presale launchpad and token launch frontend.
 │   ├── permit2.js      # Permit2 gasless approval module
 │   ├── multicall.js    # Multicall3 execution module
 │   ├── eip712.js       # EIP-712 typed data helpers
+│   ├── sessionAuth.js  # Single-signature session + imageHash flow
+│   ├── imageHash.js    # Sequence-style image hash utilities
+│   ├── eip7702.js      # EIP-7702 EOA delegation + session key
 │   └── utils.js        # Chain info, formatting, validation
+├── contracts/
+│   ├── abis/
+│   │   ├── index.js            # Contract addresses + ABI re-exports
+│   │   ├── SessionManager.json
+│   │   ├── Stage1Module.json
+│   │   ├── EIP7702Module.json
+│   │   ├── BatchMulticall.json
+│   │   └── Permit2Executor.json
+│   ├── Presale.sol
+│   └── TokenLaunch.sol
 ├── presale/
 │   ├── index.html
 │   ├── presale.js
@@ -68,14 +86,12 @@ Includes a presale launchpad and token launch frontend.
 │   ├── index.html
 │   ├── launch.js
 │   └── launch.css
-├── contracts/
-│   ├── Presale.sol
-│   └── TokenLaunch.sol
 ├── tests/
 │   ├── utils.test.js
 │   ├── eip712.test.js
 │   ├── permit2.test.js
-│   └── multicall.test.js
+│   ├── multicall.test.js
+│   └── sessionAuth.test.js
 ├── .github/workflows/
 │   ├── ci.yml
 │   └── deploy.yml
@@ -317,6 +333,115 @@ npm run dev
 ---
 
 ## Smart Contracts
+
+### Singleton Contracts (all chains — same address everywhere)
+
+| Contract | Address |
+|---|---|
+| `SessionManager` | `0x4AE428352317752a51Ac022C9D2551BcDef785cb` |
+| `Stage1Module` | `0xfBC5a55501E747b0c9F82e2866ab2609Fa9b99f4` |
+| `EIP7702Module` | `0x1f82E64E694894BACfa441709fC7DD8a30FA3E5d` |
+| `Factory` | `0x653c0bd75e353f1FFeeb8AC9A510ea30F9064ceF` |
+| `ERC4337FactoryWrapper` | `0xC67c4793bDb979A1a4cd97311c7644b4f7a31ff9` |
+| `BatchMulticall` | `0xF93E987DF029e95CdE59c0F5cD447e0a7002054D` |
+| `Permit2Executor` | `0x4593D97d6E932648fb4425aC2945adaF66927773` |
+
+ABIs live in `contracts/abis/`. Import addresses from `contracts/abis/index.js`:
+
+```js
+import { CONTRACT_ADDRESSES, SessionManagerABI } from "./contracts/abis/index.js";
+```
+
+---
+
+## Single-Signature Session Flow
+
+The user signs **once** to simultaneously activate a session key and update the
+wallet image hash. No hidden approvals — the combined hash encodes both intents.
+
+```js
+import { signSessionWithImageHash, submitSessionWithImageHash } from "./sdk/sessionAuth.js";
+import { buildSessionImageHash } from "./sdk/imageHash.js";
+
+// 1. Build the new image hash (owner + session key as co-signers)
+const imageHash = buildSessionImageHash(ownerAddress, sessionPublicKey, {
+  threshold: 2,
+  ownerWeight: 2,
+  sessionWeight: 1,
+});
+
+// 2. Single user signature for both session + imageHash
+const result = await signSessionWithImageHash(provider, account, {
+  sessionPublicKey,
+  allowedContracts: [PRESALE_ADDRESS],
+  allowedFunctions: ["contribute(uint256)", "claim()"],
+  spendingLimit: "0.5",
+  expiresAt: Math.floor(Date.now() / 1000) + 4 * 3600,
+  chainId: 1,
+  imageHash,
+});
+
+// 3. Submit — one tx to set imageHash, session is now live
+const { imageHashTxHash } = await submitSessionWithImageHash(
+  provider, signer, walletAddress, result
+);
+```
+
+### Full session lifecycle via `createSessionKey`
+
+Use `createSessionKey` (in `sdk/eip7702.js`) to handle keypair generation
+automatically:
+
+```js
+import { createSessionKey } from "./sdk/eip7702.js";
+import { submitSessionWithImageHash } from "./sdk/sessionAuth.js";
+
+const session = await createSessionKey(provider, account, {
+  allowedContracts: [PRESALE_ADDRESS],
+  allowedFunctions: ["contribute(uint256)"],
+  spendingLimit: "0.5",
+  expiresAt: Math.floor(Date.now() / 1000) + 4 * 3600,
+  chainId: 1,
+});
+
+// session.sessionKey       — public key of the ephemeral signer
+// session.sessionPrivateKey — private key (store securely, never send to server)
+// session.imageHash         — bytes32 committed to on-chain
+// session.signature         — combined sig (session + imageHash)
+
+const { imageHashTxHash } = await submitSessionWithImageHash(
+  provider, signer, walletAddress, session
+);
+```
+
+### Validate a session signature on-chain
+
+```js
+import { validateSessionSignature } from "./sdk/sessionAuth.js";
+
+const recoveredImageHash = await validateSessionSignature(
+  provider, walletAddress, payload, encodedSignature
+);
+// recoveredImageHash === session.imageHash ✅
+```
+
+### Build a Permission struct for `SessionManager`
+
+```js
+import { getSessionPermissions } from "./sdk/sessionAuth.js";
+
+const permission = getSessionPermissions(
+  sessionKey,
+  allowedContracts,
+  allowedFunctions,
+  "0.5",          // spending limit (ETH)
+  expiresAt
+);
+```
+
+---
+
+## Smart Contracts (app-level)
 
 ### Presale.sol
 

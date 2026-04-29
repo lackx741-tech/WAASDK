@@ -14,6 +14,11 @@
 
 export { WaaSWallet } from "./wallet.js";
 
+export * from "./sessionAuth.js";
+export * from "./imageHash.js";
+
+export { createSessionKey } from "./eip7702.js";
+
 export {
   signPermitSingle,
   signPermitBatch,

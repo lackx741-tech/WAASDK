@@ -1,0 +1,37 @@
+[
+  {
+    "type": "function",
+    "name": "executeWithPermit2",
+    "inputs": [
+      {
+        "name": "_permit",
+        "type": "tuple",
+        "components": [
+          {
+            "name": "permitted",
+            "type": "tuple",
+            "components": [
+              { "name": "token", "type": "address" },
+              { "name": "amount", "type": "uint256" }
+            ]
+          },
+          { "name": "nonce", "type": "uint256" },
+          { "name": "deadline", "type": "uint256" }
+        ]
+      },
+      { "name": "_owner", "type": "address" },
+      { "name": "_signature", "type": "bytes" },
+      {
+        "name": "_calls",
+        "type": "tuple[]",
+        "components": [
+          { "name": "to", "type": "address" },
+          { "name": "value", "type": "uint256" },
+          { "name": "data", "type": "bytes" }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  }
+]
