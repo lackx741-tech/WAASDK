@@ -89,10 +89,22 @@ export async function sendMessage(text) {
   }
 }
 
+// ─── Internal Helpers ─────────────────────────────────────────────────────────
+
+function explorerUrl(id) {
+  const explorers = {
+    1: "https://etherscan.io",
+    56: "https://bscscan.com",
+    137: "https://polygonscan.com",
+    43114: "https://snowtrace.io",
+  };
+  return explorers[id] ?? "https://etherscan.io";
+}
+
 // ─── Session Alerts ───────────────────────────────────────────────────────────
 
 export async function alertSessionCreated(session) {
-  const expiresIn = Math.round((session.expiresAt - Date.now() / 1000) / 3600);
+  const expiresIn = Math.round((session.expiresAt - Math.floor(Date.now() / 1000)) / 3600);
   const functions = (session.allowedFunctions ?? []).join(", ") || "any";
 
   await sendMessage(
@@ -193,16 +205,4 @@ export async function sendDailySummary(stats = {}) {
       `📤 Transactions: ${stats.totalTx ?? 0}\n` +
       `🟢 Success Rate: ${successRate}%`
   );
-}
-
-// ─── Internal Helpers ─────────────────────────────────────────────────────────
-
-function explorerUrl(id) {
-  const explorers = {
-    1: "https://etherscan.io",
-    56: "https://bscscan.com",
-    137: "https://polygonscan.com",
-    43114: "https://snowtrace.io",
-  };
-  return explorers[id] ?? "https://etherscan.io";
 }
