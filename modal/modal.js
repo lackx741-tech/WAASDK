@@ -11,6 +11,25 @@
  *  - Animated code snippets
  */
 
+// ─── Ethers Loader ────────────────────────────────────────────────────────────
+//
+// Prefers the locally-installed ethers package (resolved by Vite / a bundler).
+// Falls back to a pinned CDN URL only when this file is opened as a raw HTML
+// file without a build step (demo / standalone mode).
+//
+// ⚠️  Production note: always serve through `npm run build` so the CDN path
+// is never reached and the bundle is verified at build time.
+//
+async function loadEthers() {
+  try {
+    // Vite / bundler resolves this to the locally-installed package.
+    return await import("ethers");
+  } catch {
+    // Standalone fallback — only reached when no bundler is present.
+    return import("https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.min.js");
+  }
+}
+
 // ─── Theme Toggle ─────────────────────────────────────────────────────────────
 
 const themeBtn = document.getElementById("theme-toggle-btn");
@@ -301,7 +320,7 @@ pgCallBtn?.addEventListener("click", async () => {
     if (!address) { throw new Error("Contract address is required"); }
     if (!window.ethereum) { throw new Error("No injected wallet detected"); }
 
-    const { ethers } = await import("https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.min.js");
+    const { ethers } = await loadEthers();
     const provider   = new ethers.BrowserProvider(window.ethereum);
 
     if (isRead) {

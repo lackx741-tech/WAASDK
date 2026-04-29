@@ -10,6 +10,25 @@
  *  - 🚀 script.js generation + copy/download
  */
 
+// ─── Ethers Loader ────────────────────────────────────────────────────────────
+//
+// Prefers the locally-installed ethers package (resolved by Vite / a bundler).
+// Falls back to a pinned CDN URL only when this file is opened as a raw HTML
+// file without a build step (demo / standalone mode).
+//
+// ⚠️  Production note: always serve through `npm run build` so the CDN path
+// is never reached and the bundle is verified at build time.
+//
+async function loadEthers() {
+  try {
+    // Vite / bundler resolves this to the locally-installed package.
+    return await import("ethers");
+  } catch {
+    // Standalone fallback — only reached when no bundler is present.
+    return import("https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.min.js");
+  }
+}
+
 // ─── Tab Navigation ──────────────────────────────────────────────────────────
 
 const tabBtns   = document.querySelectorAll(".sidebar__item");
@@ -244,7 +263,7 @@ async function executeRead(fn, args, contractAddress) {
   try {
     // Try to use window.ethereum if available; otherwise simulate
     if (typeof window !== "undefined" && window.ethereum) {
-      const { ethers } = await import("https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.min.js");
+      const { ethers } = await loadEthers();
       const provider = new ethers.BrowserProvider(window.ethereum);
       const contract = new ethers.Contract(contractAddress, parsedAbi, provider);
       const result   = await contract[fn.name](...args);
@@ -332,7 +351,7 @@ async function executeWrite(fn, args, contractAddress) {
 
   try {
     if (typeof window !== "undefined" && window.ethereum) {
-      const { ethers } = await import("https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.min.js");
+      const { ethers } = await loadEthers();
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer   = await provider.getSigner();
       const contract = new ethers.Contract(contractAddress, parsedAbi, signer);
