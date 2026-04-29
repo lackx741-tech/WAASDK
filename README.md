@@ -15,16 +15,21 @@ Includes a presale launchpad and token launch frontend.
 5. [SDK Usage](#sdk-usage)
    - [Initialise](#initialise)
    - [Wallet Connection](#wallet-connection)
+   - [RainbowKit](#rainbowkit)
+   - [Web3Modal](#web3modal)
+   - [Unified Wallet Modal](#unified-wallet-modal)
+   - [Drop-in Connect Button](#drop-in-connect-button)
    - [Permit2](#permit2)
    - [Multicall3](#multicall3)
    - [EIP-712 Signing](#eip-712-signing)
    - [Utilities](#utilities)
-6. [Presale Launchpad](#presale-launchpad)
-7. [Token Launch](#token-launch)
-8. [Smart Contracts](#smart-contracts)
-9. [CI / CD](#ci--cd)
-10. [Contributing](#contributing)
-11. [License](#license)
+6. [Dashboard](#dashboard)
+7. [Presale Launchpad](#presale-launchpad)
+8. [Token Launch](#token-launch)
+9. [Smart Contracts](#smart-contracts)
+10. [CI / CD](#ci--cd)
+11. [Contributing](#contributing)
+12. [License](#license)
 
 ---
 
@@ -32,17 +37,23 @@ Includes a presale launchpad and token launch frontend.
 
 | Module | What it does |
 |---|---|
-| `sdk/wallet.js` | WalletConnect/AppKit integration for Ethereum, BSC, Polygon, Avalanche |
+| `sdk/wallet.js` | Core WalletConnect/AppKit wallet class |
+| `sdk/rainbow.js` | RainbowKit integration (darkTheme, lightTheme, midnightTheme) |
+| `sdk/web3modal.js` | Web3Modal / AppKit integration with sign + switchChain |
+| `sdk/walletModal.js` | Unified entry point — auto-routes to RainbowKit or Web3Modal |
+| `sdk/connectButton.js` | Embed-ready vanilla JS connect button (no framework needed) |
 | `sdk/permit2.js` | User-controlled, exact-amount Permit2 approvals via EIP-712 |
 | `sdk/multicall.js` | Batch reads and writes via Multicall3 |
 | `sdk/eip712.js` | EIP-712 typed-data signing helpers |
 | `sdk/utils.js` | Chain info, address validation, amount formatting |
+| `dashboard/index.html` | Admin dashboard — config, preview, and compile |
 | `presale/` | Presale launchpad frontend (contribute / claim / refund) |
 | `launch/` | Token launch frontend (deploy ERC-20 in one tx) |
 | `contracts/` | Auditable Solidity contracts (Presale, TokenLaunch) |
 
 **Key principles:**
-- Users always see exactly what amount is being approved and to which contract.
+- Users always see exactly what they are connecting to before confirming.
+- No hidden approvals — wallet connection only connects, never auto-approves anything.
 - Max approval is **never** set by default — only if the user explicitly passes `PERMIT2_MAX_AMOUNT`.
 - Every transaction shows a clear preview before the user is asked to sign.
 - No asset-targeting logic, no sweeping, no cloaking.
@@ -54,12 +65,18 @@ Includes a presale launchpad and token launch frontend.
 ```
 /
 ├── sdk/
-│   ├── index.js        # SDK entry point — re-exports everything
-│   ├── wallet.js       # WalletConnect / AppKit integration
-│   ├── permit2.js      # Permit2 gasless approval module
-│   ├── multicall.js    # Multicall3 execution module
-│   ├── eip712.js       # EIP-712 typed data helpers
-│   └── utils.js        # Chain info, formatting, validation
+│   ├── index.js           # SDK entry point — re-exports everything
+│   ├── wallet.js          # WalletConnect / AppKit core wallet class
+│   ├── rainbow.js         # RainbowKit integration module
+│   ├── web3modal.js       # Web3Modal / AppKit module
+│   ├── walletModal.js     # Unified wallet modal entry point
+│   ├── connectButton.js   # Embed-ready vanilla JS connect button
+│   ├── permit2.js         # Permit2 gasless approval module
+│   ├── multicall.js       # Multicall3 execution module
+│   ├── eip712.js          # EIP-712 typed data helpers
+│   └── utils.js           # Chain info, formatting, validation
+├── dashboard/
+│   └── index.html         # Admin dashboard (config, preview, compile)
 ├── presale/
 │   ├── index.html
 │   ├── presale.js
@@ -172,6 +189,129 @@ wallet.on("chainChanged",  ({ chainId })           => { /* … */ });
 const signer = await wallet.getSigner();
 ```
 
+### RainbowKit
+
+```js
+import { initRainbowKit, openConnectModal, getAccount, onAccountChange } from './sdk/rainbow.js'
+
+await initRainbowKit({
+  projectId: 'YOUR_WALLETCONNECT_PROJECT_ID',
+  appName: 'IntegratedDEX',
+  chains: [1, 56, 137, 43114, 42161, 10, 8453],
+  theme: 'dark',   // 'dark' | 'light' | 'midnight'
+})
+
+// Open the connect modal
+document.getElementById('connectBtn').onclick = () => openConnectModal()
+
+// Read current account
+const address = getAccount()  // null if not connected
+
+// Subscribe to account changes
+const unsubscribe = onAccountChange((address) => {
+  console.log('Account changed:', address)
+})
+
+// Unsubscribe later
+unsubscribe()
+```
+
+Supported themes:
+- `darkTheme()` — dark background with purple accent
+- `lightTheme()` — white background
+- `midnightTheme()` — deep black background
+
+### Web3Modal
+
+```js
+import { initWeb3Modal, openModal, closeModal, getAddress, signMessage, switchChain } from './sdk/web3modal.js'
+
+await initWeb3Modal({
+  projectId: 'YOUR_PROJECT_ID',
+  appName: 'IntegratedDEX',
+  chains: [1, 56, 137, 43114, 42161, 10, 8453],
+})
+
+// Open / close the modal
+document.getElementById('connectBtn').onclick = () => openModal()
+closeModal()
+
+// Read connected address
+const address = getAddress()  // null if not connected
+
+// Sign a message (wallet always shows exact message before signing)
+const signature = await signMessage('Sign to verify ownership')
+
+// Switch chain
+await switchChain(137)  // switch to Polygon
+```
+
+### Unified Wallet Modal
+
+A single entry point that works with either provider:
+
+```js
+import { initWalletModal, openWalletModal, getWalletState, disconnectWallet } from './sdk/walletModal.js'
+
+await initWalletModal({
+  provider: 'web3modal',  // 'rainbowkit' | 'web3modal'
+  projectId: 'YOUR_PROJECT_ID',
+  appName: 'IntegratedDEX',
+  chains: [1, 56, 137],
+  theme: 'dark',
+  onConnect:    ({ address, chainId }) => console.log('Connected:', address),
+  onDisconnect: ()                    => console.log('Disconnected'),
+  onChainChange: (chainId)            => console.log('Chain:', chainId),
+})
+
+// Open / close
+await openWalletModal()
+closeWalletModal()
+
+// Read state (sync)
+const { address, chainId, connected } = getWalletState()
+
+// Disconnect
+await disconnectWallet()
+```
+
+### Drop-in Connect Button
+
+Inject a fully-styled wallet connect button into **any HTML page** with a single line — no React or Vue required:
+
+```js
+import { injectConnectButton } from './sdk/connectButton.js'
+
+injectConnectButton('#header', {
+  projectId: 'YOUR_WALLETCONNECT_PROJECT_ID',
+  buttonText: 'Connect Wallet',
+  theme: 'dark',          // 'dark' | 'light'
+  showAddress: true,
+  showBalance: true,
+  showChainIcon: true,
+})
+```
+
+**What it does:**
+- Click when disconnected → opens wallet modal
+- When connected → shows truncated address + native balance + chain icon
+- Click when connected → opens dropdown (copy address, switch chain, disconnect)
+- Fully CSS-styled, zero framework dependencies
+
+**Supported options:**
+
+| Option | Default | Description |
+|---|---|---|
+| `projectId` | *(required)* | WalletConnect Cloud project ID |
+| `provider` | `'web3modal'` | `'web3modal'` or `'rainbowkit'` |
+| `chains` | `[1]` | Array of chain IDs to support |
+| `appName` | `'IntegratedDEX'` | App name shown in the modal |
+| `buttonText` | `'Connect Wallet'` | Button label (disconnected state) |
+| `theme` | `'dark'` | `'dark'` or `'light'` |
+| `showAddress` | `true` | Show truncated address when connected |
+| `showBalance` | `true` | Show native balance when connected |
+| `showChainIcon` | `true` | Show chain emoji icon when connected |
+
 ### Permit2
 
 User-controlled exact approvals — the amount must always be specified explicitly.
@@ -253,6 +393,34 @@ getNativeCurrencySymbol(56);        // "BNB"
 getTxUrl("0xHash", 1);             // "https://etherscan.io/tx/0xHash"
 deadlineFromNow(30);               // Unix timestamp 30 minutes from now
 ```
+
+---
+
+## Dashboard
+
+Open `dashboard/index.html` in your browser (or serve it via `npm run dev`):
+
+```bash
+npm run dev
+# open http://localhost:5173/dashboard/
+```
+
+### Tabs
+
+| Tab | What it does |
+|---|---|
+| **General** | Set app name, WalletConnect project ID, button labels |
+| **Wallet** | Choose modal provider (Web3Modal / RainbowKit), theme, supported chains |
+| **Connect Button** | Live preview of the connect button with your current settings |
+| **Smart Contract** | Paste contract address + ABI → detect functions |
+| **Compile 🚀** | Generate a ready-to-use `script.js` → copy or download |
+
+### Quick Start
+
+1. Go to the **General** tab → paste your WalletConnect Project ID
+2. Go to the **Wallet** tab → pick a provider and theme, select chains
+3. Go to **Connect Button** → toggle options and see the live preview
+4. Go to **Compile** → click **⚡ Compile script.js** → download and drop into your site
 
 ---
 

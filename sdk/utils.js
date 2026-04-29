@@ -58,6 +58,45 @@ export const SUPPORTED_CHAINS = {
       default: { name: "SnowTrace", url: "https://snowtrace.io" },
     },
   },
+  42161: {
+    id: 42161,
+    name: "Arbitrum One",
+    network: "arbitrum",
+    nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+    rpcUrls: {
+      default: { http: ["https://arb1.arbitrum.io/rpc"] },
+      public: { http: ["https://arb1.arbitrum.io/rpc"] },
+    },
+    blockExplorers: {
+      default: { name: "Arbiscan", url: "https://arbiscan.io" },
+    },
+  },
+  10: {
+    id: 10,
+    name: "Optimism",
+    network: "optimism",
+    nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+    rpcUrls: {
+      default: { http: ["https://mainnet.optimism.io"] },
+      public: { http: ["https://mainnet.optimism.io"] },
+    },
+    blockExplorers: {
+      default: { name: "Optimistic Etherscan", url: "https://optimistic.etherscan.io" },
+    },
+  },
+  8453: {
+    id: 8453,
+    name: "Base",
+    network: "base",
+    nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+    rpcUrls: {
+      default: { http: ["https://mainnet.base.org"] },
+      public: { http: ["https://mainnet.base.org"] },
+    },
+    blockExplorers: {
+      default: { name: "BaseScan", url: "https://basescan.org" },
+    },
+  },
 };
 
 // ─── Address Utilities ────────────────────────────────────────────────────────
