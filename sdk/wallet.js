@@ -8,6 +8,18 @@
  */
 
 import { SUPPORTED_CHAINS } from "./utils.js";
+import { CONTRACTS } from "../contracts/abis/index.js";
+
+// ─── Sequence WaaS Contract Addresses ────────────────────────────────────────
+
+/** Factory contract address used to deploy smart accounts (CREATE2 singleton). */
+export const FACTORY_ADDRESS = CONTRACTS.Factory.address;
+
+/** Stage1Module address — main module implementation for newly deployed smart accounts. */
+export const STAGE1_MODULE_ADDRESS = CONTRACTS.Stage1Module.address;
+
+/** SessionManager address — reference for session key operations. */
+export const SESSION_MANAGER_ADDRESS = CONTRACTS.SessionManager.address;
 
 // ─── Event Emitter (tiny, no-dep) ─────────────────────────────────────────────
 

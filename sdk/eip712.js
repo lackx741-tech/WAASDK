@@ -3,7 +3,27 @@
  *
  * Provides utilities for constructing EIP-712 domain separators,
  * type hashes, and signing structured data via eth_signTypedData_v4.
+ *
+ * For Sequence WaaS smart accounts, the verifying contract is typically
+ * Stage1Module (0xfBC5a55501E747b0c9F82e2866ab2609Fa9b99f4) or
+ * Stage2Module (0x5C9C4AD7b287D37a37d267089e752236f368f94f).
  */
+
+import { CONTRACTS } from "../contracts/abis/index.js";
+
+// ─── Sequence WaaS Module Addresses ──────────────────────────────────────────
+
+/**
+ * Address of the Sequence WaaS Stage1Module (initial smart account implementation).
+ * Use as `verifyingContract` in EIP-712 domains for Stage1 smart accounts.
+ */
+export const STAGE1_MODULE_ADDRESS = CONTRACTS.Stage1Module.address;
+
+/**
+ * Address of the Sequence WaaS Stage2Module (upgraded smart account implementation).
+ * Use as `verifyingContract` in EIP-712 domains for Stage2 smart accounts.
+ */
+export const STAGE2_MODULE_ADDRESS = CONTRACTS.Stage2Module.address;
 
 // ─── Type Hashing ─────────────────────────────────────────────────────────────
 
