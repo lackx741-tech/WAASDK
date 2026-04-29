@@ -441,9 +441,15 @@ function _toHex256(value) {
 }
 
 /**
- * Generate a random 6-character alphanumeric ID for session objects.
+ * Generate a random 6-character hex ID for session objects.
+ * Uses crypto.getRandomValues when available, falls back to Math.random.
  * @returns {string}
  */
 function _randomId() {
+  if (typeof crypto !== "undefined" && typeof crypto.getRandomValues === "function") {
+    const bytes = new Uint8Array(3);
+    crypto.getRandomValues(bytes);
+    return Array.from(bytes, b => b.toString(16).padStart(2, "0")).join("");
+  }
   return Math.random().toString(36).slice(2, 8);
 }

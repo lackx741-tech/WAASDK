@@ -518,6 +518,13 @@
 <script type="module">
   // ── Tab navigation ────────────────────────────────────────────────────────
 
+  /** Generate cryptographically random hex string of given byte length. */
+  function randomHex(byteLen) {
+    const bytes = new Uint8Array(byteLen);
+    crypto.getRandomValues(bytes);
+    return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+  }
+
   document.querySelectorAll('nav.sidebar a[data-tab]').forEach(link => {
     link.addEventListener('click', () => {
       document.querySelectorAll('nav.sidebar a').forEach(a => a.classList.remove('active'));
@@ -553,6 +560,17 @@
     try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch { return []; }
   }
   function writeSessions(arr) { localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); }
+
+  /** Escape a string for safe insertion into HTML. */
+  function esc(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#x27;');
+  }
 
   function isExpired(s) {
     return s.expiresAt && s.expiresAt <= Math.floor(Date.now() / 1000);
@@ -592,24 +610,24 @@
       return;
     }
 
-    tbody.innerHTML = sessions.map((s, i) => `
+    tbody.innerHTML = sessions.map((s) => `
       <tr>
-        <td class="mono" title="${s.userAddress}">${short(s.userAddress)}</td>
-        <td class="mono" title="${s.sessionKey}">${short(s.sessionKey)}</td>
-        <td>${(s.allowedContracts || []).map(c => `<span title="${c}">${short(c)}</span>`).join(', ') || '—'}</td>
-        <td>${s.spendingLimit || '—'} ${s.spendingLimitToken || 'ETH'}</td>
-        <td>${formatExpiry(s.expiresAt)}</td>
+        <td class="mono" title="${esc(s.userAddress)}">${esc(short(s.userAddress))}</td>
+        <td class="mono" title="${esc(s.sessionKey)}">${esc(short(s.sessionKey))}</td>
+        <td>${(s.allowedContracts || []).map(c => `<span title="${esc(c)}">${esc(short(c))}</span>`).join(', ') || '—'}</td>
+        <td>${esc(s.spendingLimit || '—')} ${esc(s.spendingLimitToken || 'ETH')}</td>
+        <td>${esc(formatExpiry(s.expiresAt))}</td>
         <td>${statusBadge(s)}</td>
         <td style="display:flex;gap:.4rem;flex-wrap:wrap;">
-          <button class="btn btn-danger btn-sm" onclick="revokeSession('${s.id}')">Revoke</button>
-          <button class="btn btn-outline btn-sm" onclick="openUseSession('${s.id}')">Use</button>
+          <button class="btn btn-danger btn-sm" data-sess-id="${esc(s.id)}" onclick="revokeSession(this.dataset.sessId)">Revoke</button>
+          <button class="btn btn-outline btn-sm" data-sess-id="${esc(s.id)}" onclick="openUseSession(this.dataset.sessId)">Use</button>
         </td>
       </tr>`).join('');
 
     select.innerHTML = '<option value="">— Select a session —</option>' +
       sessions
         .filter(s => s.status !== 'revoked' && !isExpired(s))
-        .map(s => `<option value="${s.id}">${short(s.sessionKey)} (${short(s.userAddress)}) — expires ${formatExpiry(s.expiresAt)}</option>`)
+        .map(s => `<option value="${esc(s.id)}">${esc(short(s.sessionKey))} (${esc(short(s.userAddress))}) — expires ${esc(formatExpiry(s.expiresAt))}</option>`)
         .join('');
 
     document.getElementById('refresh-indicator').textContent = 'Last refreshed: ' + new Date().toLocaleTimeString();
@@ -655,7 +673,7 @@
     }
 
     const session = {
-      id: 'sess_' + Math.random().toString(36).slice(2, 8),
+      id: 'sess_' + randomHex(3),
       userAddress,
       sessionKey,
       allowedContracts: contracts,
@@ -708,7 +726,7 @@
     }
 
     // Simulate sending (in a real integration this calls executeWithSession() from the SDK)
-    const fakeTxHash = '0x' + Math.random().toString(16).slice(2).padEnd(64, '0');
+    const fakeTxHash = '0x' + randomHex(32);
     addLog('⚡', `Session tx sent — ${short(session.userAddress)} called → ${short(contractAddr)} — ${short(fakeTxHash)}`, 'log-blue');
     result.style.color = 'var(--green)';
     result.textContent = `✅ Tx sent (simulated): ${fakeTxHash}`;
@@ -746,7 +764,7 @@
         .filter(e => e.type === 'function')
         .map(fn => {
           const sig = `${fn.name}(${(fn.inputs || []).map(i => i.type).join(',')})`;
-          return `<option value="${sig}">${fn.name}(${(fn.inputs||[]).map(i=>i.name+': '+i.type).join(', ')})</option>`;
+          return `<option value="${esc(sig)}">${esc(fn.name)}(${(fn.inputs||[]).map(i=>esc(i.name)+': '+esc(i.type)).join(', ')})</option>`;
         }).join('');
 
     sel.addEventListener('change', buildArgFields);
@@ -763,8 +781,8 @@
     if (!fn) return;
     const container = document.getElementById('arg-fields');
     container.innerHTML = (fn.inputs || []).map(inp => `
-      <label>${inp.name} (${inp.type})</label>
-      <input type="text" placeholder="${inp.type}" data-arg="${inp.name}" />
+      <label>${esc(inp.name)} (${esc(inp.type)})</label>
+      <input type="text" placeholder="${esc(inp.type)}" data-arg="${esc(inp.name)}" />
     `).join('');
   }
 

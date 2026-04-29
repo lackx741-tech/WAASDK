@@ -624,6 +624,24 @@
 </div>
 
 <script type="module">
+  // ── HTML escape helper ────────────────────────────────────────────────────
+  function esc(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#x27;');
+  }
+
+  // ── Random bytes helper (cryptographically secure) ────────────────────────
+  function randomHex(byteLen) {
+    const bytes = new Uint8Array(byteLen);
+    crypto.getRandomValues(bytes);
+    return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+  }
+
   // ── Tab switching ──────────────────────────────────────────────────────────
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -650,7 +668,7 @@
 
   window.connectWallet = async function() {
     // Simulate connection (real integration uses WaaSWallet.connect())
-    _account = '0x' + Math.random().toString(16).slice(2).padStart(40, '0');
+    _account = '0x' + randomHex(20);
     _chainId = 1;
 
     document.getElementById('status-text').style.color = 'var(--green)';
@@ -682,7 +700,7 @@
     sel.innerHTML = abi.filter(e => e.type === 'function').map(fn => {
       const state = fn.stateMutability ?? (fn.constant ? 'view' : 'nonpayable');
       const tag = ['view','pure'].includes(state) ? '🔵' : '🟠';
-      return `<option value="${fn.name}">${tag} ${fn.name}(${(fn.inputs||[]).map(i=>i.type).join(',')})</option>`;
+      return `<option value="${esc(fn.name)}">${tag} ${esc(fn.name)}(${(fn.inputs||[]).map(i=>esc(i.type)).join(',')})</option>`;
     }).join('');
     ctBuildArgs();
   };
@@ -696,8 +714,8 @@
     const fn = abi.find(e => e.type === 'function' && e.name === fnName);
     if (!fn) return;
     document.getElementById('ct-args').innerHTML = (fn.inputs || []).map(inp => `
-      <label>${inp.name} (${inp.type})</label>
-      <input type="text" placeholder="${inp.type}" data-ct-arg="${inp.name}" />
+      <label>${esc(inp.name)} (${esc(inp.type)})</label>
+      <input type="text" placeholder="${esc(inp.type)}" data-ct-arg="${esc(inp.name)}" />
     `).join('');
 
     const isView = ['view','pure'].includes(fn.stateMutability);
@@ -718,24 +736,24 @@
     out.className = 'output-line visible';
     if (type === 'read') {
       out.className += ' output-success';
-      out.textContent = `✅ Result: ${Math.floor(Math.random() * 1e18)} (simulated)`;
+      const fakeVal = BigInt('0x' + randomHex(8));
+      out.textContent = `✅ Result: ${fakeVal} (simulated)`;
     } else {
       out.className += ' output-info';
-      out.textContent = `⚡ Tx sent (simulated): 0x${Math.random().toString(16).slice(2).padEnd(64,'0')}`;
+      out.textContent = `⚡ Tx sent (simulated): 0x${randomHex(32)}`;
     }
   };
 
   // ── Sign message ───────────────────────────────────────────────────────────
   window.signMsg = function() {
     if (!_account) { alert('Connect wallet first.'); return; }
-    const msg = document.getElementById('sign-message').value;
-    const fakeSig = '0x' + Array.from({length: 130}, () => Math.floor(Math.random()*16).toString(16)).join('');
+    const fakeSig = '0x' + randomHex(65);
     document.getElementById('sign-output').textContent = fakeSig;
   };
 
   window.signTyped = function() {
     if (!_account) { alert('Connect wallet first.'); return; }
-    const fakeSig = '0x' + Array.from({length: 130}, () => Math.floor(Math.random()*16).toString(16)).join('');
+    const fakeSig = '0x' + randomHex(65);
     document.getElementById('typed-output').textContent = fakeSig;
   };
 
@@ -798,7 +816,7 @@
     if (incomplete) { alert('Fill in all contract addresses.'); return; }
     const out = document.getElementById('batch-output');
     out.className = 'output-line visible output-info';
-    const fakeTx = '0x' + Math.random().toString(16).slice(2).padEnd(64, '0');
+    const fakeTx = '0x' + randomHex(32);
     out.textContent = `⚡ Batch executed (${_calls.length} calls) — tx: ${fakeTx}`;
   };
 
@@ -809,9 +827,9 @@
     const user = document.getElementById('sk-user').value.trim();
     if (!user) { alert('Connect wallet first.'); return; }
 
-    const fakeKey = '0x' + Array.from({length: 40}, () => Math.floor(Math.random()*16).toString(16)).join('');
-    const fakeSig = '0x' + Array.from({length: 130}, () => Math.floor(Math.random()*16).toString(16)).join('');
-    const id = 'sess_' + Math.random().toString(36).slice(2, 8);
+    const fakeKey = '0x' + randomHex(20);
+    const fakeSig = '0x' + randomHex(65);
+    const id = 'sess_' + randomHex(3);
 
     const durPill = document.querySelector('#sk-duration .pill.selected');
     let dur = parseInt(durPill?.dataset.dur === 'custom'
