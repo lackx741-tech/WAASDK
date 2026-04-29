@@ -136,7 +136,7 @@ dom.launchBtn?.addEventListener("click", async () => {
     // Show user exactly what they are deploying before they sign
     showStatus(
       "info",
-      `Deploying <strong>${name} (${symbol})</strong> — supply: ${Number(supply).toLocaleString()}, decimals: ${decimals}.<br>Confirm the transaction in your wallet.`
+      `Deploying <strong>${escapeHtml(name)} (${escapeHtml(symbol)})</strong> — supply: ${escapeHtml(Number(supply).toLocaleString())}, decimals: ${escapeHtml(String(decimals))}.<br>Confirm the transaction in your wallet.`
     );
 
     const tx = await factory.deployToken(name, symbol, totalSupplyRaw, decimals);
@@ -172,9 +172,9 @@ dom.launchBtn?.addEventListener("click", async () => {
       dom.deployedExplorer.style.display = "inline-flex";
     }
 
-    showStatus("success", `✅ Token deployed successfully! Address: <code>${tokenAddress}</code>`);
+    showStatus("success", `✅ Token deployed successfully! Address: <code>${escapeHtml(tokenAddress)}</code>`);
   } catch (err) {
-    showStatus("danger", `Deployment failed: ${err.reason ?? err.message}`);
+    showStatus("danger", `Deployment failed: ${escapeHtml(err.reason ?? err.message)}`);
     setStep(2);
   } finally {
     setButtonLoading(dom.launchBtn, false);
@@ -193,6 +193,16 @@ function setStep(active) {
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+/** Escape a string for safe insertion into innerHTML. */
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 
 function showStatus(type, html) {
   if (!dom.statusMsg) return;

@@ -96,7 +96,7 @@ wallet.on("connect", async ({ account, chainId }) => {
     presaleContract = new Contract(CONFIG.presaleAddress, PRESALE_ABI, signer);
     await refreshPresaleData(account);
   } catch (err) {
-    showStatus("danger", `Failed to load presale data: ${err.message}`);
+    showStatus("danger", `Failed to load presale data: ${escapeHtml(err.message)}`);
   }
 });
 
@@ -186,7 +186,7 @@ dom.contributeBtn?.addEventListener("click", async () => {
     await refreshPresaleData(wallet.account);
     dom.amountInput.value = "";
   } catch (err) {
-    showStatus("danger", `Transaction failed: ${err.reason ?? err.message}`);
+    showStatus("danger", `Transaction failed: ${escapeHtml(err.reason ?? err.message)}`);
   } finally {
     setButtonLoading(dom.contributeBtn, false);
   }
@@ -207,7 +207,7 @@ dom.claimBtn?.addEventListener("click", async () => {
     await tx.wait();
     showStatus("success", "✅ Tokens claimed successfully!");
   } catch (err) {
-    showStatus("danger", `Claim failed: ${err.reason ?? err.message}`);
+    showStatus("danger", `Claim failed: ${escapeHtml(err.reason ?? err.message)}`);
   } finally {
     setButtonLoading(dom.claimBtn, false);
   }
@@ -229,13 +229,23 @@ dom.refundBtn?.addEventListener("click", async () => {
     showStatus("success", "✅ Refund successful! Your funds have been returned.");
     await refreshPresaleData(wallet.account);
   } catch (err) {
-    showStatus("danger", `Refund failed: ${err.reason ?? err.message}`);
+    showStatus("danger", `Refund failed: ${escapeHtml(err.reason ?? err.message)}`);
   } finally {
     setButtonLoading(dom.refundBtn, false);
   }
 });
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+/** Escape a string for safe insertion into innerHTML. */
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 
 function showStatus(type, html) {
   if (!dom.statusMsg) return;
