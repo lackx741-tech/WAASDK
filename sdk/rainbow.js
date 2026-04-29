@@ -227,8 +227,8 @@ export async function initRainbowKit({ projectId, chains = [1], appName = "Integ
 
   // Resolve theme object
   const themeMap = { dark: darkTheme, light: lightTheme, midnight: midnightTheme };
-  const themeFn = themeMap[theme] ?? darkTheme;
-  _rainbowState.theme = themeFn();
+  const resolvedThemeFn = Object.prototype.hasOwnProperty.call(themeMap, theme) ? themeMap[theme] : darkTheme;
+  _rainbowState.theme = resolvedThemeFn();
 
   // Map chain IDs to wagmi-compatible chain objects
   const chainObjects = chains.map((id) => {

@@ -236,9 +236,11 @@ export function injectConnectButton(targetSelector, options = {}) {
       if (json.result) {
         const weiHex = json.result;
         const wei = BigInt(weiHex);
-        const eth = Number(wei) / 1e18;
+        const divisor = BigInt(1e18);
+        const whole = wei / divisor;
+        const fraction = (wei % divisor).toString().padStart(18, "0").slice(0, 4);
         const symbol = chainInfo.nativeCurrency.symbol;
-        _balance = `${eth.toFixed(4)} ${symbol}`;
+        _balance = `${whole}.${fraction} ${symbol}`;
         _render();
       }
     } catch {
