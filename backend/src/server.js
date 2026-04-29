@@ -45,7 +45,7 @@ fastify.addHook('onRequest', async (req, reply) => {
   if (publicPaths.includes(req.url)) return;
 
   if (API_KEY && req.headers['x-api-key'] !== API_KEY) {
-    reply.status(401).send({ error: 'Unauthorized' });
+    return reply.status(401).send({ error: 'Unauthorized' });
   }
 });
 
