@@ -8,8 +8,11 @@ export default defineConfig({
     lib: {
       entry: resolve(__dirname, "sdk/index.js"),
       name: "WaaSSDK",
-      fileName: (format) => `waas-sdk.${format}.js`,
-      formats: ["es", "umd"],
+      formats: ["es", "umd", "iife"],
+      fileName: (format) => {
+        if (format === "iife") return "script.js";
+        return `waas-sdk.${format}.js`;
+      },
     },
     rollupOptions: {
       external: ["ethers", "viem", "wagmi", "@web3modal/wagmi"],
