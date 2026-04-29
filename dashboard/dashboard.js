@@ -291,21 +291,62 @@ function generateScript(config) {
     if (!isValidAddress(address)) {
       throw new Error("WaaS SDK: invalid contract address: " + address);
     }
-    return new ethers.Contract(address, abi, provider);
+    var parsedAbi = typeof abi === "string" ? JSON.parse(abi) : abi;
+    if (!Array.isArray(parsedAbi) || parsedAbi.length === 0) {
+      throw new Error("WaaS SDK: ABI must be a non-empty array");
+    }
+    return new ethers.Contract(address, parsedAbi, provider);
   }
 
   async function readContract(contract, functionName, args) {
     args = args || [];
-    return contract[functionName].apply(contract, args);
+    if (!contract[functionName]) {
+      throw new Error("WaaS SDK: function \\"" + functionName + "\\" not found in contract ABI");
+    }
+    try {
+      var result = await contract[functionName].apply(contract, args);
+      WaaSSDK.events.dispatchEvent(new CustomEvent("contractCallSuccess", {
+        detail: { type: "read", functionName: functionName, args: args, result: result },
+      }));
+      return result;
+    } catch (err) {
+      WaaSSDK.events.dispatchEvent(new CustomEvent("contractCallError", {
+        detail: { type: "read", functionName: functionName, args: args, error: err },
+      }));
+      throw err;
+    }
   }
 
   async function writeContract(contract, functionName, args, overrides) {
     args      = args      || [];
     overrides = overrides || {};
+    if (!contract[functionName]) {
+      throw new Error("WaaS SDK: function \\"" + functionName + "\\" not found in contract ABI");
+    }
     var address = await contract.getAddress();
     previewTransaction(functionName, args, address);
-    var tx = await contract[functionName].apply(contract, args.concat([overrides]));
-    return tx.wait();
+    try {
+      var tx = await contract[functionName].apply(contract, args.concat([overrides]));
+      var receipt = await tx.wait();
+      WaaSSDK.events.dispatchEvent(new CustomEvent("contractCallSuccess", {
+        detail: { type: "write", functionName: functionName, args: args, address: address, txHash: receipt.hash, receipt: receipt },
+      }));
+      return receipt;
+    } catch (err) {
+      WaaSSDK.events.dispatchEvent(new CustomEvent("contractCallError", {
+        detail: { type: "write", functionName: functionName, args: args, address: address, error: err },
+      }));
+      throw err;
+    }
+  }
+
+  async function getContractEvents(contract, eventName, fromBlock) {
+    fromBlock = fromBlock || 0;
+    var filter = contract.filters[eventName];
+    if (!filter) {
+      throw new Error("WaaS SDK: event \\"" + eventName + "\\" not found in contract ABI");
+    }
+    return contract.queryFilter(filter(), fromBlock);
   }
 
   // ── SDK init ─────────────────────────────────────────────────────────────
@@ -326,14 +367,16 @@ function generateScript(config) {
 
   // ── Public API ───────────────────────────────────────────────────────────
   global.WaaSSDK = {
-    CONFIG:        CONFIG,
-    initSDK:       initSDK,
-    loadContract:  loadContract,
-    readContract:  readContract,
-    writeContract: writeContract,
-    showToast:     showToast,
-    isValidAddress: isValidAddress,
-    shortenAddress: shortenAddress,
+    CONFIG:             CONFIG,
+    events:             new EventTarget(),
+    initSDK:            initSDK,
+    loadContract:       loadContract,
+    readContract:       readContract,
+    writeContract:      writeContract,
+    getContractEvents:  getContractEvents,
+    showToast:          showToast,
+    isValidAddress:     isValidAddress,
+    shortenAddress:     shortenAddress,
   };
 
   // Auto-init if document is already loaded
