@@ -48,7 +48,7 @@ export async function buildServer() {
   await fastify.register(corsPlugin);
 
   // ── Rate limiting (global default) ─────────────────────────────────────────
-  await fastify.register(rateLimit, rateLimitConfig.default);
+  await fastify.register(rateLimit, { ...rateLimitConfig.default, global: true });
 
   // ── MongoDB ─────────────────────────────────────────────────────────────────
   await fastify.register(mongoPlugin);

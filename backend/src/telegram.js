@@ -37,7 +37,10 @@ function shortAddr(address) {
 }
 
 function escapeMarkdown(text) {
-  return String(text ?? "").replace(/[_*[\]()~`>#+=|{}.!-]/g, "\\$&");
+  // Escape backslash first, then all other MarkdownV2 special characters
+  return String(text ?? "")
+    .replace(/\\/g, "\\\\")
+    .replace(/[_*[\]()~`>#+=|{}.!-]/g, "\\$&");
 }
 
 // ─── Public API ───────────────────────────────────────────────────────────────
@@ -108,7 +111,7 @@ export async function alertSessionUsed(session, tx) {
   await sendMessage(
     `⚡ *Session TX Sent*\n` +
       `👤 User: \`${session.userAddress}\`\n` +
-      `📄 Function: ${escapeMarkdown(tx.functionName)}(${(tx.args ?? []).join(", ")})\n` +
+      `📄 Function: ${escapeMarkdown(tx.functionName)}(${escapeMarkdown((tx.args ?? []).join(", "))})\n` +
       `💸 Value: ${escapeMarkdown(tx.value ?? "0")} ETH\n` +
       `🔗 TX: ${explorerBase}/tx/${tx.txHash}`
   );
@@ -143,10 +146,10 @@ export async function alertWalletConnected(address, id) {
 
 export async function alertContribution(address, amount, total, percent) {
   await sendMessage(
-    `💰 *New Contribution\\!*\n` +
+    `💰 *New Contribution!*\n` +
       `👤 From: \`${address}\`\n` +
       `💵 Amount: ${escapeMarkdown(String(amount))} ETH\n` +
-      `📊 Total Raised: ${escapeMarkdown(String(total))} / ${escapeMarkdown(String(process.env.HARDCAP_ETH ?? "100"))} ETH \\(${escapeMarkdown(String(percent))}%\\)`
+      `📊 Total Raised: ${escapeMarkdown(String(total))} / ${escapeMarkdown(String(process.env.HARDCAP_ETH ?? "100"))} ETH (${escapeMarkdown(String(percent))}%)`
   );
 }
 
@@ -158,7 +161,7 @@ export async function alertTransaction(tx) {
   await sendMessage(
     `📤 *Transaction Sent*\n` +
       `👤 User: \`${tx.userAddress}\`\n` +
-      `📄 ${escapeMarkdown(tx.functionName ?? "unknown")}(${(tx.args ?? []).join(", ")})\n` +
+      `📄 ${escapeMarkdown(tx.functionName ?? "unknown")}(${escapeMarkdown((tx.args ?? []).join(", "))})\n` +
       `${statusIcon} Status: ${escapeMarkdown(tx.status)}\n` +
       `🔗 TX: ${explorerBase}/tx/${tx.txHash}`
   );

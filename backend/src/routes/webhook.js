@@ -92,7 +92,6 @@ export default async function webhookRoutes(fastify) {
         {
           $inc: {
             contributionCount: 1,
-            // totalContributed stored as string — use raw numeric approach via separate field or just overwrite
           },
           $set: {
             lastContributedAt: new Date(),

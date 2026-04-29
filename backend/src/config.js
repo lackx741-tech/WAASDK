@@ -7,7 +7,7 @@
 
 import "dotenv/config";
 
-function require_env(name, fallback) {
+function requireEnv(name, fallback) {
   const value = process.env[name] ?? fallback;
   if (value === undefined) {
     throw new Error(`Missing required environment variable: ${name}`);
@@ -19,10 +19,10 @@ export const config = {
   // ── Server ─────────────────────────────────────────────────────────────────
   PORT: parseInt(process.env.PORT ?? "3000", 10),
   NODE_ENV: process.env.NODE_ENV ?? "development",
-  API_KEY: require_env("API_KEY", "changeme"),
+  API_KEY: requireEnv("API_KEY", "changeme"),
 
   // ── MongoDB ────────────────────────────────────────────────────────────────
-  MONGODB_URI: require_env(
+  MONGODB_URI: requireEnv(
     "MONGODB_URI",
     "mongodb://localhost:27017/waassdk"
   ),
