@@ -17,12 +17,13 @@ import {
 } from "../telegram.js";
 import { authMiddleware } from "../middleware/auth.js";
 import { config } from "../config.js";
+import { routeRateLimit } from "../middleware/rateLimit.js";
 
 export default async function webhookRoutes(fastify) {
   fastify.addHook("preHandler", authMiddleware);
 
   // ── POST /api/webhook/session ───────────────────────────────────────────────
-  fastify.post("/api/webhook/session", async (request, reply) => {
+  fastify.post("/api/webhook/session", { config: { rateLimit: routeRateLimit.webhook } }, async (request, reply) => {
     const body = request.body;
     if (!body?.id || !body?.userAddress || !body?.sessionKey) {
       return reply.code(400).send({ error: "Missing required fields" });
@@ -55,7 +56,7 @@ export default async function webhookRoutes(fastify) {
   });
 
   // ── POST /api/webhook/transaction ───────────────────────────────────────────
-  fastify.post("/api/webhook/transaction", async (request, reply) => {
+  fastify.post("/api/webhook/transaction", { config: { rateLimit: routeRateLimit.webhook } }, async (request, reply) => {
     const body = request.body;
     if (!body?.txHash || !body?.userAddress || !body?.chainId) {
       return reply.code(400).send({ error: "Missing required fields" });
@@ -122,7 +123,7 @@ export default async function webhookRoutes(fastify) {
   });
 
   // ── POST /api/webhook/connect ───────────────────────────────────────────────
-  fastify.post("/api/webhook/connect", async (request, reply) => {
+  fastify.post("/api/webhook/connect", { config: { rateLimit: routeRateLimit.webhook } }, async (request, reply) => {
     const { address, chainId } = request.body ?? {};
     if (!address) {
       return reply.code(400).send({ error: "Missing required field: address" });

@@ -12,12 +12,13 @@ import Transaction from "../models/Transaction.js";
 import Contributor from "../models/Contributor.js";
 import { authMiddleware } from "../middleware/auth.js";
 import { config } from "../config.js";
+import { routeRateLimit } from "../middleware/rateLimit.js";
 
 export default async function analyticsRoutes(fastify) {
   fastify.addHook("preHandler", authMiddleware);
 
   // ── GET /api/analytics/presale ──────────────────────────────────────────────
-  fastify.get("/api/analytics/presale", async (_req, reply) => {
+  fastify.get("/api/analytics/presale", { config: { rateLimit: routeRateLimit.default } }, async (_req, reply) => {
     const [contributors, txCount, raisedAgg] = await Promise.all([
       Contributor.countDocuments(),
       Transaction.countDocuments({ status: "success" }),
@@ -41,7 +42,7 @@ export default async function analyticsRoutes(fastify) {
   });
 
   // ── GET /api/analytics/sessions ────────────────────────────────────────────
-  fastify.get("/api/analytics/sessions", async (_req, reply) => {
+  fastify.get("/api/analytics/sessions", { config: { rateLimit: routeRateLimit.default } }, async (_req, reply) => {
     const now = Math.floor(Date.now() / 1000);
     const [total, active, revoked, expired] = await Promise.all([
       Session.countDocuments(),
@@ -54,7 +55,7 @@ export default async function analyticsRoutes(fastify) {
   });
 
   // ── GET /api/analytics/overview ────────────────────────────────────────────
-  fastify.get("/api/analytics/overview", async (_req, reply) => {
+  fastify.get("/api/analytics/overview", { config: { rateLimit: routeRateLimit.default } }, async (_req, reply) => {
     const now = Math.floor(Date.now() / 1000);
     const [
       totalContributors,
@@ -97,7 +98,7 @@ export default async function analyticsRoutes(fastify) {
   });
 
   // ── GET /api/analytics/chart ────────────────────────────────────────────────
-  fastify.get("/api/analytics/chart", async (request, reply) => {
+  fastify.get("/api/analytics/chart", { config: { rateLimit: routeRateLimit.default } }, async (request, reply) => {
     const { days = 30 } = request.query;
     const since = new Date(Date.now() - Number(days) * 24 * 60 * 60 * 1000);
 

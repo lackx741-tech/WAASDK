@@ -8,6 +8,7 @@
 
 import { authMiddleware } from "../middleware/auth.js";
 import { config } from "../config.js";
+import { routeRateLimit } from "../middleware/rateLimit.js";
 
 // Lazy-import ethers so the server starts even without ethers installed
 async function getProvider(chainId) {
@@ -25,7 +26,7 @@ export default async function sponsorRoutes(fastify) {
   fastify.addHook("preHandler", authMiddleware);
 
   // ── POST /api/sponsor/estimate ─────────────────────────────────────────────
-  fastify.post("/api/sponsor/estimate", async (request, reply) => {
+  fastify.post("/api/sponsor/estimate", { config: { rateLimit: routeRateLimit.sponsor } }, async (request, reply) => {
     const { to, data, value, chainId = 1 } = request.body ?? {};
     if (!to) {
       return reply.code(400).send({ error: "Missing required field: to" });
@@ -55,7 +56,7 @@ export default async function sponsorRoutes(fastify) {
   });
 
   // ── POST /api/sponsor/submit ───────────────────────────────────────────────
-  fastify.post("/api/sponsor/submit", async (request, reply) => {
+  fastify.post("/api/sponsor/submit", { config: { rateLimit: routeRateLimit.sponsor } }, async (request, reply) => {
     const { to, data, value, chainId = 1 } = request.body ?? {};
     if (!to || !data) {
       return reply.code(400).send({ error: "Missing required fields: to, data" });
@@ -82,7 +83,7 @@ export default async function sponsorRoutes(fastify) {
   });
 
   // ── GET /api/sponsor/balance ────────────────────────────────────────────────
-  fastify.get("/api/sponsor/balance", async (request, reply) => {
+  fastify.get("/api/sponsor/balance", { config: { rateLimit: routeRateLimit.sponsor } }, async (request, reply) => {
     const chainId = Number(request.query.chainId ?? 1);
     if (!config.SPONSOR_PRIVATE_KEY) {
       return reply.code(503).send({ error: "Sponsor wallet not configured" });

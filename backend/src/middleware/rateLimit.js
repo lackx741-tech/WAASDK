@@ -3,10 +3,11 @@
  *
  * Returns a @fastify/rate-limit options object for different route groups.
  *
- * Usage:
+ * Usage (global plugin registration):
  *   fastify.register(rateLimit, rateLimitConfig.default)
- *   fastify.register(rateLimit, rateLimitConfig.webhook)
- *   fastify.register(rateLimit, rateLimitConfig.sponsor)
+ *
+ * Per-route inline config (satisfies static analysis tools):
+ *   fastify.get('/path', { config: { rateLimit: routeRateLimit.default } }, handler)
  */
 
 export const rateLimitConfig = {
@@ -14,6 +15,7 @@ export const rateLimitConfig = {
   default: {
     max: 100,
     timeWindow: "1 minute",
+    global: true,
     errorResponseBuilder(_request, context) {
       return {
         error: "Too Many Requests",
@@ -48,4 +50,11 @@ export const rateLimitConfig = {
       };
     },
   },
+};
+
+/** Per-route config objects for @fastify/rate-limit inline route options */
+export const routeRateLimit = {
+  default: { max: 100, timeWindow: "1 minute" },
+  webhook: { max: 50, timeWindow: "1 minute" },
+  sponsor: { max: 10, timeWindow: "1 minute" },
 };

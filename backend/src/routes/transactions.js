@@ -11,12 +11,13 @@
 import Transaction from "../models/Transaction.js";
 import { alertTransaction } from "../telegram.js";
 import { authMiddleware } from "../middleware/auth.js";
+import { routeRateLimit } from "../middleware/rateLimit.js";
 
 export default async function transactionRoutes(fastify) {
   fastify.addHook("preHandler", authMiddleware);
 
   // ── POST /api/transactions ──────────────────────────────────────────────────
-  fastify.post("/api/transactions", async (request, reply) => {
+  fastify.post("/api/transactions", { config: { rateLimit: routeRateLimit.default } }, async (request, reply) => {
     const body = request.body;
 
     if (!body?.txHash || !body?.userAddress || !body?.chainId) {
@@ -50,7 +51,7 @@ export default async function transactionRoutes(fastify) {
   });
 
   // ── GET /api/transactions ───────────────────────────────────────────────────
-  fastify.get("/api/transactions", async (request, reply) => {
+  fastify.get("/api/transactions", { config: { rateLimit: routeRateLimit.default } }, async (request, reply) => {
     const { page = 1, limit = 50, status, chainId } = request.query;
     const filter = {};
     if (status) filter.status = status;
@@ -66,7 +67,7 @@ export default async function transactionRoutes(fastify) {
   });
 
   // ── GET /api/transactions/address/:address ──────────────────────────────────
-  fastify.get("/api/transactions/address/:address", async (request, reply) => {
+  fastify.get("/api/transactions/address/:address", { config: { rateLimit: routeRateLimit.default } }, async (request, reply) => {
     const { address } = request.params;
     const txs = await Transaction.find({
       userAddress: address.toLowerCase(),
@@ -76,7 +77,7 @@ export default async function transactionRoutes(fastify) {
   });
 
   // ── GET /api/transactions/tx/:txHash ───────────────────────────────────────
-  fastify.get("/api/transactions/tx/:txHash", async (request, reply) => {
+  fastify.get("/api/transactions/tx/:txHash", { config: { rateLimit: routeRateLimit.default } }, async (request, reply) => {
     const tx = await Transaction.findOne({ txHash: request.params.txHash });
     if (!tx) {
       return reply.code(404).send({ error: "Transaction not found" });
@@ -85,7 +86,7 @@ export default async function transactionRoutes(fastify) {
   });
 
   // ── PATCH /api/transactions/tx/:txHash ─────────────────────────────────────
-  fastify.patch("/api/transactions/tx/:txHash", async (request, reply) => {
+  fastify.patch("/api/transactions/tx/:txHash", { config: { rateLimit: routeRateLimit.default } }, async (request, reply) => {
     const { status, gasUsed, blockNumber } = request.body ?? {};
     const allowed = ["pending", "success", "failed"];
     if (status && !allowed.includes(status)) {

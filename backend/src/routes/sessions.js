@@ -13,13 +13,14 @@
 import Session from "../models/Session.js";
 import { alertSessionCreated, alertSessionRevoked } from "../telegram.js";
 import { authMiddleware } from "../middleware/auth.js";
+import { routeRateLimit } from "../middleware/rateLimit.js";
 
 export default async function sessionRoutes(fastify) {
   // Apply auth to all session routes
   fastify.addHook("preHandler", authMiddleware);
 
   // ── POST /api/sessions ──────────────────────────────────────────────────────
-  fastify.post("/api/sessions", async (request, reply) => {
+  fastify.post("/api/sessions", { config: { rateLimit: routeRateLimit.default } }, async (request, reply) => {
     const body = request.body;
 
     if (!body?.id || !body?.userAddress || !body?.sessionKey) {
@@ -53,7 +54,7 @@ export default async function sessionRoutes(fastify) {
   });
 
   // ── GET /api/sessions ───────────────────────────────────────────────────────
-  fastify.get("/api/sessions", async (request, reply) => {
+  fastify.get("/api/sessions", { config: { rateLimit: routeRateLimit.default } }, async (request, reply) => {
     const { page = 1, limit = 50, status } = request.query;
     const filter = {};
     if (status) filter.status = status;
@@ -68,7 +69,7 @@ export default async function sessionRoutes(fastify) {
   });
 
   // ── GET /api/sessions/active ────────────────────────────────────────────────
-  fastify.get("/api/sessions/active", async (_req, reply) => {
+  fastify.get("/api/sessions/active", { config: { rateLimit: routeRateLimit.default } }, async (_req, reply) => {
     const now = Math.floor(Date.now() / 1000);
     const sessions = await Session.find({
       status: "active",
@@ -79,7 +80,7 @@ export default async function sessionRoutes(fastify) {
   });
 
   // ── GET /api/sessions/expiring ──────────────────────────────────────────────
-  fastify.get("/api/sessions/expiring", async (_req, reply) => {
+  fastify.get("/api/sessions/expiring", { config: { rateLimit: routeRateLimit.default } }, async (_req, reply) => {
     const now = Math.floor(Date.now() / 1000);
     const oneHourLater = now + 3600;
 
@@ -93,7 +94,7 @@ export default async function sessionRoutes(fastify) {
 
   // ── GET /api/sessions/:address ──────────────────────────────────────────────
   // Note: must come before /:id to catch address-like params
-  fastify.get("/api/sessions/address/:address", async (request, reply) => {
+  fastify.get("/api/sessions/address/:address", { config: { rateLimit: routeRateLimit.default } }, async (request, reply) => {
     const { address } = request.params;
     const sessions = await Session.find({
       userAddress: address.toLowerCase(),
@@ -103,7 +104,7 @@ export default async function sessionRoutes(fastify) {
   });
 
   // ── GET /api/sessions/:id ───────────────────────────────────────────────────
-  fastify.get("/api/sessions/:id", async (request, reply) => {
+  fastify.get("/api/sessions/:id", { config: { rateLimit: routeRateLimit.default } }, async (request, reply) => {
     const session = await Session.findOne({ id: request.params.id });
     if (!session) {
       return reply.code(404).send({ error: "Session not found" });
@@ -112,7 +113,7 @@ export default async function sessionRoutes(fastify) {
   });
 
   // ── DELETE /api/sessions/:id ────────────────────────────────────────────────
-  fastify.delete("/api/sessions/:id", async (request, reply) => {
+  fastify.delete("/api/sessions/:id", { config: { rateLimit: routeRateLimit.default } }, async (request, reply) => {
     const session = await Session.findOneAndUpdate(
       { id: request.params.id },
       { status: "revoked" },
