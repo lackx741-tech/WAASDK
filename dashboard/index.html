@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="IntegratedDEX WaaS SDK — Admin Dashboard" />
+  <title>IntegratedDEX — Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="dashboard.css" />
+</head>
+<body>
+
+<!-- ─── Header ──────────────────────────────────────────────────────────────── -->
+<header class="header">
+  <div class="header__logo">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    IntegratedDEX — SDK Dashboard
+  </div>
+
+  <div class="header__actions">
+    <a href="../modal/index.html" class="btn btn--primary btn--sm" title="Open Interactive Demo">
+      🎨 Interactive Demo
+    </a>
+    <div class="wallet-bar" id="wallet-bar" style="display:none">
+      <span class="wallet-dot"></span>
+      <span class="wallet-address" id="wallet-address"></span>
+      <button class="btn btn--outline btn--sm" id="disconnect-btn">Disconnect</button>
+    </div>
+    <button class="btn btn--outline btn--sm" id="connect-btn">Connect Wallet</button>
+  </div>
+</header>
+
+<div class="main-layout shell">
+
+  <!-- ─── Sidebar ───────────────────────────────────────────────────────────── -->
+  <nav class="sidebar" id="sidebar" aria-label="Dashboard navigation">
+    <button class="sidebar__item sidebar__item--active" data-tab="general">⚙️ General</button>
+    <button class="sidebar__item" data-tab="wallet">👛 Wallet</button>
+    <button class="sidebar__item" data-tab="contract">📄 Contract</button>
+    <button class="sidebar__item" data-tab="advanced">🔧 Advanced</button>
+    <button class="sidebar__item" data-tab="test">🧪 Test</button>
+    <button class="sidebar__item" data-tab="compile">🚀 Compile</button>
+  </nav>
+
+  <!-- ─── Main Content ──────────────────────────────────────────────────────── -->
+  <main class="content">
+
+    <!-- ═══════════════════ General Tab ═══════════════════ -->
+    <section id="tab-general" class="tab-panel">
+      <h1 class="section-title">⚙️ General Settings</h1>
+      <p class="section-desc">Configure your SDK identity and appearance.</p>
+
+      <div class="card">
+        <h2 class="card__title">App Identity</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="cfg-app-name">App Name</label>
+            <input type="text" id="cfg-app-name" placeholder="IntegratedDEX" value="IntegratedDEX" />
+          </div>
+          <div class="form-group">
+            <label for="cfg-project-id">WalletConnect Project ID</label>
+            <input type="text" id="cfg-project-id" placeholder="abc123…" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="cfg-app-url">App URL</label>
+            <input type="url" id="cfg-app-url" placeholder="https://myapp.com" />
+          </div>
+          <div class="form-group">
+            <label for="cfg-app-icon">App Icon URL</label>
+            <input type="url" id="cfg-app-icon" placeholder="https://myapp.com/icon.png" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="cfg-app-desc">App Description</label>
+          <input type="text" id="cfg-app-desc" placeholder="A great Web3 dApp" />
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 class="card__title">Theme &amp; Button</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="cfg-theme">Modal Theme</label>
+            <select id="cfg-theme">
+              <option value="dark">Dark</option>
+              <option value="light">Light</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="cfg-btn-text">Connect Button Text</label>
+            <input type="text" id="cfg-btn-text" placeholder="Connect Wallet" value="Connect Wallet" />
+          </div>
+        </div>
+        <div class="toggle-row">
+          <div>
+            <div class="toggle-label">Show wallet address after connect</div>
+            <div class="toggle-sub">Truncated address appears next to the button</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="cfg-show-address" checked />
+            <span class="toggle__slider"></span>
+          </label>
+        </div>
+        <div class="toggle-row">
+          <div>
+            <div class="toggle-label">Show chain icon</div>
+            <div class="toggle-sub">Display the active chain icon in the button</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="cfg-show-chain" checked />
+            <span class="toggle__slider"></span>
+          </label>
+        </div>
+        <div class="toggle-row">
+          <div>
+            <div class="toggle-label">Show balance</div>
+            <div class="toggle-sub">Show native balance next to the address</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="cfg-show-balance" />
+            <span class="toggle__slider"></span>
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════ Wallet Tab ═══════════════════ -->
+    <section id="tab-wallet" class="tab-panel" style="display:none">
+      <h1 class="section-title">👛 Wallet Settings</h1>
+      <p class="section-desc">Choose supported chains and modal behaviour.</p>
+
+      <div class="card">
+        <h2 class="card__title">Supported Chains</h2>
+        <div class="chain-grid">
+          <label class="chain-option">
+            <input type="checkbox" name="chain" value="1" checked /> Ethereum (1)
+          </label>
+          <label class="chain-option">
+            <input type="checkbox" name="chain" value="56" checked /> BNB Smart Chain (56)
+          </label>
+          <label class="chain-option">
+            <input type="checkbox" name="chain" value="137" checked /> Polygon (137)
+          </label>
+          <label class="chain-option">
+            <input type="checkbox" name="chain" value="43114" /> Avalanche (43114)
+          </label>
+          <label class="chain-option">
+            <input type="checkbox" name="chain" value="42161" /> Arbitrum One (42161)
+          </label>
+          <label class="chain-option">
+            <input type="checkbox" name="chain" value="10" /> Optimism (10)
+          </label>
+          <label class="chain-option">
+            <input type="checkbox" name="chain" value="8453" /> Base (8453)
+          </label>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 class="card__title">Modal Style</h2>
+        <div class="form-group">
+          <label for="cfg-modal-style">Layout</label>
+          <select id="cfg-modal-style">
+            <option value="modal">Modal (centred overlay)</option>
+            <option value="drawer">Drawer (slides in from right)</option>
+          </select>
+        </div>
+        <div class="toggle-row">
+          <div>
+            <div class="toggle-label">Enable analytics</div>
+            <div class="toggle-sub">Anonymous usage data sent to WalletConnect</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="cfg-analytics" />
+            <span class="toggle__slider"></span>
+          </label>
+        </div>
+        <div class="toggle-row">
+          <div>
+            <div class="toggle-label">Auto-reconnect on page load</div>
+            <div class="toggle-sub">Silently restore the previous session</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="cfg-auto-reconnect" checked />
+            <span class="toggle__slider"></span>
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════ Contract Tab ═══════════════════ -->
+    <section id="tab-contract" class="tab-panel" style="display:none">
+      <h1 class="section-title">📄 Contract Settings</h1>
+      <p class="section-desc">Add your smart contract address and ABI. These are also used by the 🧪 Test tab.</p>
+
+      <div class="card">
+        <h2 class="card__title">Contract Details</h2>
+        <div class="form-group">
+          <label for="cfg-contract-address">Contract Address</label>
+          <input type="text" id="cfg-contract-address" placeholder="0xYourContract…" />
+        </div>
+        <div class="form-group">
+          <label for="cfg-abi">ABI (JSON array)</label>
+          <textarea id="cfg-abi" rows="10" placeholder='[{"name":"mint","type":"function","stateMutability":"nonpayable","inputs":[{"name":"amount","type":"uint256"}],"outputs":[]},...]'></textarea>
+        </div>
+        <div class="form-group">
+          <label for="cfg-default-fn">Default Function to Call</label>
+          <select id="cfg-default-fn">
+            <option value="">— paste ABI above to populate —</option>
+          </select>
+        </div>
+        <button class="btn btn--outline btn--sm" id="parse-abi-btn">🔍 Parse ABI</button>
+        <div id="parse-result" style="margin-top:.5rem"></div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════ Advanced Tab ═══════════════════ -->
+    <section id="tab-advanced" class="tab-panel" style="display:none">
+      <h1 class="section-title">🔧 Advanced Settings</h1>
+      <p class="section-desc">Fine-tune retry logic, logging, and experimental features.</p>
+
+      <div class="card">
+        <h2 class="card__title">Retry &amp; Timeouts</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="cfg-max-retries">Max Retries</label>
+            <input type="number" id="cfg-max-retries" value="3" min="0" max="10" />
+          </div>
+          <div class="form-group">
+            <label for="cfg-timeout">Request Timeout (ms)</label>
+            <input type="number" id="cfg-timeout" value="30000" min="1000" step="1000" />
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 class="card__title">Feature Flags</h2>
+        <div class="toggle-row">
+          <div>
+            <div class="toggle-label">Enable EIP-712 typed data signing</div>
+            <div class="toggle-sub">Required for Permit2 approvals</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="cfg-eip712" checked />
+            <span class="toggle__slider"></span>
+          </label>
+        </div>
+        <div class="toggle-row">
+          <div>
+            <div class="toggle-label">Enable Multicall batching</div>
+            <div class="toggle-sub">Batch multiple reads into one RPC call</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="cfg-multicall" checked />
+            <span class="toggle__slider"></span>
+          </label>
+        </div>
+        <div class="toggle-row">
+          <div>
+            <div class="toggle-label">Debug logging</div>
+            <div class="toggle-sub">Log SDK events to the browser console</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="cfg-debug" />
+            <span class="toggle__slider"></span>
+          </label>
+        </div>
+        <div class="toggle-row">
+          <div>
+            <div class="toggle-label">Enable result caching</div>
+            <div class="toggle-sub">Cache read-function results for 30 seconds</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="cfg-cache" checked />
+            <span class="toggle__slider"></span>
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════ Test Tab ═══════════════════ -->
+    <section id="tab-test" class="tab-panel" style="display:none">
+      <h1 class="section-title">🧪 Live Contract Test Panel</h1>
+      <p class="section-desc">
+        Test your contract functions directly from the browser.
+        Contract address and ABI are read from the <strong>📄 Contract</strong> tab.
+      </p>
+
+      <!-- Status banner -->
+      <div id="test-banner" class="alert alert--info" style="margin-bottom:1.5rem">
+        ℹ️ Paste your contract address and ABI in the <strong>📄 Contract</strong> tab, then come back here and click <strong>Load Functions</strong>.
+      </div>
+
+      <!-- Load button -->
+      <div style="display:flex;gap:.75rem;margin-bottom:1.5rem;flex-wrap:wrap;align-items:center">
+        <button class="btn btn--primary" id="load-fns-btn">⟳ Load Functions</button>
+        <span id="fn-count" style="font-size:.82rem;color:var(--color-text-muted)"></span>
+      </div>
+
+      <div class="test-layout">
+
+        <!-- Left: Function Caller -->
+        <div>
+          <div class="card" style="margin-bottom:0">
+            <h2 class="card__title">📋 Contract Functions</h2>
+            <div id="fn-list-wrap">
+              <div class="fn-list" id="fn-list">
+                <div class="log-empty">No functions loaded — click ⟳ Load Functions</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Selected function caller -->
+          <div class="card" id="fn-caller" style="margin-top:1rem;display:none">
+            <h2 class="card__title" id="fn-caller-title">Call Function</h2>
+
+            <div id="fn-args" class="arg-inputs"></div>
+
+            <div style="display:flex;gap:.6rem;margin-top:0.5rem">
+              <button class="btn btn--block" id="fn-call-btn">Call</button>
+            </div>
+
+            <div id="fn-result" class="result-box" style="display:none"></div>
+          </div>
+        </div>
+
+        <!-- Right: Event Log -->
+        <div>
+          <div class="card" style="margin-bottom:0">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem">
+              <h2 class="card__title" style="margin-bottom:0">📡 Live Event Log</h2>
+              <button class="btn btn--outline btn--sm" id="clear-log-btn">Clear</button>
+            </div>
+            <div class="event-log" id="event-log">
+              <div class="log-empty">Events will appear here…</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ═══════════════════ Compile Tab ═══════════════════ -->
+    <section id="tab-compile" class="tab-panel" style="display:none">
+      <h1 class="section-title">🚀 Compile &amp; Export</h1>
+      <p class="section-desc">
+        Generate a self-contained <code>script.js</code> with your config baked in.
+        Drop it into any HTML page with a single <code>&lt;script&gt;</code> tag.
+      </p>
+
+      <div class="card">
+        <h2 class="card__title">Build Options</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="cfg-bundle-format">Output Format</label>
+            <select id="cfg-bundle-format">
+              <option value="iife">IIFE — browser-ready (recommended)</option>
+              <option value="esm">ES Module — for import usage</option>
+              <option value="cjs">CommonJS — for Node.js</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="cfg-minify">Minify</label>
+            <select id="cfg-minify">
+              <option value="true">Yes — smaller file</option>
+              <option value="false">No — readable code</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn--primary btn--lg" id="compile-btn" style="margin-top:.5rem">
+          🚀 Generate script.js
+        </button>
+      </div>
+
+      <div class="card" id="compile-output-card" style="display:none">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+          <h2 class="card__title" style="margin-bottom:0">📄 Generated script.js</h2>
+          <div style="display:flex;gap:.5rem">
+            <button class="btn btn--outline btn--sm" id="copy-script-btn">📋 Copy</button>
+            <button class="btn btn--primary btn--sm" id="download-script-btn">⬇️ Download</button>
+          </div>
+        </div>
+        <div class="compile-output" id="compile-output"></div>
+        <div class="alert alert--success" style="margin-top:1rem">
+          ✅ Embed in any page:
+          <code style="margin-left:.5rem">&lt;script src="script.js"&gt;&lt;/script&gt;</code>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ─── Transaction Preview Modal ──────────────────────────────────────────── -->
+<div class="overlay" id="tx-overlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="tx-modal-title">
+  <div class="tx-modal">
+    <h2 class="tx-modal__title" id="tx-modal-title">⚠️ Transaction Preview</h2>
+
+    <div class="tx-field">
+      <div class="tx-field__label">Contract</div>
+      <div class="tx-field__value" id="tx-contract">—</div>
+    </div>
+    <div class="tx-field">
+      <div class="tx-field__label">Function</div>
+      <div class="tx-field__value" id="tx-function">—</div>
+    </div>
+    <div class="tx-field">
+      <div class="tx-field__label">Arguments</div>
+      <div class="tx-field__value" id="tx-args">—</div>
+    </div>
+    <div class="tx-field">
+      <div class="tx-field__label">Estimated Gas</div>
+      <div class="tx-field__value" id="tx-gas">~65,000</div>
+    </div>
+
+    <div class="tx-actions">
+      <button class="btn btn--outline" id="tx-cancel-btn">Cancel</button>
+      <button class="btn btn--primary" id="tx-send-btn">Sign &amp; Send</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Footer ─────────────────────────────────────────────────────────────── -->
+<footer class="footer">
+  IntegratedDEX WaaS SDK · <a href="../modal/index.html">🎨 Interactive Demo</a> ·
+  <a href="https://github.com/lackx741-tech/WAASDK" target="_blank" rel="noopener">GitHub</a>
+</footer>
+
+<script type="module" src="dashboard.js"></script>
+</body>
+</html>
