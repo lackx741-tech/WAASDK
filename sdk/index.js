@@ -53,6 +53,53 @@ export {
   sleep,
 } from "./utils.js";
 
+// ─── RainbowKit Module ────────────────────────────────────────────────────────
+
+export {
+  initRainbowKit,
+  openConnectModal,
+  getAccount,
+  disconnect as disconnectRainbow,
+  onAccountChange,
+  onChainChange,
+  getChainId as getRainbowChainId,
+  isConnected as isRainbowConnected,
+  darkTheme,
+  lightTheme,
+  midnightTheme,
+} from "./rainbow.js";
+
+// ─── Web3Modal Module ─────────────────────────────────────────────────────────
+
+export {
+  initWeb3Modal,
+  openModal,
+  closeModal,
+  getAddress,
+  getChainId as getWeb3ModalChainId,
+  signMessage,
+  switchChain,
+  disconnect as disconnectWeb3Modal,
+  isConnected as isWeb3ModalConnected,
+  getWagmiConfig,
+  getModal,
+} from "./web3modal.js";
+
+// ─── Unified Wallet Modal ─────────────────────────────────────────────────────
+
+export {
+  initWalletModal,
+  openWalletModal,
+  closeWalletModal,
+  getWalletState,
+  disconnectWallet,
+  getProvider,
+} from "./walletModal.js";
+
+// ─── Connect Button ───────────────────────────────────────────────────────────
+
+export { injectConnectButton } from "./connectButton.js";
+
 // ─── SDK Factory ──────────────────────────────────────────────────────────────
 
 /**
