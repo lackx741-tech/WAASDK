@@ -325,8 +325,7 @@ without writing any extra code.
 Open `modal/index.html` (or visit the GitHub Pages deployment) for a stunning
 live product demo page.
 
-> 📸 **Screenshot placeholder** — add a screenshot of the demo here once deployed.
-> `![Interactive Modal Demo](./docs/screenshot-modal.png)`
+> 📸 **Screenshot** — add a screenshot of the demo once deployed by saving it as `docs/screenshot-modal.png`.
 
 **What's on the page:**
 
