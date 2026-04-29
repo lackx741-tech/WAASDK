@@ -1,12 +1,17 @@
 /**
- * IntegratedDEX WaaS SDK — Multicall3 Module
+ * IntegratedDEX WaaS SDK — Multicall Module
  *
- * Batches multiple read or write calls into a single RPC request using
- * the canonical Multicall3 deployment.
+ * Provides two batching strategies:
+ *  1. batchCall()     — uses the project's own BatchMulticall singleton for
+ *                       write (state-changing) batch calls.
+ *  2. multicallRead() — uses the canonical Multicall3 deployment for
+ *                       efficient read-only (eth_call) batches.
  *
- * Multicall3 address: 0xcA11bde05977b3631167028862bE2a173976CA11
- * Deployed on: Ethereum, BSC, Polygon, Avalanche (and 70+ other chains)
+ * BatchMulticall address: 0xF93E987DF029e95CdE59c0F5cD447e0a7002054D
+ * Multicall3 address:     0xcA11bde05977b3631167028862bE2a173976CA11
  */
+
+import { CONTRACTS, ABIS } from './constants.js';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -94,6 +99,39 @@ export const MULTICALL3_ABI = [
  */
 export function buildCall(target, callData, allowFailure = true) {
   return { target, allowFailure, callData };
+}
+
+// ─── Batch Write via BatchMulticall ──────────────────────────────────────────
+
+/**
+ * Execute a batch of calls in a single transaction via the project's
+ * BatchMulticall singleton.
+ *
+ * Unlike Multicall3, BatchMulticall forwards ETH value per call and returns
+ * per-call success/result pairs. This is the preferred path for write batches.
+ *
+ * @param {object} provider  ethers v6 provider (only used to construct the contract)
+ * @param {object} signer    ethers v6 Signer — pays gas for the batch
+ * @param {Array<{ to: string, data: string, value?: bigint }>} calls
+ * @param {bigint} [totalValue=0n]  Total ETH to forward across all calls
+ * @returns {Promise<Array<{ success: boolean, result: string }>>}
+ */
+export async function batchCall(provider, signer, calls, totalValue = 0n) {
+  if (!calls || calls.length === 0) {
+    throw new Error('batchCall: calls array must not be empty');
+  }
+
+  const { Contract } = await import('ethers');
+  const mc = new Contract(CONTRACTS.BatchMulticall, ABIS.BatchMulticall, signer);
+
+  const encoded = calls.map((c) => ({
+    to:    c.to,
+    data:  c.data  ?? '0x',
+    value: c.value ?? 0n,
+  }));
+
+  const results = await mc.batchCall(encoded, { value: totalValue });
+  return results.map((r) => ({ success: r.success, result: r.result }));
 }
 
 // ─── Batch Read (eth_call) ────────────────────────────────────────────────────

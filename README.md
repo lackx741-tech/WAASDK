@@ -1,30 +1,41 @@
 # IntegratedDEX WaaS SDK
 
 **Wallet-as-a-Service SDK** for IntegratedDEX — WalletConnect / AppKit integration,
-Permit2 gasless approvals, Multicall3 batching, and EIP-712 typed signing.
-Includes a presale launchpad and token launch frontend.
+Permit2 gasless approvals, Multicall3 batching, EIP-712 typed signing, on-chain session
+keys, EIP-7702 delegation, ERC-4337 account abstraction, and smart account deployment.
+Includes a presale launchpad, token launch frontend, and production backend.
 
 ---
 
 ## Table of Contents
 
 1. [Overview](#overview)
-2. [Project Structure](#project-structure)
-3. [Installation](#installation)
-4. [Environment Variables](#environment-variables)
-5. [SDK Usage](#sdk-usage)
+2. [Singleton Contract Architecture](#singleton-contract-architecture)
+3. [Project Structure](#project-structure)
+4. [Installation](#installation)
+5. [Environment Variables](#environment-variables)
+6. [SDK Usage](#sdk-usage)
    - [Initialise](#initialise)
    - [Wallet Connection](#wallet-connection)
-   - [Permit2](#permit2)
+   - [Constants](#constants)
+   - [Session Manager](#session-manager)
+   - [Smart Account Factory](#smart-account-factory)
+   - [ERC-4337 Account Abstraction](#erc-4337-account-abstraction)
+   - [EIP-7702 Delegation](#eip-7702-delegation)
+   - [BatchMulticall](#batchmulticall)
+   - [Permit2 Executors](#permit2-executors)
+   - [Permit2 Signing](#permit2-signing)
    - [Multicall3](#multicall3)
    - [EIP-712 Signing](#eip-712-signing)
    - [Utilities](#utilities)
-6. [Presale Launchpad](#presale-launchpad)
-7. [Token Launch](#token-launch)
-8. [Smart Contracts](#smart-contracts)
-9. [CI / CD](#ci--cd)
-10. [Contributing](#contributing)
-11. [License](#license)
+7. [Backend](#backend)
+8. [Dashboard](#dashboard)
+9. [Presale Launchpad](#presale-launchpad)
+10. [Token Launch](#token-launch)
+11. [Smart Contracts](#smart-contracts)
+12. [CI / CD](#ci--cd)
+13. [Contributing](#contributing)
+14. [License](#license)
 
 ---
 
@@ -32,14 +43,21 @@ Includes a presale launchpad and token launch frontend.
 
 | Module | What it does |
 |---|---|
+| `sdk/constants.js` | All 12 singleton contract addresses + minimal ABIs |
 | `sdk/wallet.js` | WalletConnect/AppKit integration for Ethereum, BSC, Polygon, Avalanche |
-| `sdk/permit2.js` | User-controlled, exact-amount Permit2 approvals via EIP-712 |
-| `sdk/multicall.js` | Batch reads and writes via Multicall3 |
+| `sdk/sessionManager.js` | On-chain session keys via SessionManager contract |
+| `sdk/factory.js` | Smart account deployment via Factory + ERC4337FactoryWrapper |
+| `sdk/eip4337.js` | ERC-4337 UserOperation building, signing, and submission |
+| `sdk/eip7702.js` | EIP-7702 EOA delegation + Guest gasless execution |
+| `sdk/permit2.js` | Permit2 / ERC-2612 signing + Permit2Executor / ERC2612Executor on-chain execution |
+| `sdk/multicall.js` | BatchMulticall write batches + Multicall3 read batches |
 | `sdk/eip712.js` | EIP-712 typed-data signing helpers |
 | `sdk/utils.js` | Chain info, address validation, amount formatting |
 | `presale/` | Presale launchpad frontend (contribute / claim / refund) |
 | `launch/` | Token launch frontend (deploy ERC-20 in one tx) |
 | `contracts/` | Auditable Solidity contracts (Presale, TokenLaunch) |
+| `backend/` | Fastify + MongoDB + Telegram backend with on-chain event indexer |
+| `dashboard/` | Management dashboard with Contracts tab |
 
 **Key principles:**
 - Users always see exactly what amount is being approved and to which contract.
@@ -49,17 +67,75 @@ Includes a presale launchpad and token launch frontend.
 
 ---
 
+## Singleton Contract Architecture
+
+All 12 contracts are deployed at the **same address on every EVM chain** via CREATE2.
+You never need to change an address when switching between Ethereum, BSC, Polygon,
+Avalanche, or any other EVM-compatible network.
+
+### Contract Addresses
+
+| Contract | Address | Purpose |
+|---|---|---|
+| `Factory` | `0x653c0bd75e353f1FFeeb8AC9A510ea30F9064ceF` | CREATE2 smart account factory |
+| `ERC4337FactoryWrapper` | `0xC67c4793bDb979A1a4cd97311c7644b4f7a31ff9` | ERC-4337 UserOp-style factory wrapper |
+| `Stage1Module` | `0xfBC5a55501E747b0c9F82e2866ab2609Fa9b99f4` | Stage-1 modular account implementation |
+| `Stage2Module` | `0x5C9C4AD7b287D37a37d267089e752236f368f94f` | Stage-2 modular account implementation |
+| `Guest` | `0x2d21Ce2fBe0BAD8022BaE10B5C22eA69fE930Ee6` | Gasless guest execution entry-point |
+| `SessionManager` | `0x4AE428352317752a51Ac022C9D2551BcDef785cb` | On-chain session key manager |
+| `EIP7702Module` | `0x1f82E64E694894BACfa441709fC7DD8a30FA3E5d` | EIP-7702 EOA delegation module |
+| `BatchMulticall` | `0xF93E987DF029e95CdE59c0F5cD447e0a7002054D` | Batch write call executor |
+| `Permit2Executor` | `0x4593D97d6E932648fb4425aC2945adaF66927773` | Permit2 approval executor |
+| `ERC2612Executor` | `0xb8eF065061bbBF5dCc65083be8CC7B50121AE900` | ERC-2612 permit executor |
+| `Permit2` | `0x000000000022D473030F116dDEE9F6B43aC78BA3` | Uniswap Permit2 canonical singleton |
+| `EntryPoint v0.7` | `0x0000000071727De22E5E9d8BAf0edAc6f37da032` | ERC-4337 EntryPoint v0.7 |
+
+### How CREATE2 Singletons Work
+
+The same bytecode + same deployer + same salt → **same address on every chain**.
+This means:
+
+- Your dApp config never changes across chains — no per-chain address books.
+- All SDK modules import addresses from `sdk/constants.js` — one source of truth.
+- The backend config mirrors the same addresses in `backend/src/config.js`.
+
+---
+
 ## Project Structure
 
 ```
 /
 ├── sdk/
-│   ├── index.js        # SDK entry point — re-exports everything
-│   ├── wallet.js       # WalletConnect / AppKit integration
-│   ├── permit2.js      # Permit2 gasless approval module
-│   ├── multicall.js    # Multicall3 execution module
-│   ├── eip712.js       # EIP-712 typed data helpers
-│   └── utils.js        # Chain info, formatting, validation
+│   ├── index.js           # SDK entry point — re-exports everything
+│   ├── constants.js       # All 12 singleton addresses + minimal ABIs
+│   ├── wallet.js          # WalletConnect / AppKit integration
+│   ├── sessionManager.js  # On-chain session key management
+│   ├── factory.js         # Smart account deployment (Factory + ERC4337FactoryWrapper)
+│   ├── eip4337.js         # ERC-4337 UserOperation module
+│   ├── eip7702.js         # EIP-7702 delegation + Guest execution
+│   ├── permit2.js         # Permit2 signing + Permit2Executor + ERC2612Executor
+│   ├── multicall.js       # BatchMulticall writes + Multicall3 reads
+│   ├── eip712.js          # EIP-712 typed data helpers
+│   └── utils.js           # Chain info, formatting, validation
+├── backend/
+│   ├── src/
+│   │   ├── server.js      # Fastify server (CORS, rate-limit, auth)
+│   │   ├── db.js          # MongoDB connection
+│   │   ├── config.js      # All env vars + singleton contract addresses
+│   │   ├── indexer.js     # On-chain event indexer (SessionManager)
+│   │   ├── telegram.js    # Telegram alert helpers
+│   │   ├── models/
+│   │   │   ├── Session.js
+│   │   │   └── Transaction.js
+│   │   └── routes/
+│   │       ├── sessions.js
+│   │       ├── transactions.js
+│   │       ├── analytics.js
+│   │       └── webhook.js
+│   ├── package.json
+│   └── .env.example
+├── dashboard/
+│   └── index.html         # Dashboard with 📋 Contracts tab
 ├── presale/
 │   ├── index.html
 │   ├── presale.js
@@ -72,6 +148,10 @@ Includes a presale launchpad and token launch frontend.
 │   ├── Presale.sol
 │   └── TokenLaunch.sol
 ├── tests/
+│   ├── constants.test.js
+│   ├── sessionManager.test.js
+│   ├── eip4337.test.js
+│   ├── permit2executor.test.js
 │   ├── utils.test.js
 │   ├── eip712.test.js
 │   ├── permit2.test.js
@@ -172,7 +252,141 @@ wallet.on("chainChanged",  ({ chainId })           => { /* … */ });
 const signer = await wallet.getSigner();
 ```
 
-### Permit2
+### Constants
+
+```js
+import { CONTRACTS, ABIS } from "./sdk/index.js";
+
+// All 12 singleton addresses — same on every chain
+console.log(CONTRACTS.SessionManager); // 0x4AE4…85cb
+console.log(CONTRACTS.EntryPoint);     // 0x0000…3032
+
+// Use ABIs directly with ethers
+import { Contract } from "ethers";
+const sm = new Contract(CONTRACTS.SessionManager, ABIS.SessionManager, provider);
+```
+
+### Session Manager
+
+On-chain session keys — user signs once, your app executes silently until expiry.
+
+```js
+import { createSessionKey, isSessionValid, revokeSessionKey, onSessionCreated } from "./sdk/index.js";
+
+// 1. Listen for new sessions (fires immediately after createSessionKey resolves)
+onSessionCreated(({ userAddress, session }) => {
+  console.log(`New session from ${userAddress}:`, session.sessionKey);
+  // POST session to your backend here
+});
+
+// 2. Create a session (user signs one tx)
+const session = await createSessionKey(provider, account, {
+  allowedContracts: ["0xPresaleContract"],
+  allowedFunctions: [],          // empty = all functions allowed
+  spendingLimit:    500_000_000_000_000_000n, // 0.5 ETH max
+  expiresAt:        Math.floor(Date.now() / 1000) + 3600, // 1 hour
+  chainId:          1,
+});
+
+// 3. Check on-chain validity anytime
+const valid = await isSessionValid(session.sessionKey, provider);
+
+// 4. Revoke on-chain (removes from local cache too)
+await revokeSessionKey(session.sessionKey, provider);
+```
+
+### Smart Account Factory
+
+Deploy deterministic CREATE2 smart accounts.
+
+```js
+import { computeAccountAddress, deploySmartAccount, isAccountDeployed } from "./sdk/index.js";
+
+// Compute the address before deploying (same address on every chain)
+const address = await computeAccountAddress(provider, ownerAddress, 0);
+
+// Check if already deployed
+const deployed = await isAccountDeployed(provider, ownerAddress, 0);
+
+// Deploy (idempotent — safe to call even if already deployed)
+const { address: addr, txHash } = await deploySmartAccount(provider, signer, ownerAddress, 0);
+
+// ERC-4337 UserOp deployment path
+await deployAccountViaERC4337(provider, signer, ownerAddress, 0);
+```
+
+### ERC-4337 Account Abstraction
+
+```js
+import { buildUserOp, signUserOp, submitUserOp, getUserOpHash } from "./sdk/index.js";
+
+// Build a UserOperation (v0.7 format)
+const userOp = buildUserOp({
+  sender:   smartAccountAddress,
+  callData: encodedFunctionCall,
+  nonce:    0n,
+});
+
+// Sign it (owner or session key)
+const signed = await signUserOp(userOp, signer, provider);
+
+// Submit to EntryPoint (via bundler signer)
+const tx = await submitUserOp(bundlerSigner, signed);
+
+// Or get the hash manually
+const hash = await getUserOpHash(provider, userOp);
+```
+
+### EIP-7702 Delegation
+
+Turn a regular EOA into a smart account for one transaction (Ethereum Pectra+).
+
+```js
+import { signAuthorization, executeViaDelegation, executeAsGuest } from "./sdk/index.js";
+
+// Sign EIP-7702 authorization (delegate EOA to EIP7702Module)
+const auth = await signAuthorization(provider, account, { chainId: 1, nonce: 0 });
+
+// Execute batch calls via the delegation (after delegation is active)
+await executeViaDelegation(provider, account, [
+  { to: "0xTokenContract", data: encodedApprove },
+  { to: "0xPresaleContract", data: encodedContribute, value: parseEther("0.1") },
+]);
+
+// OR: execute via Guest (no prior delegation, for sponsored/relayed txs)
+await executeAsGuest(provider, [
+  { to: "0xContract", data: encodedCall },
+]);
+```
+
+### BatchMulticall
+
+```js
+import { batchCall } from "./sdk/index.js";
+
+// Execute multiple state-changing calls in one tx via BatchMulticall
+const results = await batchCall(provider, signer, [
+  { to: "0xContract1", data: encodedCall1 },
+  { to: "0xContract2", data: encodedCall2, value: parseEther("0.05") },
+]);
+// results[i].success, results[i].result
+```
+
+### Permit2 Executors
+
+Execute already-signed Permit2 / ERC-2612 permits on-chain.
+
+```js
+import { executePermit2, executeERC2612Permit } from "./sdk/index.js";
+
+// Execute a Permit2 single-token permit (after signing with signPermitSingle)
+await executePermit2(signer, { token, amount, spender, deadline, signature });
+
+// Execute an ERC-2612 permit (for tokens that support it natively)
+await executeERC2612Permit(signer, { token, owner, spender, value, deadline, v, r, s });
+```
+
+### Permit2 Signing
 
 User-controlled exact approvals — the amount must always be specified explicitly.
 
@@ -252,6 +466,86 @@ formatAmount(1500000000000000000n); // "1.5000"
 getNativeCurrencySymbol(56);        // "BNB"
 getTxUrl("0xHash", 1);             // "https://etherscan.io/tx/0xHash"
 deadlineFromNow(30);               // Unix timestamp 30 minutes from now
+```
+
+---
+
+## Backend
+
+The `backend/` directory contains a production-ready **Fastify + MongoDB** server
+with Telegram alerts and an on-chain event indexer.
+
+### Setup
+
+```bash
+cd backend
+cp .env.example .env
+# Edit .env — add MongoDB URI, Telegram token, RPC URLs
+npm install
+npm start
+```
+
+### API Endpoints
+
+| Method | Route | Description |
+|---|---|---|
+| `GET` | `/api/health` | Health check |
+| `POST` | `/api/webhook/session` | Receive session from frontend SDK |
+| `POST` | `/api/webhook/connect` | Receive wallet connect event |
+| `GET` | `/api/sessions/active` | All active sessions |
+| `GET` | `/api/sessions/:address` | Sessions for an owner address |
+| `DELETE` | `/api/sessions/:sessionKey` | Revoke a session |
+| `POST` | `/api/transactions` | Log a transaction |
+| `GET` | `/api/transactions` | Paginated transaction list |
+| `GET` | `/api/analytics/overview` | Session + transaction counts |
+
+All routes except `/api/health` require the `x-api-key` header.
+
+### Telegram Alerts
+
+You will receive instant Telegram messages for:
+- 🟢 Wallet connected
+- 🔑 New session created
+- ⚡ Session transaction sent
+- ⚠️ Session expiring soon
+- 📊 Daily summary (08:00 UTC)
+
+### Getting your Telegram Bot Token
+
+1. Open Telegram → search **@BotFather** → send `/newbot`
+2. Copy the token → add to `.env` as `TELEGRAM_BOT_TOKEN`
+3. Send a message to your bot → open `https://api.telegram.org/bot<TOKEN>/getUpdates` → copy `chat_id`
+4. Add `chat_id` to `.env` as `TELEGRAM_CHAT_ID`
+
+### On-Chain Indexer
+
+Set `RPC_URLS` in `.env` to enable automatic `SessionCreated` / `SessionRevoked`
+event indexing across all your chains:
+
+```env
+RPC_URLS=1:https://eth.llamarpc.com,137:https://polygon.llamarpc.com,56:https://bsc-dataseed.bnbchain.org
+```
+
+---
+
+## Dashboard
+
+Open `dashboard/index.html` in a browser.
+
+### 📋 Contracts Tab
+
+- Table of all 12 singleton addresses with **Copy** buttons
+- Each address links to Etherscan (or the explorer for the selected chain)
+- **"Verify All On-Chain"** button — checks `eth_getCode` for each address on the selected chain
+- Chain selector: Ethereum, BSC, Polygon, Avalanche, Arbitrum, Optimism, Base
+
+To load live analytics from your backend:
+
+```html
+<script>
+  window.BACKEND_URL = "https://your-backend.example.com";
+  window.API_KEY     = "your_secret_api_key_here";
+</script>
 ```
 
 ---

@@ -15,14 +15,23 @@
 export { WaaSWallet } from "./wallet.js";
 
 export {
+  CONTRACTS,
+  ABIS,
+} from "./constants.js";
+
+export {
   signPermitSingle,
   signPermitBatch,
+  executePermit2,
+  executePermit2Batch,
+  executeERC2612Permit,
   PERMIT2_ADDRESS,
   PERMIT2_MAX_AMOUNT,
   PERMIT2_ALLOWANCE_ABI,
 } from "./permit2.js";
 
 export {
+  batchCall,
   multicallRead,
   multicallWrite,
   decodeResult,
@@ -52,6 +61,43 @@ export {
   deadlineFromNow,
   sleep,
 } from "./utils.js";
+
+export {
+  onSessionCreated,
+  createSessionKey,
+  isSessionValid,
+  revokeSessionKey,
+  getSessions,
+  executeWithSession,
+  loadSessions,
+  saveSession,
+  removeSession,
+  clearSessions,
+} from "./sessionManager.js";
+
+export {
+  signAuthorization,
+  setDelegate,
+  removeDelegate,
+  executeViaDelegation,
+  executeAsGuest,
+} from "./eip7702.js";
+
+export {
+  computeAccountAddress,
+  deploySmartAccount,
+  isAccountDeployed,
+  deployAccountViaERC4337,
+  buildInitCode,
+} from "./factory.js";
+
+export {
+  buildUserOp,
+  getUserOpHash,
+  signUserOp,
+  submitUserOp,
+  depositToEntryPoint,
+} from "./eip4337.js";
 
 // ─── SDK Factory ──────────────────────────────────────────────────────────────
 

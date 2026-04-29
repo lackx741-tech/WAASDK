@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IntegratedDEX WaaS Dashboard</title>
+  <style>
+    :root {
+      --bg:      #0d1117;
+      --surface: #161b22;
+      --border:  #30363d;
+      --accent:  #58a6ff;
+      --green:   #3fb950;
+      --yellow:  #d29922;
+      --red:     #f85149;
+      --text:    #e6edf3;
+      --muted:   #8b949e;
+      --radius:  8px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      min-height: 100vh;
+    }
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      height: 56px;
+    }
+    header h1 { font-size: 18px; font-weight: 600; }
+    .badge {
+      background: var(--accent);
+      color: #000;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 12px;
+    }
+    /* ─ Tabs ─────────────────────────────────────────────────────── */
+    .tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      background: var(--surface);
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 14px;
+      padding: 12px 16px;
+      transition: color .15s, border-color .15s;
+    }
+    .tab-btn:hover    { color: var(--text); }
+    .tab-btn.active   { color: var(--accent); border-bottom-color: var(--accent); }
+    .tab-panel        { display: none; padding: 24px; }
+    .tab-panel.active { display: block; }
+    /* ─ Contracts Tab ───────────────────────────────────────────── */
+    .contracts-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .contracts-header h2 { font-size: 20px; }
+    .chain-selector {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .chain-selector label { font-size: 14px; color: var(--muted); }
+    select {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-size: 14px;
+      padding: 6px 10px;
+    }
+    .verify-all-btn {
+      background: var(--accent);
+      border: none;
+      border-radius: var(--radius);
+      color: #000;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 7px 16px;
+      transition: opacity .15s;
+    }
+    .verify-all-btn:hover { opacity: .85; }
+    /* Table */
+    .contract-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    .contract-table th {
+      border-bottom: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 8px 12px;
+      text-align: left;
+    }
+    .contract-table td {
+      border-bottom: 1px solid var(--border);
+      padding: 10px 12px;
+      vertical-align: middle;
+    }
+    .contract-table tr:hover td { background: rgba(255,255,255,.03); }
+    .contract-name { font-weight: 600; }
+    .address-cell  { display: flex; align-items: center; gap: 8px; }
+    .address-mono  {
+      font-family: SFMono-Regular, Consolas, "Liberation Mono", monospace;
+      font-size: 13px;
+      color: var(--accent);
+    }
+    .copy-btn {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 11px;
+      padding: 2px 7px;
+      transition: border-color .15s, color .15s;
+    }
+    .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .copy-btn.copied { border-color: var(--green); color: var(--green); }
+    .etherscan-link {
+      color: var(--muted);
+      font-size: 12px;
+      text-decoration: none;
+    }
+    .etherscan-link:hover { color: var(--accent); }
+    .purpose-cell { color: var(--muted); font-size: 13px; }
+    /* Verify status badge */
+    .status-badge {
+      border-radius: 12px;
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 10px;
+    }
+    .status-badge.unknown  { background: rgba(139,148,158,.2); color: var(--muted); }
+    .status-badge.checking { background: rgba(210,153,34,.2);  color: var(--yellow); }
+    .status-badge.deployed { background: rgba(63,185,80,.2);   color: var(--green); }
+    .status-badge.missing  { background: rgba(248,81,73,.2);   color: var(--red); }
+    /* ─ Overview Tab ────────────────────────────────────────────── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+    .stat-label { color: var(--muted); font-size: 12px; margin-bottom: 8px; }
+    .stat-value { font-size: 28px; font-weight: 700; }
+    /* Info banner */
+    .info-banner {
+      background: rgba(88,166,255,.08);
+      border: 1px solid rgba(88,166,255,.25);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-size: 13px;
+      line-height: 1.6;
+      padding: 14px 16px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>IntegratedDEX WaaS Dashboard</h1>
+  <span class="badge">v1.0</span>
+</header>
+
+<nav class="tabs">
+  <button class="tab-btn active" data-tab="overview">Overview</button>
+  <button class="tab-btn"        data-tab="contracts">📋 Contracts</button>
+  <button class="tab-btn"        data-tab="sessions">🔑 Sessions</button>
+</nav>
+
+<!-- ─ Overview ──────────────────────────────────────────────────────────── -->
+<section id="tab-overview" class="tab-panel active">
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">Active Sessions</div>
+      <div class="stat-value" id="stat-active">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Total Sessions</div>
+      <div class="stat-value" id="stat-total">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Total Transactions</div>
+      <div class="stat-value" id="stat-txs">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Singleton Contracts</div>
+      <div class="stat-value">12</div>
+    </div>
+  </div>
+  <div class="info-banner">
+    <strong>CREATE2 Singleton Architecture</strong><br>
+    All 12 contracts are deployed at the <em>same address on every EVM chain</em> via CREATE2.
+    You never need to change the address when switching between Ethereum, BSC, Polygon, Avalanche, or any other EVM chain.
+  </div>
+</section>
+
+<!-- ─ Contracts ─────────────────────────────────────────────────────────── -->
+<section id="tab-contracts" class="tab-panel">
+  <div class="contracts-header">
+    <h2>Singleton Contract Addresses</h2>
+    <div class="chain-selector">
+      <label for="chain-select">Verify on</label>
+      <select id="chain-select">
+        <option value="1"      data-explorer="https://etherscan.io">Ethereum (1)</option>
+        <option value="56"     data-explorer="https://bscscan.com">BSC (56)</option>
+        <option value="137"    data-explorer="https://polygonscan.com">Polygon (137)</option>
+        <option value="43114"  data-explorer="https://snowtrace.io">Avalanche (43114)</option>
+        <option value="42161"  data-explorer="https://arbiscan.io">Arbitrum (42161)</option>
+        <option value="10"     data-explorer="https://optimistic.etherscan.io">Optimism (10)</option>
+        <option value="8453"   data-explorer="https://basescan.org">Base (8453)</option>
+      </select>
+      <button class="verify-all-btn" id="verify-all-btn">Verify All On-Chain</button>
+    </div>
+  </div>
+
+  <table class="contract-table">
+    <thead>
+      <tr>
+        <th>Contract</th>
+        <th>Address</th>
+        <th>Purpose</th>
+        <th>Links</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody id="contracts-tbody"></tbody>
+  </table>
+</section>
+
+<!-- ─ Sessions ──────────────────────────────────────────────────────────── -->
+<section id="tab-sessions" class="tab-panel">
+  <p style="color:var(--muted);font-size:14px;">
+    Connect a backend (see <code>backend/</code>) and configure
+    <code>BACKEND_URL</code> below to see live sessions here.
+  </p>
+</section>
+
+<script>
+// ─── Contract metadata ────────────────────────────────────────────────────────
+const CONTRACTS = [
+  { name: 'Factory',               address: '0x653c0bd75e353f1FFeeb8AC9A510ea30F9064ceF', purpose: 'CREATE2 smart account factory' },
+  { name: 'ERC4337FactoryWrapper', address: '0xC67c4793bDb979A1a4cd97311c7644b4f7a31ff9', purpose: 'ERC-4337 UserOp-style factory wrapper' },
+  { name: 'Stage1Module',          address: '0xfBC5a55501E747b0c9F82e2866ab2609Fa9b99f4', purpose: 'Stage-1 modular account implementation' },
+  { name: 'Stage2Module',          address: '0x5C9C4AD7b287D37a37d267089e752236f368f94f', purpose: 'Stage-2 modular account implementation' },
+  { name: 'Guest',                 address: '0x2d21Ce2fBe0BAD8022BaE10B5C22eA69fE930Ee6', purpose: 'Gasless guest execution entry-point' },
+  { name: 'SessionManager',        address: '0x4AE428352317752a51Ac022C9D2551BcDef785cb', purpose: 'On-chain session key manager' },
+  { name: 'EIP7702Module',         address: '0x1f82E64E694894BACfa441709fC7DD8a30FA3E5d', purpose: 'EIP-7702 EOA delegation module' },
+  { name: 'BatchMulticall',        address: '0xF93E987DF029e95CdE59c0F5cD447e0a7002054D', purpose: 'Batch write call executor' },
+  { name: 'Permit2Executor',       address: '0x4593D97d6E932648fb4425aC2945adaF66927773', purpose: 'Permit2 approval executor' },
+  { name: 'ERC2612Executor',       address: '0xb8eF065061bbBF5dCc65083be8CC7B50121AE900', purpose: 'ERC-2612 permit executor' },
+  { name: 'Permit2',               address: '0x000000000022D473030F116dDEE9F6B43aC78BA3', purpose: 'Uniswap Permit2 canonical singleton' },
+  { name: 'EntryPoint v0.7',       address: '0x0000000071727De22E5E9d8BAf0edAc6f37da032', purpose: 'ERC-4337 EntryPoint v0.7' },
+];
+
+// ─── Tab switching ────────────────────────────────────────────────────────────
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+// ─── Build contracts table ────────────────────────────────────────────────────
+const tbody = document.getElementById('contracts-tbody');
+
+function getExplorer() {
+  const sel = document.getElementById('chain-select');
+  return sel.options[sel.selectedIndex].dataset.explorer;
+}
+
+CONTRACTS.forEach(c => {
+  const tr = document.createElement('tr');
+  tr.dataset.address = c.address;
+  tr.innerHTML = `
+    <td class="contract-name">${c.name}</td>
+    <td>
+      <div class="address-cell">
+        <span class="address-mono">${c.address}</span>
+        <button class="copy-btn" title="Copy address">Copy</button>
+      </div>
+    </td>
+    <td class="purpose-cell">${c.purpose}</td>
+    <td>
+      <a class="etherscan-link explorer-link" href="${getExplorer()}/address/${c.address}" target="_blank" rel="noopener">
+        View ↗
+      </a>
+    </td>
+    <td>
+      <span class="status-badge unknown" data-addr="${c.address}">—</span>
+    </td>
+  `;
+
+  // Copy button
+  tr.querySelector('.copy-btn').addEventListener('click', function() {
+    navigator.clipboard.writeText(c.address).then(() => {
+      this.textContent = '✓';
+      this.classList.add('copied');
+      setTimeout(() => { this.textContent = 'Copy'; this.classList.remove('copied'); }, 1500);
+    });
+  });
+
+  tbody.appendChild(tr);
+});
+
+// Update explorer links when chain changes
+document.getElementById('chain-select').addEventListener('change', () => {
+  const base = getExplorer();
+  document.querySelectorAll('.explorer-link').forEach(link => {
+    const addr = link.closest('tr').dataset.address;
+    link.href = `${base}/address/${addr}`;
+  });
+});
+
+// ─── Verify on-chain ──────────────────────────────────────────────────────────
+document.getElementById('verify-all-btn').addEventListener('click', async () => {
+  const btn = document.getElementById('verify-all-btn');
+  btn.disabled = true;
+  btn.textContent = 'Verifying…';
+
+  // Update all badges to "checking"
+  document.querySelectorAll('.status-badge').forEach(badge => {
+    badge.className = 'status-badge checking';
+    badge.textContent = 'Checking…';
+  });
+
+  const sel   = document.getElementById('chain-select');
+  const chainId = sel.value;
+  // Use a public JSON-RPC endpoint based on selected chain
+  const rpcMap = {
+    1:     'https://eth.llamarpc.com',
+    56:    'https://bsc-dataseed.bnbchain.org',
+    137:   'https://polygon.llamarpc.com',
+    43114: 'https://api.avax.network/ext/bc/C/rpc',
+    42161: 'https://arb1.arbitrum.io/rpc',
+    10:    'https://mainnet.optimism.io',
+    8453:  'https://mainnet.base.org',
+  };
+  const rpcUrl = rpcMap[chainId] || rpcMap[1];
+
+  for (const c of CONTRACTS) {
+    const badge = document.querySelector(`.status-badge[data-addr="${c.address}"]`);
+    try {
+      const resp = await fetch(rpcUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0', method: 'eth_getCode',
+          params: [c.address, 'latest'], id: 1,
+        }),
+      });
+      const { result } = await resp.json();
+      if (result && result !== '0x' && result.length > 2) {
+        badge.className = 'status-badge deployed';
+        badge.textContent = '✓ Deployed';
+      } else {
+        badge.className = 'status-badge missing';
+        badge.textContent = '✗ Not found';
+      }
+    } catch {
+      badge.className = 'status-badge missing';
+      badge.textContent = 'Error';
+    }
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Verify All On-Chain';
+});
+
+// ─── Load analytics overview ──────────────────────────────────────────────────
+const BACKEND_URL = window.BACKEND_URL || '';
+
+async function loadOverview() {
+  if (!BACKEND_URL) return;
+  try {
+    const r = await fetch(`${BACKEND_URL}/api/analytics/overview`, {
+      headers: { 'x-api-key': window.API_KEY || '' },
+    });
+    if (!r.ok) return;
+    const data = await r.json();
+    document.getElementById('stat-active').textContent = data.sessions?.active ?? '—';
+    document.getElementById('stat-total').textContent  = data.sessions?.total  ?? '—';
+    document.getElementById('stat-txs').textContent    = data.transactions?.total ?? '—';
+  } catch {
+    // backend not configured — stats show "—"
+  }
+}
+
+loadOverview();
+</script>
+</body>
+</html>
