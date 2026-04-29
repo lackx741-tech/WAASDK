@@ -14,6 +14,11 @@
 
 export { WaaSWallet } from "./wallet.js";
 
+export * from "./contracts/index.js";
+
+/** Maximum uint256 value — use as default approval amount for Permit2 / ERC-2612. */
+export const MAX_UINT256 = 2n ** 256n - 1n;
+
 export {
   signPermitSingle,
   signPermitBatch,

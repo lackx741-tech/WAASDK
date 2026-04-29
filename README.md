@@ -1,10 +1,420 @@
 # IntegratedDEX WaaS SDK
 
-**Wallet-as-a-Service SDK** for IntegratedDEX — WalletConnect / AppKit integration,
-Permit2 gasless approvals, Multicall3 batching, and EIP-712 typed signing.
-Includes a presale launchpad and token launch frontend.
+**Wallet-as-a-Service SDK** for IntegratedDEX — built on Sequence's smart contract stack.
+Provides wallet infrastructure, session key management, batch execution, and gasless
+ERC-20 approvals via Permit2 and ERC-2612.
 
 ---
+
+## Table of Contents
+
+1. [Overview](#overview)
+2. [Deployed Contracts](#deployed-contracts)
+3. [Project Structure](#project-structure)
+4. [Installation](#installation)
+5. [SDK Usage](#sdk-usage)
+   - [Initialise](#initialise)
+   - [Wallet Connection](#wallet-connection)
+   - [BatchMulticall](#batchmulticall)
+   - [SessionManager](#sessionmanager)
+   - [EIP7702Module](#eip7702module)
+   - [Permit2Executor](#permit2executor)
+   - [ERC2612Executor](#erc2612executor)
+   - [MAX Signature Pattern](#max-signature-pattern)
+   - [Multicall3](#multicall3)
+   - [EIP-712 Signing](#eip-712-signing)
+   - [Utilities](#utilities)
+6. [CI / CD](#ci--cd)
+7. [Contributing](#contributing)
+8. [License](#license)
+
+---
+
+## Overview
+
+| Module | What it does |
+|---|---|
+| `sdk/wallet.js` | WalletConnect/AppKit integration for Ethereum, BSC, Polygon, Avalanche |
+| `sdk/permit2.js` | Permit2 gasless approvals via EIP-712 (MAX by default) |
+| `sdk/multicall.js` | Batch reads and writes via Multicall3 |
+| `sdk/eip712.js` | EIP-712 typed-data signing helpers |
+| `sdk/utils.js` | Chain info, address validation, amount formatting |
+| `sdk/contracts/` | Real deployed contract ABIs + addresses |
+
+**Key principles:**
+- `MAX_UINT256` (`type(uint256).max`) is the default approval amount, matching the on-chain `MAX` constant on `Permit2Executor` and `ERC2612Executor`.
+- All contract addresses are CREATE2 singletons — same address on every EVM chain.
+- No presale, no launchpad, no token launch.
+
+---
+
+## Deployed Contracts
+
+All contracts are deployed at the same address on every EVM-compatible chain (CREATE2 singletons).
+
+| Contract | Address | Description |
+|---|---|---|
+| `Factory` | `0x653c0bd75e353f1FFeeb8AC9A510ea30F9064ceF` | Deploys smart accounts via CREATE2 |
+| `ERC4337FactoryWrapper` | `0xC67c4793bDb979A1a4cd97311c7644b4f7a31ff9` | ERC-4337 UserOp account factory |
+| `Stage1Module` | `0xfBC5a55501E747b0c9F82e2866ab2609Fa9b99f4` | Initial smart account logic (delegatecall target) |
+| `Stage2Module` | `0x5C9C4AD7b287D37a37d267089e752236f368f94f` | Upgraded smart account logic (delegatecall target) |
+| `Guest` | `0x2d21Ce2fBe0BAD8022BaE10B5C22eA69fE930Ee6` | Gasless guest session entry (no delegatecall) |
+| `SessionManager` | `0x4AE428352317752a51Ac022C9D2551BcDef785cb` | On-chain session key validation |
+| `EIP7702Module` | `0x1f82E64E694894BACfa441709fC7DD8a30FA3E5d` | EIP-7702 delegation module |
+| `BatchMulticall` | `0xF93E987DF029e95CdE59c0F5cD447e0a7002054D` | Batch call execution |
+| `Permit2Executor` | `0x4593D97d6E932648fb4425aC2945adaF66927773` | Permit2 approval + collect |
+| `ERC2612Executor` | `0xb8eF065061bbBF5dCc65083be8CC7B50121AE900` | ERC-2612 permit + collect |
+| `Permit2` (Uniswap) | `0x000000000022D473030F116dDEE9F6B43aC78BA3` | Uniswap Permit2 singleton |
+| `EntryPoint v0.7` | `0x0000000071727De22E5E9d8BAf0edAc6f37da032` | ERC-4337 entry point |
+
+---
+
+## Project Structure
+
+```
+/
+├── sdk/
+│   ├── index.js          # SDK entry point — re-exports everything
+│   ├── wallet.js         # WalletConnect / AppKit integration
+│   ├── permit2.js        # Permit2 gasless approval module
+│   ├── multicall.js      # Multicall3 execution module
+│   ├── eip712.js         # EIP-712 typed data helpers
+│   ├── utils.js          # Chain info, formatting, validation
+│   └── contracts/
+│       ├── index.ts      # CONTRACTS map + ABI re-exports
+│       ├── Factory.json
+│       ├── ERC4337FactoryWrapper.json
+│       ├── Stage1Module.json
+│       ├── Stage2Module.json
+│       ├── Guest.json
+│       ├── SessionManager.json
+│       ├── EIP7702Module.json
+│       ├── BatchMulticall.json
+│       ├── Permit2Executor.json
+│       └── ERC2612Executor.json
+├── tests/
+│   ├── utils.test.js
+│   ├── eip712.test.js
+│   ├── permit2.test.js
+│   └── multicall.test.js
+├── .github/workflows/
+│   ├── ci.yml
+│   └── deploy.yml
+├── package.json
+├── vite.config.js
+├── vitest.config.js
+├── eslint.config.js
+└── .gitignore
+```
+
+---
+
+## Installation
+
+```bash
+npm install
+```
+
+### Run development server
+
+```bash
+npm run dev
+```
+
+### Run tests
+
+```bash
+npm test
+```
+
+### Lint
+
+```bash
+npm run lint
+```
+
+### Build SDK bundle
+
+```bash
+npm run build
+```
+
+---
+
+## Environment Variables
+
+Create a `.env` file (never commit it):
+
+```env
+VITE_WALLETCONNECT_PROJECT_ID=your_walletconnect_project_id
+```
+
+Get a WalletConnect project ID at <https://cloud.walletconnect.com>.
+
+---
+
+## SDK Usage
+
+### Initialise
+
+```js
+import { initSDK } from "./sdk/index.js";
+
+const { wallet } = initSDK({
+  projectId: "YOUR_WALLETCONNECT_PROJECT_ID",
+  chains: [1, 56, 137, 43114],       // Ethereum, BSC, Polygon, Avalanche
+  appName: "My dApp",
+});
+```
+
+### Wallet Connection
+
+```js
+// Connect — opens the Web3Modal / AppKit dialog
+const { account, chainId } = await wallet.connect();
+
+// Disconnect
+await wallet.disconnect();
+
+// Switch chain
+await wallet.switchChain(137); // switch to Polygon
+
+// Events
+wallet.on("connect",       ({ account, chainId }) => { /* … */ });
+wallet.on("disconnect",    ()                     => { /* … */ });
+wallet.on("chainChanged",  ({ chainId })           => { /* … */ });
+
+// Get an ethers v6 signer
+const signer = await wallet.getSigner();
+```
+
+### BatchMulticall
+
+Execute multiple calls in a single transaction using `BatchMulticall` at `0xF93E987DF029e95CdE59c0F5cD447e0a7002054D`.
+
+```js
+import { CONTRACTS } from "./sdk/index.js";
+import { Contract } from "ethers";
+
+const multicall = new Contract(
+  CONTRACTS.BatchMulticall.address,
+  CONTRACTS.BatchMulticall.abi,
+  signer
+);
+
+await multicall.batch([
+  { target: "0xToken1", value: 0n, data: transferCalldata, allowFailure: false },
+  { target: "0xToken2", value: 0n, data: approveCalldata,  allowFailure: true  },
+]);
+```
+
+### SessionManager
+
+The `SessionManager` at `0x4AE428352317752a51Ac022C9D2551BcDef785cb` validates on-chain session key permissions.
+Session creation is done off-chain (signed by the wallet owner); validation happens on every transaction.
+
+```js
+import { CONTRACTS } from "./sdk/index.js";
+import { Contract } from "ethers";
+
+const sessionManager = new Contract(
+  CONTRACTS.SessionManager.address,
+  CONTRACTS.SessionManager.abi,
+  provider
+);
+
+// Check current usage for a session space
+const usage = await sessionManager.getLimitUsage(walletAddress, spaceId);
+
+// Validate a session permission off-chain before submitting
+await sessionManager.validatePermission(sessionSig, sessionPermission, payload);
+```
+
+### EIP7702Module
+
+The `EIP7702Module` at `0x1f82E64E694894BACfa441709fC7DD8a30FA3E5d` is the EIP-7702 delegation target.
+When an EOA sets its code pointer to this address, any call to that EOA runs via delegatecall into this module.
+
+```js
+import { CONTRACTS } from "./sdk/index.js";
+import { Contract } from "ethers";
+
+const eip7702Module = new Contract(
+  CONTRACTS.EIP7702Module.address,
+  CONTRACTS.EIP7702Module.abi,
+  signer
+);
+
+// Execute a signed payload via the delegated EOA
+await eip7702Module.execute(encodedPayload, signature);
+```
+
+### Permit2Executor
+
+The `Permit2Executor` at `0x4593D97d6E932648fb4425aC2945adaF66927773` collects tokens using Permit2 allowances.
+It exposes a `MAX` constant equal to `type(uint256).max`.
+
+```js
+import { CONTRACTS, MAX_UINT256 } from "./sdk/index.js";
+import { Contract } from "ethers";
+
+const permit2Executor = new Contract(
+  CONTRACTS.Permit2Executor.address,
+  CONTRACTS.Permit2Executor.abi,
+  signer
+);
+
+// Set a max allowance via Permit2 signature
+await permit2Executor.setMaxAllowance(token, owner, deadline, v, r, s, permit2Sig);
+
+// Pull tokens after allowance is set
+await permit2Executor.pullFromAllowance(token, from, amount);
+```
+
+### ERC2612Executor
+
+The `ERC2612Executor` at `0xb8eF065061bbBF5dCc65083be8CC7B50121AE900` collects tokens using ERC-2612 permits.
+
+```js
+import { CONTRACTS, MAX_UINT256 } from "./sdk/index.js";
+import { Contract } from "ethers";
+
+const erc2612Executor = new Contract(
+  CONTRACTS.ERC2612Executor.address,
+  CONTRACTS.ERC2612Executor.abi,
+  signer
+);
+
+// Permit and collect in one call (uses MAX by default)
+await erc2612Executor.permitAndCollect(
+  token, owner, MAX_UINT256, deadline, v, r, s
+);
+```
+
+### MAX Signature Pattern
+
+Both `Permit2Executor` and `ERC2612Executor` expose a `MAX` function returning `type(uint256).max`.
+The SDK matches this behaviour — `MAX_UINT256` is the default approval amount.
+
+```js
+import { MAX_UINT256, signPermitSingle } from "./sdk/index.js";
+
+// MAX_UINT256 == 2n**256n - 1n == type(uint256).max
+console.log(MAX_UINT256); // 115792089237316195423570985008687907853269984665640564039457584007913129639935n
+
+// signPermitSingle defaults to MAX when amount is omitted
+const { signature } = await signPermitSingle(provider, account, chainId, {
+  token:   "0xTokenAddress",
+  // amount omitted → defaults to MAX_UINT256
+  spender: "0xSpenderAddress",
+});
+
+// Pass explicit amount to override
+const { signature: exactSig } = await signPermitSingle(provider, account, chainId, {
+  token:   "0xTokenAddress",
+  amount:  500_000_000n,   // exact override
+  spender: "0xSpenderAddress",
+});
+```
+
+### Multicall3
+
+```js
+import { multicallRead, buildCall, MULTICALL3_ADDRESS } from "./sdk/index.js";
+
+// Batch read calls
+const results = await multicallRead(provider, [
+  buildCall("0xContract1", encodedCallData1),
+  buildCall("0xContract2", encodedCallData2),
+]);
+
+// results[0].success, results[0].returnData
+```
+
+### EIP-712 Signing
+
+```js
+import { buildDomain, buildTypedData, signTypedData } from "./sdk/index.js";
+
+const domain = buildDomain({
+  name: "MyApp",
+  version: "1",
+  chainId: 1,
+  verifyingContract: "0xContract",
+});
+
+const typedData = buildTypedData(
+  domain,
+  { Order: [{ name: "amount", type: "uint256" }] },
+  "Order",
+  { amount: 42 }
+);
+
+const signature = await signTypedData(provider, account, typedData);
+```
+
+### Utilities
+
+```js
+import {
+  isValidAddress,
+  shortenAddress,
+  parseAmount,
+  formatAmount,
+  getChainInfo,
+  getNativeCurrencySymbol,
+  getTxUrl,
+  deadlineFromNow,
+} from "./sdk/index.js";
+
+shortenAddress("0x1234...abcd");   // "0x1234…abcd"
+parseAmount("1.5", 18);            // 1500000000000000000n
+formatAmount(1500000000000000000n); // "1.5000"
+getNativeCurrencySymbol(56);        // "BNB"
+getTxUrl("0xHash", 1);             // "https://etherscan.io/tx/0xHash"
+deadlineFromNow(30);               // Unix timestamp 30 minutes from now
+```
+
+---
+
+## CI / CD
+
+### CI (`.github/workflows/ci.yml`)
+
+Runs on every push and pull request to `main`:
+1. Install dependencies (`npm ci`)
+2. Lint (`eslint`)
+3. Test (`vitest`)
+4. Build SDK bundle (`vite build`)
+
+### Deploy (`.github/workflows/deploy.yml`)
+
+Runs on push to `main`:
+1. Build with production env vars (stored as GitHub Secrets)
+2. Deploy `dist/` to GitHub Pages
+
+**Required GitHub Secrets:**
+
+| Secret | Description |
+|---|---|
+| `WALLETCONNECT_PROJECT_ID` | Your WalletConnect Cloud project ID |
+
+---
+
+## Contributing
+
+1. Fork the repo
+2. Create a feature branch: `git checkout -b feat/my-feature`
+3. Make changes, add tests
+4. Run `npm run lint && npm test && npm run build`
+5. Open a pull request
+
+---
+
+## License
+
+MIT © IntegratedDEX
+
 
 ## Table of Contents
 

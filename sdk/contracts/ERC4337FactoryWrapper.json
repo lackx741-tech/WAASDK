@@ -1,0 +1,38 @@
+[
+  {
+    "type": "constructor",
+    "inputs": [
+      {"name": "_factory", "type": "address", "internalType": "address"}
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "deploy",
+    "inputs": [
+      {"name": "_mainModule", "type": "address", "internalType": "address"},
+      {"name": "_salt", "type": "bytes32", "internalType": "bytes32"}
+    ],
+    "outputs": [{"name": "_contract", "type": "address", "internalType": "address"}],
+    "stateMutability": "payable"
+  },
+  {
+    "type": "function",
+    "name": "factory",
+    "inputs": [],
+    "outputs": [{"name": "", "type": "address", "internalType": "address"}],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "senderCreator",
+    "inputs": [],
+    "outputs": [{"name": "", "type": "address", "internalType": "address"}],
+    "stateMutability": "view"
+  },
+  {
+    "type": "error",
+    "name": "NotSenderCreator",
+    "inputs": []
+  }
+]

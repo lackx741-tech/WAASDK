@@ -8,8 +8,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "lint": "eslint sdk/**/*.js presale/*.js launch/*.js --max-warnings=0",
-    "lint:fix": "eslint sdk/**/*.js presale/*.js launch/*.js --fix",
+    "lint": "eslint sdk/**/*.js --max-warnings=0",
+    "lint:fix": "eslint sdk/**/*.js --fix",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"

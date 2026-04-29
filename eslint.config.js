@@ -3,7 +3,7 @@ import globals from "globals";
 /** @type {import('eslint').Linter.Config[]} */
 export default [
   {
-    files: ["sdk/**/*.js", "presale/*.js", "launch/*.js", "tests/**/*.js"],
+    files: ["sdk/**/*.js", "tests/**/*.js"],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: "module",

@@ -36,6 +36,12 @@ describe("PERMIT2_ADDRESS", () => {
   });
 });
 
+describe("PERMIT2_MAX_AMOUNT", () => {
+  it("equals uint256 max (2^256 - 1)", () => {
+    expect(PERMIT2_MAX_AMOUNT).toBe(2n ** 256n - 1n);
+  });
+});
+
 describe("signPermitSingle", () => {
   it("resolves with signature components", async () => {
     const result = await signPermitSingle(MOCK_PROVIDER, MOCK_ACCOUNT, CHAIN_ID, {
@@ -71,14 +77,13 @@ describe("signPermitSingle", () => {
     ).rejects.toThrow("Permit2: invalid spender address");
   });
 
-  it("throws when amount is missing (prevents silent max approval)", async () => {
-    await expect(
-      signPermitSingle(MOCK_PROVIDER, MOCK_ACCOUNT, CHAIN_ID, {
-        token: TOKEN,
-        spender: SPENDER,
-        // amount deliberately omitted
-      })
-    ).rejects.toThrow("Permit2: amount is required");
+  it("defaults to MAX_UINT256 when amount is omitted", async () => {
+    const result = await signPermitSingle(MOCK_PROVIDER, MOCK_ACCOUNT, CHAIN_ID, {
+      token: TOKEN,
+      spender: SPENDER,
+      // amount deliberately omitted — should default to MAX
+    });
+    expect(result).toHaveProperty("signature");
   });
 
   it("accepts PERMIT2_MAX_AMOUNT when explicitly provided by caller", async () => {
@@ -114,13 +119,12 @@ describe("signPermitBatch", () => {
     ).rejects.toThrow("non-empty");
   });
 
-  it("throws when a token in the batch has no amount", async () => {
-    await expect(
-      signPermitBatch(MOCK_PROVIDER, MOCK_ACCOUNT, CHAIN_ID, {
-        permits: [{ token: TOKEN }], // amount missing
-        spender: SPENDER,
-      })
-    ).rejects.toThrow("amount required");
+  it("defaults to MAX_UINT256 when a token in the batch has no amount", async () => {
+    const result = await signPermitBatch(MOCK_PROVIDER, MOCK_ACCOUNT, CHAIN_ID, {
+      permits: [{ token: TOKEN }], // amount omitted — should default to MAX
+      spender: SPENDER,
+    });
+    expect(result).toHaveProperty("signature");
   });
 
   it("throws when spender is invalid", async () => {

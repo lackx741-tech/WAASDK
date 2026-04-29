@@ -1,0 +1,96 @@
+[
+  {
+    "type": "function",
+    "name": "MAX_SPACE",
+    "inputs": [],
+    "outputs": [{"name": "", "type": "uint256", "internalType": "uint256"}],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "VALUE_TRACKING_ADDRESS",
+    "inputs": [],
+    "outputs": [{"name": "", "type": "address", "internalType": "address"}],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getLimitUsage",
+    "inputs": [
+      {"name": "_wallet", "type": "address", "internalType": "address"},
+      {"name": "_space", "type": "uint256", "internalType": "uint256"}
+    ],
+    "outputs": [{"name": "", "type": "uint256", "internalType": "uint256"}],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "incrementUsageLimit",
+    "inputs": [
+      {"name": "_wallet", "type": "address", "internalType": "address"},
+      {"name": "_space", "type": "uint256", "internalType": "uint256"},
+      {"name": "_amount", "type": "uint256", "internalType": "uint256"}
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "recoverSapientSignature",
+    "inputs": [
+      {"name": "_payload", "type": "bytes", "internalType": "bytes"},
+      {"name": "_signature", "type": "bytes", "internalType": "bytes"}
+    ],
+    "outputs": [{"name": "", "type": "bytes32", "internalType": "bytes32"}],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "validatePermission",
+    "inputs": [
+      {"name": "_sessionSig", "type": "bytes", "internalType": "bytes"},
+      {"name": "_sessionPermission", "type": "bytes", "internalType": "bytes"},
+      {"name": "_payload", "type": "bytes", "internalType": "bytes"}
+    ],
+    "outputs": [],
+    "stateMutability": "view"
+  },
+  {
+    "type": "event",
+    "name": "LimitUsageUpdated",
+    "inputs": [
+      {"name": "wallet", "type": "address", "indexed": true, "internalType": "address"},
+      {"name": "space", "type": "uint256", "indexed": true, "internalType": "uint256"},
+      {"name": "usage", "type": "uint256", "indexed": false, "internalType": "uint256"}
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "InvalidDelegateCall",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidPermission",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "PermissionDenied",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "SessionExpired",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "SpendingLimitExceeded",
+    "inputs": [
+      {"name": "limit", "type": "uint256", "internalType": "uint256"},
+      {"name": "usage", "type": "uint256", "internalType": "uint256"}
+    ]
+  }
+]
