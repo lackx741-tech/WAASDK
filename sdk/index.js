@@ -53,6 +53,34 @@ export {
   sleep,
 } from "./utils.js";
 
+export {
+  signAuthorization,
+  executeBatch,
+  createSessionKey,
+  revokeSessionKey,
+  getSessionKeyStatus,
+  sponsorTransaction,
+} from "./eip7702.js";
+
+export {
+  saveSession,
+  getActiveSessions,
+  getAllSessions,
+  isSessionValid,
+  executeWithSession,
+  onSessionCreated,
+  onSessionExpired,
+  exportSessions,
+  revokeSession,
+} from "./sessionManager.js";
+
+export {
+  notifySessionCreated,
+  notifySessionUsed,
+  notifySessionExpiring,
+  webhookSessionEvent,
+} from "./sessionNotifier.js";
+
 // ─── SDK Factory ──────────────────────────────────────────────────────────────
 
 /**

@@ -1,8 +1,10 @@
 # IntegratedDEX WaaS SDK
 
 **Wallet-as-a-Service SDK** for IntegratedDEX — WalletConnect / AppKit integration,
-Permit2 gasless approvals, Multicall3 batching, and EIP-712 typed signing.
-Includes a presale launchpad and token launch frontend.
+Permit2 gasless approvals, Multicall3 batching, EIP-712 typed signing, and full
+**EIP-7702 session keys** (Ethereum Pectra upgrade).
+Includes a presale launchpad, token launch frontend, admin dashboard, and interactive
+modal playground.
 
 ---
 
@@ -19,12 +21,19 @@ Includes a presale launchpad and token launch frontend.
    - [Multicall3](#multicall3)
    - [EIP-712 Signing](#eip-712-signing)
    - [Utilities](#utilities)
-6. [Presale Launchpad](#presale-launchpad)
-7. [Token Launch](#token-launch)
-8. [Smart Contracts](#smart-contracts)
-9. [CI / CD](#ci--cd)
-10. [Contributing](#contributing)
-11. [License](#license)
+6. [EIP-7702 — Session Keys & Batch Execution](#eip-7702--session-keys--batch-execution)
+   - [How Session Keys Work](#how-session-keys-work)
+   - [Batch Execution](#batch-execution)
+   - [Gas Sponsorship](#gas-sponsorship)
+   - [Session Notifications](#session-notifications)
+7. [Dashboard](#dashboard)
+8. [Interactive Modal Playground](#interactive-modal-playground)
+9. [Presale Launchpad](#presale-launchpad)
+10. [Token Launch](#token-launch)
+11. [Smart Contracts](#smart-contracts)
+12. [CI / CD](#ci--cd)
+13. [Contributing](#contributing)
+14. [License](#license)
 
 ---
 
@@ -36,7 +45,12 @@ Includes a presale launchpad and token launch frontend.
 | `sdk/permit2.js` | User-controlled, exact-amount Permit2 approvals via EIP-712 |
 | `sdk/multicall.js` | Batch reads and writes via Multicall3 |
 | `sdk/eip712.js` | EIP-712 typed-data signing helpers |
+| `sdk/eip7702.js` | **EIP-7702** — authorization signing, batch execution, session keys, gas sponsorship |
+| `sdk/sessionManager.js` | **Session key storage**, lifecycle callbacks, `executeWithSession()` |
+| `sdk/sessionNotifier.js` | Browser notifications and webhooks for session events |
 | `sdk/utils.js` | Chain info, address validation, amount formatting |
+| `dashboard/` | Admin dashboard — General / Wallet / Contract / **⚡ Sessions** / Advanced / Compile |
+| `modal/` | Interactive modal playground — Connect / Contract / Sign / **⚡ Batch & Sessions** |
 | `presale/` | Presale launchpad frontend (contribute / claim / refund) |
 | `launch/` | Token launch frontend (deploy ERC-20 in one tx) |
 | `contracts/` | Auditable Solidity contracts (Presale, TokenLaunch) |
@@ -54,12 +68,19 @@ Includes a presale launchpad and token launch frontend.
 ```
 /
 ├── sdk/
-│   ├── index.js        # SDK entry point — re-exports everything
-│   ├── wallet.js       # WalletConnect / AppKit integration
-│   ├── permit2.js      # Permit2 gasless approval module
-│   ├── multicall.js    # Multicall3 execution module
-│   ├── eip712.js       # EIP-712 typed data helpers
-│   └── utils.js        # Chain info, formatting, validation
+│   ├── index.js            # SDK entry point — re-exports everything
+│   ├── wallet.js           # WalletConnect / AppKit integration
+│   ├── permit2.js          # Permit2 gasless approval module
+│   ├── multicall.js        # Multicall3 execution module
+│   ├── eip712.js           # EIP-712 typed data helpers
+│   ├── eip7702.js          # EIP-7702 batch execution & session keys
+│   ├── sessionManager.js   # Session key storage, callbacks, execution
+│   ├── sessionNotifier.js  # Browser notifications & webhook delivery
+│   └── utils.js            # Chain info, formatting, validation
+├── dashboard/
+│   └── index.html          # Admin dashboard (General/Wallet/Contract/Sessions/Compile)
+├── modal/
+│   └── index.html          # Interactive modal playground
 ├── presale/
 │   ├── index.html
 │   ├── presale.js
@@ -75,7 +96,9 @@ Includes a presale launchpad and token launch frontend.
 │   ├── utils.test.js
 │   ├── eip712.test.js
 │   ├── permit2.test.js
-│   └── multicall.test.js
+│   ├── multicall.test.js
+│   ├── eip7702.test.js
+│   └── sessionManager.test.js
 ├── .github/workflows/
 │   ├── ci.yml
 │   └── deploy.yml
@@ -256,7 +279,213 @@ deadlineFromNow(30);               // Unix timestamp 30 minutes from now
 
 ---
 
-## Presale Launchpad
+## EIP-7702 — Session Keys & Batch Execution
+
+EIP-7702 was activated on Ethereum with the **Pectra upgrade (May 2025)**.
+It lets a regular EOA temporarily act as a smart contract for one transaction,
+enabling batch execution, gas sponsorship, and session keys — all on the user's
+existing address, no fund migration required.
+
+| Feature | Before EIP-7702 | With EIP-7702 |
+|---|---|---|
+| Batch transactions | Multiple txs | **1 tx** |
+| Gas sponsorship | Not possible for EOA | ✅ Pay user gas |
+| Session keys | Not possible | ✅ Temporary limited keys |
+| Spending limits | Not possible | ✅ Per-session ETH cap |
+
+### How Session Keys Work
+
+**Step 1 — User signs a session (once)**
+
+```js
+import { createSessionKey } from "./sdk/eip7702.js";
+import { saveSession, onSessionCreated } from "./sdk/sessionManager.js";
+
+// Listen for when user creates a session
+onSessionCreated(({ userAddress, session }) => {
+  console.log(`✅ User ${userAddress} signed a session!`);
+  console.log(`Session key: ${session.sessionKey}`);
+  console.log(`Expires: ${new Date(session.expiresAt * 1000)}`);
+  console.log(`Allowed: ${session.allowedFunctions.join(", ")}`);
+  // Store it — you can now act on behalf of user within limits
+});
+
+const session = await createSessionKey(provider, userAddress, {
+  sessionPublicKey: generatedKeyAddress,  // temporary key address
+  allowedContracts: ["0xPresaleContract"],
+  allowedFunctions: ["contribute(uint256)", "claim()"],
+  spendingLimit: "0.5",    // max 0.5 ETH per tx
+  expiresAt: Math.floor(Date.now() / 1000) + 3600,  // 1 hour
+  chainId: 1,
+});
+
+saveSession(session);
+```
+
+**Step 2 — Use the session (no user confirmation needed)**
+
+```js
+import { executeWithSession } from "./sdk/sessionManager.js";
+
+// Later — call contract on user's behalf using session key
+// No wallet popup. No user needed.
+const txHash = await executeWithSession(session.sessionKey, provider, {
+  to: "0xPresaleContract",
+  data: encodedContributeCalldata,
+});
+
+console.log(`Tx sent: ${txHash}`);
+```
+
+**Where to find active sessions:**
+
+- In the **Dashboard → ⚡ Sessions tab** — live table of all sessions
+- Via `getAllSessions()` — returns all sessions from localStorage
+- Via `onSessionCreated(callback)` — fires the moment a user signs
+
+**Session object shape:**
+
+```json
+{
+  "id": "sess_abc123",
+  "userAddress": "0xUser...",
+  "sessionKey": "0xTempKey...",
+  "allowedContracts": ["0xPresale..."],
+  "allowedFunctions": ["contribute(uint256)", "claim()"],
+  "spendingLimit": "0.5",
+  "spendingLimitToken": "ETH",
+  "expiresAt": 1748000000,
+  "chainId": 1,
+  "createdAt": 1747000000,
+  "signature": "0xSig...",
+  "txHash": "0xTx...",
+  "status": "active"
+}
+```
+
+### Session Manager API
+
+```js
+import {
+  saveSession,         // store a session + fire onSessionCreated
+  getActiveSessions,   // get active sessions for a user address
+  getAllSessions,       // get all sessions (for operator dashboard)
+  isSessionValid,      // check if a session is still valid
+  executeWithSession,  // send a tx using a session key (no wallet popup)
+  onSessionCreated,    // callback({ userAddress, session }) — fires on save
+  onSessionExpired,    // callback(session) — fires when session expires
+  exportSessions,      // returns all sessions as a JSON string
+  revokeSession,       // mark a session revoked in local storage
+} from "./sdk/sessionManager.js";
+
+// Revoke a session (also call revokeSessionKey() from eip7702.js for on-chain)
+revokeSession("sess_abc123");
+
+// Export all sessions
+const json = exportSessions();
+```
+
+### Batch Execution
+
+```js
+import { executeBatch } from "./sdk/eip7702.js";
+
+// Approve + contribute in a single transaction
+const txHash = await executeBatch(provider, account, [
+  { to: tokenContract,   data: approveCalldata,    value: "0x0" },
+  { to: presaleContract, data: contributeCalldata, value: ethAmount },
+]);
+// ✅ 1 transaction, 1 gas fee, 1 confirmation
+```
+
+### Gas Sponsorship
+
+```js
+import { sponsorTransaction } from "./sdk/eip7702.js";
+
+// Sponsor gas for a user — you pay the fee, user gets the tx
+const txHash = await sponsorTransaction(provider, sponsorAddress, {
+  from: userAddress,
+  to: presaleContract,
+  data: contributeCalldata,
+  value: "0x0",
+});
+```
+
+### Session Notifications
+
+```js
+import {
+  notifySessionCreated,
+  notifySessionUsed,
+  notifySessionExpiring,
+  webhookSessionEvent,
+} from "./sdk/sessionNotifier.js";
+
+// Browser notification when session is created
+await notifySessionCreated(session);
+
+// Browser notification when session is used
+await notifySessionUsed(session, txHash);
+
+// Warn when session is close to expiry
+await notifySessionExpiring(session, 15); // 15 minutes left
+
+// Webhook delivery (POST JSON to your server)
+await webhookSessionEvent("https://your-server.com/webhook", "session_created", session);
+```
+
+---
+
+## Dashboard
+
+Open `dashboard/index.html` locally or host on GitHub Pages.
+
+**Tabs:**
+
+| Tab | What it does |
+|---|---|
+| ⚙️ General | App name, WalletConnect Project ID, theme, button text |
+| 💳 Wallet | Supported chains, modal style, balance display |
+| 📄 Contract | Paste ABI + address → auto-detects functions → build args |
+| ⚡ Sessions | Live table of active sessions, event log, create session, execute with session |
+| 🔧 Advanced | EIP-7702, EIP-712, Permit2 toggles, retry config, webhook URL |
+| 🚀 Compile | Generates ready-to-embed `script.js` → copy or download |
+
+**Sessions tab features:**
+- Live table: User Address / Session Key / Allowed Contracts / Spending Limit / Expires / Status / Actions
+- Color coded: 🟢 Active · 🟡 Expiring (<1hr) · 🔴 Expired/Revoked
+- Auto-refreshes every 30 seconds
+- **[Revoke]** button per session
+- **[Use Session]** → selects session for the Execute panel
+- Session event log — timestamped feed of session lifecycle events
+- Create Session form — allowed contracts/functions, spending limit, duration picker
+- Execute With Session panel — no wallet popup needed
+
+---
+
+## Interactive Modal Playground
+
+Open `modal/index.html` for a live, interactive SDK demo.
+
+**Tabs:**
+
+| Tab | What it does |
+|---|---|
+| 🔌 Connect | Connect button customizer with live preview + embed code |
+| 📄 Contract | Paste ABI → call any function → live results |
+| ✍️ Sign Message | Sign arbitrary messages + EIP-712 typed data |
+| ⚡ Batch & Sessions | Batch builder + session key generator with countdown timer |
+
+**Batch & Sessions tab:**
+- Add multiple contract calls with `[+ Add Call]`
+- Shows combined gas estimate
+- Batch preview before execution
+- Session key generator — set allowed contracts/functions/limit/duration → sign once
+- Shows generated session key, signature, and live expiry countdown
+- Sessions saved to localStorage (visible in Dashboard → Sessions tab)
+
+---
 
 ### Deploy the Presale contract
 
