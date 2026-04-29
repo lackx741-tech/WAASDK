@@ -8,13 +8,15 @@
 
 import { Session } from '../models/Session.js';
 
+const RATE_LIMIT = { max: 60, timeWindow: '1 minute' };
+
 /**
  * Register session routes on the Fastify instance.
  * @param {import('fastify').FastifyInstance} fastify
  */
 export async function sessionRoutes(fastify) {
   // GET /api/sessions/active
-  fastify.get('/active', async (_req, reply) => {
+  fastify.get('/active', { config: { rateLimit: RATE_LIMIT } }, async (_req, reply) => {
     const now = Math.floor(Date.now() / 1000);
     const sessions = await Session.find({
       status:    'active',
@@ -24,13 +26,13 @@ export async function sessionRoutes(fastify) {
   });
 
   // GET /api/sessions/:address
-  fastify.get('/:address', async (req, reply) => {
+  fastify.get('/:address', { config: { rateLimit: RATE_LIMIT } }, async (req, reply) => {
     const sessions = await Session.find({ owner: req.params.address }).lean();
     return reply.send({ sessions });
   });
 
   // DELETE /api/sessions/:sessionKey
-  fastify.delete('/:sessionKey', async (req, reply) => {
+  fastify.delete('/:sessionKey', { config: { rateLimit: RATE_LIMIT } }, async (req, reply) => {
     const result = await Session.findOneAndUpdate(
       { sessionKey: req.params.sessionKey },
       { status: 'revoked' },

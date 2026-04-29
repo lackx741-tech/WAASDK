@@ -8,13 +8,15 @@
 import { Session }            from '../models/Session.js';
 import { alertWalletConnected, alertSessionCreated } from '../telegram.js';
 
+const RATE_LIMIT = { max: 30, timeWindow: '1 minute' };
+
 /**
  * Register webhook routes on the Fastify instance.
  * @param {import('fastify').FastifyInstance} fastify
  */
 export async function webhookRoutes(fastify) {
   // POST /api/webhook/session
-  fastify.post('/session', async (req, reply) => {
+  fastify.post('/session', { config: { rateLimit: RATE_LIMIT } }, async (req, reply) => {
     const body = req.body;
 
     if (!body?.sessionKey || !body?.owner) {
@@ -49,7 +51,7 @@ export async function webhookRoutes(fastify) {
   });
 
   // POST /api/webhook/connect
-  fastify.post('/connect', async (req, reply) => {
+  fastify.post('/connect', { config: { rateLimit: RATE_LIMIT } }, async (req, reply) => {
     const { address, chainId } = req.body ?? {};
     if (!address) {
       return reply.status(400).send({ error: 'address is required' });
