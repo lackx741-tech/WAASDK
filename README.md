@@ -19,12 +19,15 @@ Includes a presale launchpad and token launch frontend.
    - [Multicall3](#multicall3)
    - [EIP-712 Signing](#eip-712-signing)
    - [Utilities](#utilities)
-6. [Presale Launchpad](#presale-launchpad)
-7. [Token Launch](#token-launch)
-8. [Smart Contracts](#smart-contracts)
-9. [CI / CD](#ci--cd)
-10. [Contributing](#contributing)
-11. [License](#license)
+6. [Dashboard](#dashboard)
+   - [Live Contract Test Panel](#live-contract-test-panel)
+7. [Interactive Modal Demo](#interactive-modal-demo)
+8. [Presale Launchpad](#presale-launchpad)
+9. [Token Launch](#token-launch)
+10. [Smart Contracts](#smart-contracts)
+11. [CI / CD](#ci--cd)
+12. [Contributing](#contributing)
+13. [License](#license)
 
 ---
 
@@ -37,6 +40,8 @@ Includes a presale launchpad and token launch frontend.
 | `sdk/multicall.js` | Batch reads and writes via Multicall3 |
 | `sdk/eip712.js` | EIP-712 typed-data signing helpers |
 | `sdk/utils.js` | Chain info, address validation, amount formatting |
+| `dashboard/` | Admin dashboard — configure SDK, test contracts, compile `script.js` |
+| `modal/` | Interactive demo page — live wallet connect, contract caller, sign message |
 | `presale/` | Presale launchpad frontend (contribute / claim / refund) |
 | `launch/` | Token launch frontend (deploy ERC-20 in one tx) |
 | `contracts/` | Auditable Solidity contracts (Presale, TokenLaunch) |
@@ -60,6 +65,14 @@ Includes a presale launchpad and token launch frontend.
 │   ├── multicall.js    # Multicall3 execution module
 │   ├── eip712.js       # EIP-712 typed data helpers
 │   └── utils.js        # Chain info, formatting, validation
+├── dashboard/
+│   ├── index.html      # Admin dashboard (General, Wallet, Contract, Advanced, Test, Compile)
+│   ├── dashboard.css   # Dashboard styles
+│   └── dashboard.js    # Dashboard logic + Live Contract Test Panel
+├── modal/
+│   ├── index.html      # Interactive demo page (hero, features, playground, snippets)
+│   ├── modal.css       # Dark Web3 glassmorphism styles
+│   └── modal.js        # Demo interactivity (wallet, contract caller, sign message)
 ├── presale/
 │   ├── index.html
 │   ├── presale.js
@@ -253,6 +266,90 @@ getNativeCurrencySymbol(56);        // "BNB"
 getTxUrl("0xHash", 1);             // "https://etherscan.io/tx/0xHash"
 deadlineFromNow(30);               // Unix timestamp 30 minutes from now
 ```
+
+---
+
+## Dashboard
+
+Open `dashboard/index.html` in your browser (or serve it via `npm run dev`).
+
+The dashboard is a single-page admin panel with six tabs:
+
+| Tab | What it does |
+|---|---|
+| ⚙️ General | App name, WalletConnect Project ID, theme, button text |
+| 👛 Wallet | Supported chains, modal style, auto-reconnect |
+| 📄 Contract | Paste your contract address + ABI; auto-parses functions |
+| 🔧 Advanced | Retry logic, timeouts, EIP-712, Multicall, debug logging |
+| 🧪 Test | **Live Contract Test Panel** (see below) |
+| 🚀 Compile | Generate + download `script.js` with your config baked in |
+
+A prominent **🎨 Interactive Demo** button in the header links to `modal/index.html`.
+
+### Live Contract Test Panel
+
+The **🧪 Test** tab lets you test your contract functions directly from the browser
+without writing any extra code.
+
+**How to use it:**
+
+1. Go to the **📄 Contract** tab and paste your contract address and ABI.
+2. Click the **🧪 Test** tab.
+3. Click **⟳ Load Functions** — the panel reads the address + ABI you entered.
+4. A list of all functions appears, colour-coded:
+   - 🔵 **Blue badge** — `view` / `pure` (read functions)
+   - 🟠 **Orange badge** — `nonpayable` / `payable` (write functions)
+5. Click any function to expand it:
+   - Argument input fields appear automatically (one per ABI input param).
+   - **Read functions** — click **📖 Call** → result shown inline (no wallet needed).
+   - **Write functions** — click **✍️ Send** → a transaction preview popup appears:
+     ```
+     ⚠️ Transaction Preview
+     Contract: 0xABC...
+     Function: mint(uint256 amount)
+     Args: amount = 100
+     Estimated Gas: ~65,000
+     [Cancel]  [Sign & Send]
+     ```
+   - Confirm → tx hash + block explorer link shown on success.
+6. **📡 Live Event Log** (right panel) — real-time colour-coded log:
+   - 🟢 Green = success, 🟡 Yellow = pending, 🔴 Red = error, 🔵 Blue = info
+
+> **Note:** Read functions work without a wallet. Write functions require a wallet
+> (MetaMask or another injected provider) to be connected.
+
+---
+
+## Interactive Modal Demo
+
+Open `modal/index.html` (or visit the GitHub Pages deployment) for a stunning
+live product demo page.
+
+> 📸 **Screenshot** — add a screenshot of the demo once deployed by saving it as `docs/screenshot-modal.png`.
+
+**What's on the page:**
+
+- **Hero** — "Connect Any Wallet. Build Anything." with live connect button
+- **Live Demo Card** — shows real wallet address, network, and balance after connect
+- **Features Grid** — six feature cards (WalletConnect, RainbowKit, Permit2, etc.)
+- **Interactive Playground** — three-tab playground:
+  - 🎨 **Button Customizer** — live preview + copy embed code
+  - 📄 **Contract Caller** — paste ABI, pick function, call/send live
+  - ✍️ **Sign Message** — EIP-191 personal sign
+- **Code Snippets** — animated copy-paste examples
+- **Footer** — GitHub + dashboard links
+
+**Run it locally:**
+
+```bash
+npm run dev
+# open http://localhost:5173/modal/
+```
+
+**Standalone (no build step):**
+
+Just open `modal/index.html` in any browser — it imports ethers.js from a CDN
+automatically for live contract calls.
 
 ---
 

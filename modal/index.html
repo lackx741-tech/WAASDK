@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="IntegratedDEX WaaS SDK — Interactive Demo. Connect any wallet, test contract functions, sign messages — live in the browser." />
+  <title>IntegratedDEX — Interactive Demo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="modal.css" />
+</head>
+<body>
+
+<!-- ─── Animated Background ─────────────────────────────────────────────────── -->
+<div class="bg-anim" aria-hidden="true">
+  <div class="bg-anim__blob"></div>
+  <div class="bg-anim__blob"></div>
+  <div class="bg-anim__blob"></div>
+</div>
+
+<!-- ─── Navigation ──────────────────────────────────────────────────────────── -->
+<nav class="nav">
+  <a href="../" class="nav__logo">
+    <svg class="nav__logo-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    IntegratedDEX
+  </a>
+
+  <div class="nav__links">
+    <a href="#features" class="btn btn--outline btn--sm">Features</a>
+    <a href="#playground" class="btn btn--outline btn--sm">Playground</a>
+    <a href="../dashboard/index.html" class="btn btn--outline btn--sm">⚙️ Dashboard</a>
+    <a href="https://github.com/lackx741-tech/WAASDK" target="_blank" rel="noopener" class="btn btn--outline btn--sm">
+      📖 View Docs
+    </a>
+    <button class="btn btn--outline btn--sm" id="theme-toggle-btn" title="Toggle theme">☀️ Light</button>
+  </div>
+</nav>
+
+<main>
+
+  <!-- ═══════════════════════════ HERO ═══════════════════════════════ -->
+  <section class="hero" id="hero">
+    <div class="container">
+      <span class="section-tag">🚀 Live Interactive Demo</span>
+      <h1 class="hero__headline">
+        Connect Any Wallet.<br />Build Anything.
+      </h1>
+      <p class="hero__sub">
+        IntegratedDEX WaaS SDK — WalletConnect, RainbowKit, Permit2, Multicall
+      </p>
+      <div class="hero__ctas">
+        <button class="btn btn--primary btn--lg" id="hero-connect-btn">🔗 Connect Wallet</button>
+        <a href="https://github.com/lackx741-tech/WAASDK" target="_blank" rel="noopener" class="btn btn--outline btn--lg">📖 View Docs</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════ LIVE DEMO CARD ════════════════════════════ -->
+  <section class="demo-section" id="demo">
+    <div class="container">
+      <div class="demo-card glass-card glass-card--glow">
+
+        <div class="demo-card__status">
+          <span class="status-dot" id="demo-status-dot"></span>
+          <span id="demo-status-text">Disconnected</span>
+        </div>
+
+        <div class="demo-row">
+          <span class="demo-row__label">Address</span>
+          <span class="demo-row__value" id="demo-address">—</span>
+        </div>
+        <div class="demo-row">
+          <span class="demo-row__label">Network</span>
+          <span class="demo-row__value" id="demo-chain">—</span>
+        </div>
+        <div class="demo-row">
+          <span class="demo-row__label">Balance</span>
+          <span class="demo-row__value" id="demo-balance">—</span>
+        </div>
+
+        <button class="btn btn--connect" id="connect-demo-btn">Connect Wallet</button>
+
+        <div class="demo-toggles" style="margin-top:1.25rem">
+          <span class="toggle-chip toggle-chip--active" data-provider="walletconnect">WalletConnect</span>
+          <span class="toggle-chip" data-provider="rainbowkit">RainbowKit</span>
+          <span class="toggle-chip" data-provider="metamask">MetaMask</span>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════ FEATURES ════════════════════════════════ -->
+  <section id="features">
+    <div class="container">
+      <span class="section-tag">What's Included</span>
+      <h2 class="section-headline">Everything You Need</h2>
+      <p class="section-sub">
+        A complete Wallet-as-a-Service toolkit — drop it into any site in seconds.
+      </p>
+
+      <div class="features-grid">
+
+        <div class="feature-card">
+          <span class="feature-card__icon">🔗</span>
+          <h3 class="feature-card__title">WalletConnect</h3>
+          <p class="feature-card__desc">
+            Connect 400+ wallets via QR code or deep link. Works on mobile and desktop.
+            Powered by Web3Modal v5 / AppKit.
+          </p>
+          <span class="feature-card__badge">400+ wallets</span>
+        </div>
+
+        <div class="feature-card">
+          <span class="feature-card__icon">🌈</span>
+          <h3 class="feature-card__title">RainbowKit</h3>
+          <p class="feature-card__desc">
+            Beautiful, opinionated wallet UI with zero extra config.
+            Plug in your project ID and you're live.
+          </p>
+          <span class="feature-card__badge">Zero config</span>
+        </div>
+
+        <div class="feature-card">
+          <span class="feature-card__icon">⚡</span>
+          <h3 class="feature-card__title">Permit2</h3>
+          <p class="feature-card__desc">
+            EIP-712 gasless token approvals. Users always see the exact amount approved
+            — no hidden max approvals.
+          </p>
+          <span class="feature-card__badge">Gasless</span>
+        </div>
+
+        <div class="feature-card">
+          <span class="feature-card__icon">📦</span>
+          <h3 class="feature-card__title">Multicall3</h3>
+          <p class="feature-card__desc">
+            Batch multiple contract reads into a single RPC request.
+            Up to 10× fewer network round-trips.
+          </p>
+          <span class="feature-card__badge">10× fewer requests</span>
+        </div>
+
+        <div class="feature-card">
+          <span class="feature-card__icon">🔒</span>
+          <h3 class="feature-card__title">EIP-712 Signing</h3>
+          <p class="feature-card__desc">
+            Typed data signing helpers for structured on-chain messages.
+            Supports domains, custom types, and nested structs.
+          </p>
+          <span class="feature-card__badge">Typed data</span>
+        </div>
+
+        <div class="feature-card">
+          <span class="feature-card__icon">🚀</span>
+          <h3 class="feature-card__title">1-Line Embed</h3>
+          <p class="feature-card__desc">
+            Drop a single <code style="font-size:.82em;color:var(--primary-2)">&lt;script&gt;</code> tag
+            into any HTML page. No build step. No framework required.
+          </p>
+          <span class="feature-card__badge">No build step</span>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════ PLAYGROUND ══════════════════════════════ -->
+  <section id="playground">
+    <div class="container">
+      <span class="section-tag">Interactive Playground</span>
+      <h2 class="section-headline">Try It Live</h2>
+      <p class="section-sub">
+        Test the SDK right here — connect your wallet, call contracts, sign messages.
+      </p>
+
+      <div class="glass-card" style="margin-top:3rem">
+
+        <div class="playground__tabs">
+          <button class="playground__tab playground__tab--active" data-panel="pg-panel-customizer">
+            🎨 Button Customizer
+          </button>
+          <button class="playground__tab" data-panel="pg-panel-contract">
+            📄 Contract Caller
+          </button>
+          <button class="playground__tab" data-panel="pg-panel-sign">
+            ✍️ Sign Message
+          </button>
+        </div>
+
+        <!-- Tab 1: Button Customizer -->
+        <div class="playground__panel playground__panel--active" id="pg-panel-customizer">
+          <div class="pg-form">
+            <div class="pg-form__row">
+              <div class="form-group">
+                <label for="pg-btn-text">Button Text</label>
+                <input type="text" id="pg-btn-text" value="Connect Wallet" placeholder="Connect Wallet" />
+              </div>
+              <div class="form-group">
+                <label for="pg-theme">Theme</label>
+                <select id="pg-theme">
+                  <option value="dark">Dark</option>
+                  <option value="light">Light</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="pg-form__row" style="gap:1.5rem;align-items:center">
+              <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;font-size:.88rem;color:var(--text)">
+                <input type="checkbox" id="pg-show-address" checked style="accent-color:var(--primary)" />
+                Show address
+              </label>
+              <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;font-size:.88rem;color:var(--text)">
+                <input type="checkbox" id="pg-show-balance" style="accent-color:var(--primary)" />
+                Show balance
+              </label>
+              <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;font-size:.88rem;color:var(--text)">
+                <input type="checkbox" id="pg-show-chain" checked style="accent-color:var(--primary)" />
+                Show chain icon
+              </label>
+            </div>
+          </div>
+
+          <!-- Live preview -->
+          <div class="btn-preview-wrap">
+            <button class="btn btn--connect" id="pg-preview-btn" style="max-width:280px">Connect Wallet</button>
+          </div>
+
+          <!-- Embed snippet -->
+          <div style="margin-top:1.5rem">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem">
+              <span style="font-size:.78rem;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em">Embed Code</span>
+              <button class="btn btn--outline btn--sm" id="pg-copy-code-btn">📋 Copy Code</button>
+            </div>
+            <div class="code-preview"><span class="cmt">// Drop into any HTML page</span>
+<span class="kw">&lt;div</span> <span class="prop">id</span>=<span class="str">"my-wallet"</span><span class="kw">&gt;&lt;/div&gt;</span>
+<span class="kw">&lt;script</span> <span class="prop">type</span>=<span class="str">"module"</span><span class="kw">&gt;</span>
+  <span class="kw">import</span> { injectConnectButton } <span class="kw">from</span> <span class="str">'./sdk/connectButton.js'</span>;
+  <span class="fn">injectConnectButton</span>(<span class="str">'#my-wallet'</span>, { <span class="prop">theme</span>: <span class="str">'dark'</span> });
+<span class="kw">&lt;/script&gt;</span></div>
+          </div>
+        </div>
+
+        <!-- Tab 2: Contract Caller -->
+        <div class="playground__panel" id="pg-panel-contract">
+          <div class="pg-form">
+            <div class="form-group">
+              <label for="pg-contract-address">Contract Address</label>
+              <input type="text" id="pg-contract-address" placeholder="0xYourContract…" />
+            </div>
+            <div class="form-group">
+              <label for="pg-abi">ABI (JSON array)</label>
+              <textarea id="pg-abi" placeholder='[{"name":"balanceOf","type":"function","stateMutability":"view","inputs":[{"name":"account","type":"address"}],"outputs":[{"type":"uint256"}]}]'></textarea>
+            </div>
+            <div class="form-group">
+              <label for="pg-fn-select">Function</label>
+              <select id="pg-fn-select">
+                <option>— paste ABI above —</option>
+              </select>
+            </div>
+
+            <div id="pg-arg-wrap"></div>
+
+            <button class="btn btn--primary btn--block" id="pg-call-btn" style="margin-top:.5rem">
+              📖 Call / ✍️ Send
+            </button>
+          </div>
+
+          <div class="result-display" id="pg-call-result" style="display:none"></div>
+        </div>
+
+        <!-- Tab 3: Sign Message -->
+        <div class="playground__panel" id="pg-panel-sign">
+          <div class="pg-form">
+            <div class="form-group">
+              <label for="pg-message">Message to Sign</label>
+              <textarea id="pg-message" placeholder="I agree to the IntegratedDEX Terms of Service.&#10;Timestamp: 2025-01-01T00:00:00Z"></textarea>
+            </div>
+            <button class="btn btn--primary btn--block" id="pg-sign-btn">
+              ✍️ Sign Message
+            </button>
+          </div>
+          <div class="result-display" id="pg-sign-result" style="display:none"></div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════ CODE SNIPPETS ════════════════════════════ -->
+  <section id="code-snippets">
+    <div class="container">
+      <span class="section-tag">Developer-First</span>
+      <h2 class="section-headline">Less Code. More Power.</h2>
+      <p class="section-sub">
+        Copy-paste ready examples for the most common Web3 patterns.
+      </p>
+
+      <div class="snippets-grid">
+
+        <div class="snippet-card">
+          <div class="snippet-card__header">
+            <div class="snippet-card__dots">
+              <div class="snippet-card__dot"></div>
+              <div class="snippet-card__dot"></div>
+              <div class="snippet-card__dot"></div>
+            </div>
+            <span>connect.js</span>
+          </div>
+          <pre class="snippet-card__code"><span class="cmt">// 3 lines to connect any wallet</span>
+<span class="kw">import</span> { injectConnectButton } <span class="kw">from</span> <span class="str">'./sdk/connectButton.js'</span>
+
+<span class="fn">injectConnectButton</span>(<span class="str">'#app'</span>, { <span class="prop">theme</span>: <span class="str">'dark'</span> })
+<span class="cmt">// Done. 400+ wallets supported.</span></pre>
+        </div>
+
+        <div class="snippet-card">
+          <div class="snippet-card__header">
+            <div class="snippet-card__dots">
+              <div class="snippet-card__dot"></div>
+              <div class="snippet-card__dot"></div>
+              <div class="snippet-card__dot"></div>
+            </div>
+            <span>permit2.js</span>
+          </div>
+          <pre class="snippet-card__code"><span class="cmt">// Gasless token approval — exact amount</span>
+<span class="kw">import</span> { signPermitSingle } <span class="kw">from</span> <span class="str">'./sdk/index.js'</span>
+
+<span class="kw">const</span> { signature } = <span class="kw">await</span> <span class="fn">signPermitSingle</span>(
+  provider, account, chainId, {
+    <span class="prop">token</span>:   <span class="str">'0xTokenAddress'</span>,
+    <span class="prop">amount</span>:  <span class="num">500_000_000n</span>,  <span class="cmt">// exact — never max</span>
+    <span class="prop">spender</span>: <span class="str">'0xSpender'</span>,
+  }
+)</pre>
+        </div>
+
+        <div class="snippet-card">
+          <div class="snippet-card__header">
+            <div class="snippet-card__dots">
+              <div class="snippet-card__dot"></div>
+              <div class="snippet-card__dot"></div>
+              <div class="snippet-card__dot"></div>
+            </div>
+            <span>multicall.js</span>
+          </div>
+          <pre class="snippet-card__code"><span class="cmt">// Batch 3 reads into 1 RPC call</span>
+<span class="kw">import</span> { multicallRead, buildCall } <span class="kw">from</span> <span class="str">'./sdk/index.js'</span>
+
+<span class="kw">const</span> results = <span class="kw">await</span> <span class="fn">multicallRead</span>(provider, [
+  <span class="fn">buildCall</span>(<span class="str">'0xContract1'</span>, encodedData1),
+  <span class="fn">buildCall</span>(<span class="str">'0xContract2'</span>, encodedData2),
+  <span class="fn">buildCall</span>(<span class="str">'0xContract3'</span>, encodedData3),
+])</pre>
+        </div>
+
+        <div class="snippet-card">
+          <div class="snippet-card__header">
+            <div class="snippet-card__dots">
+              <div class="snippet-card__dot"></div>
+              <div class="snippet-card__dot"></div>
+              <div class="snippet-card__dot"></div>
+            </div>
+            <span>eip712.js</span>
+          </div>
+          <pre class="snippet-card__code"><span class="cmt">// EIP-712 typed data signing</span>
+<span class="kw">import</span> { buildDomain, signTypedData } <span class="kw">from</span> <span class="str">'./sdk/index.js'</span>
+
+<span class="kw">const</span> domain = <span class="fn">buildDomain</span>({
+  <span class="prop">name</span>: <span class="str">'MyApp'</span>, <span class="prop">version</span>: <span class="str">'1'</span>,
+  <span class="prop">chainId</span>: <span class="num">1</span>, <span class="prop">verifyingContract</span>: <span class="str">'0x…'</span>,
+})
+<span class="kw">const</span> sig = <span class="kw">await</span> <span class="fn">signTypedData</span>(provider, account, typedData)</pre>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ─── Footer ─────────────────────────────────────────────────────────────── -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer__links">
+      <a href="https://github.com/lackx741-tech/WAASDK" target="_blank" rel="noopener">GitHub</a>
+      <a href="../dashboard/index.html">⚙️ Dashboard</a>
+      <a href="../presale/">Presale</a>
+      <a href="../launch/">Token Launch</a>
+    </div>
+    <p>Built with ❤️ by IntegratedDEX · WaaS SDK</p>
+  </div>
+</footer>
+
+<script type="module" src="modal.js"></script>
+</body>
+</html>
