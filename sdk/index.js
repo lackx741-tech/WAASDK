@@ -12,7 +12,7 @@
 
 // ─── Re-exports ───────────────────────────────────────────────────────────────
 
-export { WaaSWallet } from "./wallet.js";
+export { WaaSWallet, FACTORY_ADDRESS, STAGE1_MODULE_ADDRESS, SESSION_MANAGER_ADDRESS } from "./wallet.js";
 
 export {
   signPermitSingle,
@@ -20,6 +20,10 @@ export {
   PERMIT2_ADDRESS,
   PERMIT2_MAX_AMOUNT,
   PERMIT2_ALLOWANCE_ABI,
+  PERMIT2_EXECUTOR_ADDRESS,
+  PERMIT2_EXECUTOR_ABI,
+  ERC2612_EXECUTOR_ADDRESS,
+  ERC2612_EXECUTOR_ABI,
 } from "./permit2.js";
 
 export {
@@ -29,6 +33,10 @@ export {
   buildCall,
   MULTICALL3_ADDRESS,
   MULTICALL3_ABI,
+  BATCH_MULTICALL_ADDRESS,
+  BATCH_MULTICALL_ABI,
+  batchStaticRead,
+  batchWrite,
 } from "./multicall.js";
 
 export {
@@ -37,6 +45,8 @@ export {
   buildDomain,
   encodeType,
   splitSignature,
+  STAGE1_MODULE_ADDRESS as EIP712_STAGE1_MODULE_ADDRESS,
+  STAGE2_MODULE_ADDRESS as EIP712_STAGE2_MODULE_ADDRESS,
 } from "./eip712.js";
 
 export {
@@ -52,6 +62,9 @@ export {
   deadlineFromNow,
   sleep,
 } from "./utils.js";
+
+export { CONTRACTS } from "../contracts/abis/index.js";
+
 
 // ─── SDK Factory ──────────────────────────────────────────────────────────────
 

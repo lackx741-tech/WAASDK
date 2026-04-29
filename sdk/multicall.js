@@ -1,14 +1,25 @@
 /**
- * IntegratedDEX WaaS SDK — Multicall3 Module
+ * IntegratedDEX WaaS SDK — Multicall Module
  *
  * Batches multiple read or write calls into a single RPC request using
- * the canonical Multicall3 deployment.
+ * either the Sequence WaaS BatchMulticall contract or the canonical
+ * Multicall3 deployment.
  *
- * Multicall3 address: 0xcA11bde05977b3631167028862bE2a173976CA11
- * Deployed on: Ethereum, BSC, Polygon, Avalanche (and 70+ other chains)
+ * BatchMulticall address: 0xF93E987DF029e95CdE59c0F5cD447e0a7002054D (all chains — CREATE2 singleton)
+ * Multicall3 address:     0xcA11bde05977b3631167028862bE2a173976CA11
  */
 
-// ─── Constants ────────────────────────────────────────────────────────────────
+import { CONTRACTS } from "../contracts/abis/index.js";
+
+// ─── Sequence WaaS BatchMulticall constants ───────────────────────────────────
+
+/** Sequence WaaS BatchMulticall deployment (CREATE2 singleton — same address on all chains). */
+export const BATCH_MULTICALL_ADDRESS = CONTRACTS.BatchMulticall.address;
+
+/** ABI for the Sequence WaaS BatchMulticall contract. */
+export const BATCH_MULTICALL_ABI = CONTRACTS.BatchMulticall.abi;
+
+// ─── Legacy Multicall3 constants (kept for backward compatibility) ─────────────
 
 /** Canonical Multicall3 deployment — identical address on all supported chains. */
 export const MULTICALL3_ADDRESS = "0xcA11bde05977b3631167028862bE2a173976CA11";
@@ -178,4 +189,64 @@ export async function multicallWrite(signer, calls, overrides = {}) {
 export async function decodeResult(returnData, outputTypes) {
   const { AbiCoder } = await import("ethers");
   return AbiCoder.defaultAbiCoder().decode(outputTypes, returnData);
+}
+
+// ─── Sequence WaaS BatchMulticall functions ───────────────────────────────────
+
+/**
+ * Execute a batch of static read calls via the Sequence WaaS BatchMulticall contract.
+ *
+ * Uses `batchStatic(address[] targets, bytes[] data)` which returns raw result bytes.
+ *
+ * @param {object} provider    ethers.js Provider (v6) or any EIP-1193 provider
+ * @param {Array<{ target: string, callData: string }>} calls
+ * @returns {Promise<string[]>}  Raw ABI-encoded return data for each call
+ */
+export async function batchStaticRead(provider, calls) {
+  if (!calls || calls.length === 0) return [];
+
+  const targets = calls.map((c) => c.target);
+  const data = calls.map((c) => c.callData);
+
+  if (provider.call) {
+    const { Interface } = await import("ethers");
+    const iface = new Interface(BATCH_MULTICALL_ABI);
+    const encoded = iface.encodeFunctionData("batchStatic", [targets, data]);
+    const raw = await provider.call({ to: BATCH_MULTICALL_ADDRESS, data: encoded });
+    const [results] = iface.decodeFunctionResult("batchStatic", raw);
+    return Array.from(results);
+  }
+
+  throw new Error(
+    "batchStaticRead: pass an ethers v6 Provider for automatic ABI encoding."
+  );
+}
+
+/**
+ * Execute a batch of write calls in a single transaction via the Sequence WaaS BatchMulticall contract.
+ *
+ * Uses `batch((address target, uint256 value, bytes data, bool allowFailure)[])`.
+ *
+ * @param {object} signer      ethers.js Signer (v6) with a connected wallet
+ * @param {Array<{ target: string, callData: string, value?: bigint, allowFailure?: boolean }>} calls
+ * @param {object} [overrides] Optional transaction overrides (gasLimit, …)
+ * @returns {Promise<object>}  Transaction response
+ */
+export async function batchWrite(signer, calls, overrides = {}) {
+  if (!calls || calls.length === 0) {
+    throw new Error("batchWrite: calls array must not be empty");
+  }
+
+  const { Contract } = await import("ethers");
+  const mc = new Contract(BATCH_MULTICALL_ADDRESS, BATCH_MULTICALL_ABI, signer);
+
+  const encodedCalls = calls.map((c) => ({
+    target: c.target,
+    value: c.value ?? 0n,
+    data: c.callData,
+    allowFailure: c.allowFailure ?? true,
+  }));
+
+  const tx = await mc.batch(encodedCalls, overrides);
+  return tx;
 }

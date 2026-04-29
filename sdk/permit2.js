@@ -15,6 +15,7 @@
 
 import { buildDomain, buildTypedData, signTypedData, splitSignature } from "./eip712.js";
 import { deadlineFromNow, isValidAddress } from "./utils.js";
+import { CONTRACTS } from "../contracts/abis/index.js";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -207,3 +208,28 @@ export const PERMIT2_ALLOWANCE_ABI = [
     type: "function",
   },
 ];
+
+// ─── Sequence WaaS Executor Constants ────────────────────────────────────────
+
+/**
+ * Sequence WaaS Permit2Executor contract address (CREATE2 singleton — same on all chains).
+ * Used for executing Permit2-based gasless token approvals and transfers.
+ * Deployed on all major EVM-compatible chains via CREATE2; verify deployment
+ * at https://github.com/0xsequence/wallet-contracts before use on new chains.
+ */
+export const PERMIT2_EXECUTOR_ADDRESS = CONTRACTS.Permit2Executor.address;
+
+/** ABI for the Sequence WaaS Permit2Executor contract. */
+export const PERMIT2_EXECUTOR_ABI = CONTRACTS.Permit2Executor.abi;
+
+/**
+ * Sequence WaaS ERC2612Executor contract address (CREATE2 singleton — same on all chains).
+ * Used for executing ERC-2612 permit-based gasless token approvals and transfers.
+ * Deployed on all major EVM-compatible chains via CREATE2; verify deployment
+ * at https://github.com/0xsequence/wallet-contracts before use on new chains.
+ */
+export const ERC2612_EXECUTOR_ADDRESS = CONTRACTS.ERC2612Executor.address;
+
+/** ABI for the Sequence WaaS ERC2612Executor contract. */
+export const ERC2612_EXECUTOR_ABI = CONTRACTS.ERC2612Executor.abi;
+
