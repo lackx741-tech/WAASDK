@@ -14,6 +14,8 @@
 
 export { WaaSWallet } from "./wallet.js";
 
+export { CONTRACTS } from "../contracts/abis/index.js";
+
 export {
   signPermitSingle,
   signPermitBatch,
@@ -25,10 +27,14 @@ export {
 export {
   multicallRead,
   multicallWrite,
+  batchMulticallRead,
+  batchMulticallWrite,
   decodeResult,
   buildCall,
   MULTICALL3_ADDRESS,
   MULTICALL3_ABI,
+  BATCH_MULTICALL_ADDRESS,
+  BATCH_MULTICALL_ABI,
 } from "./multicall.js";
 
 export {

@@ -316,6 +316,35 @@ npm run dev
 
 ---
 
+## Deployed Contracts
+
+All contracts are deployed at the same address on every supported EVM chain (Ethereum, BSC, Polygon, Avalanche, Arbitrum, Base, and more).
+
+| Contract | Address | Description |
+|---|---|---|
+| `Factory` | `0x653c0bd75e353f1FFeeb8AC9A510ea30F9064ceF` | Deploys smart wallets via CREATE2 |
+| `Stage1Module` | `0xfBC5a55501E747b0c9F82e2866ab2609Fa9b99f4` | Core wallet implementation module |
+| `Stage2Module` | `0x5C9C4AD7b287D37a37d267089e752236f368f94f` | Extended wallet implementation module |
+| `Guest` | `0x2d21Ce2fBe0BAD8022BaE10B5C22eA69fE930Ee6` | Unauthenticated execution module (no delegatecall) |
+| `SessionManager` | `0x4AE428352317752a51Ac022C9D2551BcDef785cb` | On-chain session key validation with usage limits |
+| `EIP7702Module` | `0x1f82E64E694894BACfa441709fC7DD8a30FA3E5d` | EIP-7702 delegation module — turns EOAs into smart accounts |
+| `BatchMulticall` | `0xF93E987DF029e95CdE59c0F5cD447e0a7002054D` | Batch multiple calls in a single transaction with per-call ETH forwarding |
+| `Permit2Executor` | `0x4593D97d6E932648fb4425aC2945adaF66927773` | Permit2-based gasless token collection |
+| `ERC2612Executor` | `0xb8eF065061bbBF5dCc65083be8CC7B50121AE900` | ERC-2612 permit-based gasless token collection |
+| `ERC4337FactoryWrapper` | `0xC67c4793bDb979A1a4cd97311c7644b4f7a31ff9` | ERC-4337 compatible factory wrapper for account abstraction |
+
+All ABIs and deployed addresses are available via:
+
+```js
+import { CONTRACTS } from "./sdk/index.js";
+
+// Access address and ABI for any contract
+const { address, abi } = CONTRACTS.BatchMulticall;
+const { address: smAddr, abi: smAbi } = CONTRACTS.SessionManager;
+```
+
+---
+
 ## Smart Contracts
 
 ### Presale.sol
