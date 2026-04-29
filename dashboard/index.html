@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IntegratedDEX WaaS — Dashboard</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:          #0d0f1a;
+      --surface:     #151929;
+      --surface2:    #1c2236;
+      --border:      #2a3050;
+      --accent:      #6c63ff;
+      --accent-dim:  #3d3880;
+      --green:       #22c55e;
+      --yellow:      #eab308;
+      --red:         #ef4444;
+      --text:        #e2e8f0;
+      --muted:       #64748b;
+      --radius:      10px;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Top Bar ── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2rem;
+      height: 60px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+    header h1 { font-size: 1.1rem; font-weight: 700; letter-spacing: .04em; }
+    header h1 span { color: var(--accent); }
+
+    .wallet-status {
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      font-size: .85rem;
+    }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+    .dot.connected { background: var(--green); }
+
+    /* ── Layout ── */
+    .layout {
+      display: flex;
+      flex: 1;
+    }
+
+    /* ── Sidebar tabs ── */
+    nav.sidebar {
+      width: 210px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 1.5rem 0;
+      flex-shrink: 0;
+    }
+    nav.sidebar a {
+      display: flex;
+      align-items: center;
+      gap: .7rem;
+      padding: .65rem 1.4rem;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: .9rem;
+      transition: background .15s, color .15s;
+      cursor: pointer;
+    }
+    nav.sidebar a:hover   { background: var(--surface2); color: var(--text); }
+    nav.sidebar a.active  { background: var(--surface2); color: var(--accent); border-right: 3px solid var(--accent); }
+    nav.sidebar .icon { font-size: 1.1rem; width: 20px; text-align: center; }
+
+    /* ── Main content ── */
+    main {
+      flex: 1;
+      padding: 2rem;
+      overflow-y: auto;
+    }
+
+    /* ── Tab panels ── */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .card h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 1.1rem;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+
+    /* ── Form elements ── */
+    label { display: block; font-size: .82rem; color: var(--muted); margin-bottom: .3rem; }
+    input, textarea, select {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: .55rem .8rem;
+      color: var(--text);
+      font-size: .9rem;
+      margin-bottom: 1rem;
+      outline: none;
+      transition: border-color .15s;
+    }
+    input:focus, textarea:focus, select:focus { border-color: var(--accent); }
+    textarea { resize: vertical; min-height: 80px; }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      padding: .5rem 1.1rem;
+      border-radius: 6px;
+      font-size: .87rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: opacity .15s, transform .08s;
+    }
+    .btn:hover   { opacity: .88; }
+    .btn:active  { transform: scale(.97); }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-danger  { background: var(--red); color: #fff; }
+    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    .btn-sm      { padding: .3rem .7rem; font-size: .78rem; }
+
+    /* ── Sessions table ── */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+    thead tr { border-bottom: 1px solid var(--border); }
+    th { text-align: left; padding: .55rem .8rem; color: var(--muted); font-weight: 500; font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; }
+    td { padding: .55rem .8rem; border-bottom: 1px solid var(--surface2); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--surface2); }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: .3rem;
+      padding: .2rem .55rem;
+      border-radius: 999px;
+      font-size: .75rem;
+      font-weight: 600;
+    }
+    .badge-green  { background: rgba(34,197,94,.15);  color: var(--green); }
+    .badge-yellow { background: rgba(234,179,8,.15);  color: var(--yellow); }
+    .badge-red    { background: rgba(239,68,68,.15);  color: var(--red); }
+
+    .mono { font-family: 'Fira Code', monospace; font-size: .8rem; }
+
+    /* ── Event log ── */
+    #event-log {
+      background: #0a0c14;
+      border-radius: var(--radius);
+      padding: 1rem;
+      height: 220px;
+      overflow-y: auto;
+      font-family: 'Fira Code', monospace;
+      font-size: .8rem;
+      line-height: 1.7;
+    }
+    .log-entry { display: block; }
+    .log-green  { color: var(--green); }
+    .log-yellow { color: var(--yellow); }
+    .log-red    { color: var(--red); }
+    .log-blue   { color: #60a5fa; }
+
+    /* ── Duration pills ── */
+    .pill-group { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: 1rem; }
+    .pill {
+      padding: .3rem .85rem;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      font-size: .8rem;
+      cursor: pointer;
+      transition: background .15s, border-color .15s;
+    }
+    .pill.selected { background: var(--accent-dim); border-color: var(--accent); color: #fff; }
+
+    /* ── Empty state ── */
+    .empty { text-align: center; padding: 2.5rem; color: var(--muted); font-size: .9rem; }
+
+    /* ── Modal overlay ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.65);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem;
+      width: 480px;
+      max-width: 95vw;
+    }
+    .modal-box h3 { margin-bottom: 1.2rem; font-size: 1rem; }
+    .modal-footer { display: flex; gap: .7rem; margin-top: 1.2rem; justify-content: flex-end; }
+
+    /* ── Refresh indicator ── */
+    #refresh-indicator { font-size: .75rem; color: var(--muted); margin-left: 1rem; }
+
+    /* ── General tab forms ── */
+    .section-title {
+      font-size: .75rem;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--muted);
+      margin-bottom: .8rem;
+    }
+    .setting-row { display: flex; align-items: center; justify-content: space-between; padding: .5rem 0; border-bottom: 1px solid var(--surface2); }
+    .setting-row:last-child { border-bottom: none; }
+    .toggle { position: relative; width: 38px; height: 20px; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute;
+      inset: 0;
+      background: var(--border);
+      border-radius: 20px;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .slider::before {
+      content: "";
+      position: absolute;
+      width: 14px; height: 14px;
+      left: 3px; top: 3px;
+      background: white;
+      border-radius: 50%;
+      transition: transform .2s;
+    }
+    .toggle input:checked + .slider { background: var(--accent); }
+    .toggle input:checked + .slider::before { transform: translateX(18px); }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>IntegratedDEX <span>WaaS</span> Dashboard</h1>
+  <div class="wallet-status">
+    <div class="dot" id="wallet-dot"></div>
+    <span id="wallet-label">Not connected</span>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- ── Sidebar ── -->
+  <nav class="sidebar">
+    <a class="active" data-tab="general"><span class="icon">⚙️</span> General</a>
+    <a data-tab="wallet"><span class="icon">💳</span> Wallet</a>
+    <a data-tab="contract"><span class="icon">📄</span> Contract</a>
+    <a data-tab="sessions"><span class="icon">⚡</span> Sessions</a>
+    <a data-tab="advanced"><span class="icon">🔧</span> Advanced</a>
+    <a data-tab="compile"><span class="icon">🚀</span> Compile</a>
+  </nav>
+
+  <!-- ── Main ── -->
+  <main>
+
+    <!-- ════════ GENERAL ════════ -->
+    <div class="tab-panel active" id="tab-general">
+      <div class="card">
+        <h2>⚙️ General Settings</h2>
+        <label>App Name</label>
+        <input type="text" id="cfg-app-name" value="IntegratedDEX" placeholder="My dApp" />
+        <label>WalletConnect Project ID</label>
+        <input type="text" id="cfg-project-id" placeholder="Paste your project ID from cloud.walletconnect.com" />
+        <label>App URL</label>
+        <input type="text" id="cfg-app-url" placeholder="https://example.com" />
+        <label>Theme</label>
+        <select id="cfg-theme">
+          <option value="dark">Dark</option>
+          <option value="light">Light</option>
+          <option value="midnight">Midnight</option>
+        </select>
+        <label>Connect Button Text</label>
+        <input type="text" id="cfg-btn-text" value="Connect Wallet" />
+      </div>
+    </div>
+
+    <!-- ════════ WALLET ════════ -->
+    <div class="tab-panel" id="tab-wallet">
+      <div class="card">
+        <h2>💳 Wallet Settings</h2>
+        <label>Supported Chains</label>
+        <div class="pill-group" id="chain-pills">
+          <div class="pill selected" data-chain="1">Ethereum</div>
+          <div class="pill selected" data-chain="56">BNB Chain</div>
+          <div class="pill" data-chain="137">Polygon</div>
+          <div class="pill" data-chain="43114">Avalanche</div>
+        </div>
+        <label>Modal Style</label>
+        <select id="cfg-modal-style">
+          <option value="modal">Modal</option>
+          <option value="drawer">Drawer</option>
+        </select>
+        <div class="setting-row">
+          <span>Show balance in button</span>
+          <label class="toggle"><input type="checkbox" id="cfg-show-balance" checked /><span class="slider"></span></label>
+        </div>
+        <div class="setting-row">
+          <span>Allow testnet networks</span>
+          <label class="toggle"><input type="checkbox" id="cfg-testnets" /><span class="slider"></span></label>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════ CONTRACT ════════ -->
+    <div class="tab-panel" id="tab-contract">
+      <div class="card">
+        <h2>📄 Contract Configuration</h2>
+        <label>Contract Address</label>
+        <input type="text" id="cfg-contract-address" placeholder="0x..." />
+        <label>ABI (JSON array)</label>
+        <textarea id="cfg-abi" placeholder='[{"name":"mint","type":"function","inputs":[{"name":"amount","type":"uint256"}]}]' rows="6"></textarea>
+        <label>Function to call</label>
+        <select id="cfg-function"><option value="">— Parse ABI first —</option></select>
+        <div id="arg-fields"></div>
+        <button class="btn btn-outline" onclick="parseABI()">Parse ABI</button>
+      </div>
+    </div>
+
+    <!-- ════════ SESSIONS ════════ -->
+    <div class="tab-panel" id="tab-sessions">
+
+      <!-- Active Sessions Table -->
+      <div class="card">
+        <h2>⚡ Active Sessions
+          <span id="refresh-indicator"></span>
+          <button class="btn btn-outline btn-sm" style="margin-left:auto" onclick="refreshSessions()">↻ Refresh</button>
+        </h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>User Address</th>
+                <th>Session Key</th>
+                <th>Allowed Contracts</th>
+                <th>Spending Limit</th>
+                <th>Expires</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="sessions-table-body">
+              <tr><td colspan="7" class="empty">No sessions found. Create one below.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Event Log -->
+      <div class="card">
+        <h2>📋 Session Event Log</h2>
+        <div id="event-log"><span class="log-blue">Waiting for session events…</span></div>
+        <div style="margin-top:.8rem; display:flex; gap:.7rem;">
+          <button class="btn btn-outline btn-sm" onclick="clearLog()">Clear Log</button>
+        </div>
+      </div>
+
+      <!-- Create Session Panel -->
+      <div class="card">
+        <h2>➕ Create Session Key</h2>
+        <div class="form-row">
+          <div>
+            <label>User Address (connected wallet)</label>
+            <input type="text" id="sess-user-address" placeholder="0x..." />
+          </div>
+          <div>
+            <label>Session Public Key</label>
+            <input type="text" id="sess-key-address" placeholder="0x... (generated key address)" />
+          </div>
+        </div>
+        <label>Allowed Contracts (one per line)</label>
+        <textarea id="sess-contracts" placeholder="0xPresaleContract&#10;0xStakingContract" rows="3"></textarea>
+        <label>Allowed Functions (one per line)</label>
+        <textarea id="sess-functions" placeholder="contribute(uint256)&#10;claim()" rows="3"></textarea>
+        <div class="form-row">
+          <div>
+            <label>Spending Limit (ETH)</label>
+            <input type="text" id="sess-spending-limit" value="0.5" />
+          </div>
+          <div>
+            <label>Duration</label>
+            <div class="pill-group" id="duration-pills">
+              <div class="pill" data-dur="3600">1hr</div>
+              <div class="pill selected" data-dur="14400">4hr</div>
+              <div class="pill" data-dur="86400">24hr</div>
+              <div class="pill" data-dur="custom">Custom</div>
+            </div>
+          </div>
+        </div>
+        <div id="custom-expiry-row" style="display:none">
+          <label>Custom expiry (Unix timestamp)</label>
+          <input type="number" id="sess-custom-expiry" placeholder="1748000000" />
+        </div>
+        <button class="btn btn-primary" onclick="createSession()">⚡ Create Session</button>
+      </div>
+
+      <!-- Execute With Session Panel -->
+      <div class="card">
+        <h2>▶️ Execute With Session</h2>
+        <div class="form-row">
+          <div>
+            <label>Select Session</label>
+            <select id="exec-session-select"><option value="">— Select a session —</option></select>
+          </div>
+          <div>
+            <label>Contract Address</label>
+            <input type="text" id="exec-contract" placeholder="0x..." />
+          </div>
+        </div>
+        <label>Calldata (hex)</label>
+        <input type="text" id="exec-calldata" placeholder="0x..." />
+        <label>Value (ETH)</label>
+        <input type="text" id="exec-value" value="0" />
+        <button class="btn btn-primary" onclick="execWithSession()">▶️ Execute</button>
+        <div id="exec-result" style="margin-top:.8rem; font-size:.85rem; color:var(--green);"></div>
+      </div>
+
+    </div><!-- /tab-sessions -->
+
+    <!-- ════════ ADVANCED ════════ -->
+    <div class="tab-panel" id="tab-advanced">
+      <div class="card">
+        <h2>🔧 Advanced</h2>
+        <div class="setting-row">
+          <span>Enable EIP-7702 batch execution</span>
+          <label class="toggle"><input type="checkbox" id="cfg-eip7702" checked /><span class="slider"></span></label>
+        </div>
+        <div class="setting-row">
+          <span>Enable EIP-712 typed signing</span>
+          <label class="toggle"><input type="checkbox" id="cfg-eip712" checked /><span class="slider"></span></label>
+        </div>
+        <div class="setting-row">
+          <span>Enable Permit2 approvals</span>
+          <label class="toggle"><input type="checkbox" id="cfg-permit2" checked /><span class="slider"></span></label>
+        </div>
+        <div class="setting-row">
+          <span>Retry failed transactions</span>
+          <label class="toggle"><input type="checkbox" id="cfg-retry" checked /><span class="slider"></span></label>
+        </div>
+        <div class="setting-row">
+          <span>Debug logging</span>
+          <label class="toggle"><input type="checkbox" id="cfg-debug" /><span class="slider"></span></label>
+        </div>
+        <br />
+        <label>Max retry attempts</label>
+        <input type="number" id="cfg-max-retry" value="3" min="1" max="10" />
+        <label>Webhook URL (optional — receives session events)</label>
+        <input type="text" id="cfg-webhook" placeholder="https://your-server.com/webhook" />
+      </div>
+    </div>
+
+    <!-- ════════ COMPILE ════════ -->
+    <div class="tab-panel" id="tab-compile">
+      <div class="card">
+        <h2>🚀 Compile script.js</h2>
+        <p style="color:var(--muted); font-size:.87rem; margin-bottom:1.2rem;">
+          Generates a ready-to-embed <code>script.js</code> with your full SDK config baked in.
+          Drop it into any HTML page — no build step required.
+        </p>
+        <button class="btn btn-primary" onclick="compileScript()">🚀 Compile</button>
+        <button class="btn btn-outline" style="margin-left:.7rem" onclick="downloadScript()">⬇️ Download script.js</button>
+        <textarea id="compile-output" style="margin-top:1.2rem; height:320px; font-family:monospace; font-size:.78rem;" readonly placeholder="Compiled output will appear here…"></textarea>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ── Execute-with-session modal ── -->
+<div class="modal-overlay" id="exec-modal">
+  <div class="modal-box">
+    <h3>▶️ Execute with session</h3>
+    <label>Session ID</label>
+    <input type="text" id="modal-session-id" readonly />
+    <label>Result</label>
+    <input type="text" id="modal-result" readonly />
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('exec-modal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  // ── Tab navigation ────────────────────────────────────────────────────────
+
+  document.querySelectorAll('nav.sidebar a[data-tab]').forEach(link => {
+    link.addEventListener('click', () => {
+      document.querySelectorAll('nav.sidebar a').forEach(a => a.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      link.classList.add('active');
+      document.getElementById('tab-' + link.dataset.tab).classList.add('active');
+      if (link.dataset.tab === 'sessions') refreshSessions();
+    });
+  });
+
+  // ── Chain pill toggles ────────────────────────────────────────────────────
+
+  document.querySelectorAll('#chain-pills .pill').forEach(p => {
+    p.addEventListener('click', () => p.classList.toggle('selected'));
+  });
+
+  // ── Duration pill toggles ─────────────────────────────────────────────────
+
+  document.querySelectorAll('#duration-pills .pill').forEach(p => {
+    p.addEventListener('click', () => {
+      document.querySelectorAll('#duration-pills .pill').forEach(x => x.classList.remove('selected'));
+      p.classList.add('selected');
+      document.getElementById('custom-expiry-row').style.display =
+        p.dataset.dur === 'custom' ? 'block' : 'none';
+    });
+  });
+
+  // ── Session manager (localStorage-based) ─────────────────────────────────
+
+  const STORAGE_KEY = 'waas_sessions';
+
+  function readSessions() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch { return []; }
+  }
+  function writeSessions(arr) { localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); }
+
+  function isExpired(s) {
+    return s.expiresAt && s.expiresAt <= Math.floor(Date.now() / 1000);
+  }
+
+  function statusBadge(s) {
+    if (s.status === 'revoked') return '<span class="badge badge-red">🔴 Revoked</span>';
+    if (isExpired(s))           return '<span class="badge badge-red">🔴 Expired</span>';
+    const left = s.expiresAt - Math.floor(Date.now() / 1000);
+    if (left < 3600)            return '<span class="badge badge-yellow">🟡 Expiring</span>';
+    return '<span class="badge badge-green">🟢 Active</span>';
+  }
+
+  function formatExpiry(ts) {
+    if (!ts) return '—';
+    const secs = ts - Math.floor(Date.now() / 1000);
+    if (secs <= 0) return 'Expired';
+    if (secs < 60) return secs + 's';
+    if (secs < 3600) return Math.round(secs / 60) + 'm';
+    return Math.round(secs / 3600) + 'h ' + Math.round((secs % 3600) / 60) + 'm';
+  }
+
+  function short(addr) {
+    if (!addr || addr.length < 10) return addr || '—';
+    return addr.slice(0, 6) + '…' + addr.slice(-4);
+  }
+
+  window.refreshSessions = function() {
+    const sessions = readSessions();
+    const tbody = document.getElementById('sessions-table-body');
+    const select = document.getElementById('exec-session-select');
+
+    if (!sessions.length) {
+      tbody.innerHTML = '<tr><td colspan="7" class="empty">No sessions found. Create one below.</td></tr>';
+      select.innerHTML = '<option value="">— Select a session —</option>';
+      document.getElementById('refresh-indicator').textContent = 'Last refreshed: ' + new Date().toLocaleTimeString();
+      return;
+    }
+
+    tbody.innerHTML = sessions.map((s, i) => `
+      <tr>
+        <td class="mono" title="${s.userAddress}">${short(s.userAddress)}</td>
+        <td class="mono" title="${s.sessionKey}">${short(s.sessionKey)}</td>
+        <td>${(s.allowedContracts || []).map(c => `<span title="${c}">${short(c)}</span>`).join(', ') || '—'}</td>
+        <td>${s.spendingLimit || '—'} ${s.spendingLimitToken || 'ETH'}</td>
+        <td>${formatExpiry(s.expiresAt)}</td>
+        <td>${statusBadge(s)}</td>
+        <td style="display:flex;gap:.4rem;flex-wrap:wrap;">
+          <button class="btn btn-danger btn-sm" onclick="revokeSession('${s.id}')">Revoke</button>
+          <button class="btn btn-outline btn-sm" onclick="openUseSession('${s.id}')">Use</button>
+        </td>
+      </tr>`).join('');
+
+    select.innerHTML = '<option value="">— Select a session —</option>' +
+      sessions
+        .filter(s => s.status !== 'revoked' && !isExpired(s))
+        .map(s => `<option value="${s.id}">${short(s.sessionKey)} (${short(s.userAddress)}) — expires ${formatExpiry(s.expiresAt)}</option>`)
+        .join('');
+
+    document.getElementById('refresh-indicator').textContent = 'Last refreshed: ' + new Date().toLocaleTimeString();
+  };
+
+  window.revokeSession = function(id) {
+    const sessions = readSessions().map(s => s.id === id ? { ...s, status: 'revoked' } : s);
+    writeSessions(sessions);
+    addLog('🔴', `Session revoked — ${id}`, 'log-red');
+    refreshSessions();
+  };
+
+  window.openUseSession = function(id) {
+    document.getElementById('exec-session-select').value = id;
+    document.getElementById('tab-sessions').querySelector('#exec-contract').focus();
+    addLog('⚡', `Selected session ${id} for execution`, 'log-blue');
+  };
+
+  // ── Create session ──────────────────────────────────────────────────────────
+
+  window.createSession = async function() {
+    const userAddress = document.getElementById('sess-user-address').value.trim();
+    const sessionKey  = document.getElementById('sess-key-address').value.trim();
+    const contracts   = document.getElementById('sess-contracts').value.trim().split('\n').filter(Boolean);
+    const functions   = document.getElementById('sess-functions').value.trim().split('\n').filter(Boolean);
+    const limit       = document.getElementById('sess-spending-limit').value.trim() || '0';
+
+    if (!userAddress) { alert('Enter a user address.'); return; }
+    if (!sessionKey)  { alert('Enter a session public key.'); return; }
+
+    const durPill = document.querySelector('#duration-pills .pill.selected');
+    let expiresAt;
+    if (durPill?.dataset.dur === 'custom') {
+      expiresAt = parseInt(document.getElementById('sess-custom-expiry').value, 10);
+    } else {
+      const dur = parseInt(durPill?.dataset.dur || '14400', 10);
+      expiresAt = Math.floor(Date.now() / 1000) + dur;
+    }
+
+    if (!expiresAt || expiresAt <= Math.floor(Date.now() / 1000)) {
+      alert('Expiry must be in the future.');
+      return;
+    }
+
+    const session = {
+      id: 'sess_' + Math.random().toString(36).slice(2, 8),
+      userAddress,
+      sessionKey,
+      allowedContracts: contracts,
+      allowedFunctions: functions,
+      spendingLimit: limit,
+      spendingLimitToken: 'ETH',
+      expiresAt,
+      chainId: 1,
+      createdAt: Math.floor(Date.now() / 1000),
+      signature: null,
+      txHash: null,
+      status: 'active',
+    };
+
+    const sessions = readSessions();
+    sessions.push(session);
+    writeSessions(sessions);
+
+    addLog('🟢', `New session created — ${short(userAddress)} → expires in ${formatExpiry(expiresAt)}`, 'log-green');
+    refreshSessions();
+    alert('Session created and saved! Check the table above.');
+  };
+
+  // ── Execute with session ────────────────────────────────────────────────────
+
+  window.execWithSession = async function() {
+    const sessionId = document.getElementById('exec-session-select').value;
+    const contractAddr = document.getElementById('exec-contract').value.trim();
+    const calldata = document.getElementById('exec-calldata').value.trim() || '0x';
+    const result = document.getElementById('exec-result');
+
+    if (!sessionId) { alert('Select a session.'); return; }
+    if (!contractAddr) { alert('Enter a contract address.'); return; }
+
+    const sessions = readSessions();
+    const session = sessions.find(s => s.id === sessionId);
+
+    if (!session) { result.textContent = '❌ Session not found.'; return; }
+
+    const isExpiredSess = session.expiresAt && session.expiresAt <= Math.floor(Date.now() / 1000);
+    if (session.status === 'revoked' || isExpiredSess) {
+      result.textContent = '❌ Session is no longer valid.';
+      return;
+    }
+
+    if (session.allowedContracts?.length > 0 &&
+        !session.allowedContracts.some(c => c.toLowerCase() === contractAddr.toLowerCase())) {
+      result.textContent = `❌ ${contractAddr} is not in the allowed contracts list.`;
+      return;
+    }
+
+    // Simulate sending (in a real integration this calls executeWithSession() from the SDK)
+    const fakeTxHash = '0x' + Math.random().toString(16).slice(2).padEnd(64, '0');
+    addLog('⚡', `Session tx sent — ${short(session.userAddress)} called → ${short(contractAddr)} — ${short(fakeTxHash)}`, 'log-blue');
+    result.style.color = 'var(--green)';
+    result.textContent = `✅ Tx sent (simulated): ${fakeTxHash}`;
+  };
+
+  // ── Event log ───────────────────────────────────────────────────────────────
+
+  window.addLog = function(icon, msg, cls) {
+    const log = document.getElementById('event-log');
+    const time = new Date().toLocaleTimeString();
+    const entry = document.createElement('span');
+    entry.className = 'log-entry ' + (cls || '');
+    entry.textContent = `${icon} [${time}] ${msg}`;
+    log.appendChild(document.createElement('br'));
+    log.appendChild(entry);
+    log.scrollTop = log.scrollHeight;
+  };
+
+  window.clearLog = function() {
+    const log = document.getElementById('event-log');
+    log.innerHTML = '<span class="log-blue">Log cleared.</span>';
+  };
+
+  // ── ABI parser ──────────────────────────────────────────────────────────────
+
+  window.parseABI = function() {
+    const raw = document.getElementById('cfg-abi').value.trim();
+    if (!raw) { alert('Paste an ABI first.'); return; }
+    let abi;
+    try { abi = JSON.parse(raw); } catch { alert('Invalid JSON ABI.'); return; }
+
+    const sel = document.getElementById('cfg-function');
+    sel.innerHTML = '<option value="">— Select function —</option>' +
+      abi
+        .filter(e => e.type === 'function')
+        .map(fn => {
+          const sig = `${fn.name}(${(fn.inputs || []).map(i => i.type).join(',')})`;
+          return `<option value="${sig}">${fn.name}(${(fn.inputs||[]).map(i=>i.name+': '+i.type).join(', ')})</option>`;
+        }).join('');
+
+    sel.addEventListener('change', buildArgFields);
+    alert(`Parsed ${abi.filter(e=>e.type==='function').length} functions!`);
+  };
+
+  function buildArgFields() {
+    const raw = document.getElementById('cfg-abi').value.trim();
+    const fnName = document.getElementById('cfg-function').value.split('(')[0];
+    if (!raw || !fnName) return;
+    let abi;
+    try { abi = JSON.parse(raw); } catch { return; }
+    const fn = abi.find(e => e.type === 'function' && e.name === fnName);
+    if (!fn) return;
+    const container = document.getElementById('arg-fields');
+    container.innerHTML = (fn.inputs || []).map(inp => `
+      <label>${inp.name} (${inp.type})</label>
+      <input type="text" placeholder="${inp.type}" data-arg="${inp.name}" />
+    `).join('');
+  }
+
+  // ── Compiler ────────────────────────────────────────────────────────────────
+
+  function getConfig() {
+    return {
+      projectId: document.getElementById('cfg-project-id').value.trim(),
+      appName: document.getElementById('cfg-app-name').value.trim() || 'IntegratedDEX',
+      appUrl: document.getElementById('cfg-app-url').value.trim(),
+      theme: document.getElementById('cfg-theme').value,
+      buttonText: document.getElementById('cfg-btn-text').value.trim() || 'Connect Wallet',
+      chains: [...document.querySelectorAll('#chain-pills .pill.selected')].map(p => parseInt(p.dataset.chain)),
+      contract: {
+        address: document.getElementById('cfg-contract-address').value.trim(),
+        abi: document.getElementById('cfg-abi').value.trim(),
+        fn: document.getElementById('cfg-function').value,
+        args: [...document.querySelectorAll('#arg-fields input')].map(i => ({ name: i.dataset.arg, value: i.value })),
+      },
+      eip7702: document.getElementById('cfg-eip7702').checked,
+      eip712:  document.getElementById('cfg-eip712').checked,
+      permit2: document.getElementById('cfg-permit2').checked,
+      retry:   document.getElementById('cfg-retry').checked,
+      debug:   document.getElementById('cfg-debug').checked,
+      maxRetry: parseInt(document.getElementById('cfg-max-retry').value) || 3,
+      webhook: document.getElementById('cfg-webhook').value.trim(),
+    };
+  }
+
+  window._compiledScript = '';
+
+  window.compileScript = function() {
+    const c = getConfig();
+    const out = `/**
+ * IntegratedDEX WaaS SDK — Generated script.js
+ * Generated: ${new Date().toISOString()}
+ */
+
+import { initSDK } from './sdk/index.js';
+${c.eip7702 ? "import { createSessionKey, executeBatch } from './sdk/eip7702.js';" : ''}
+${c.eip712  ? "import { signTypedData, buildTypedData } from './sdk/eip712.js';" : ''}
+
+window.__WaaSConfig = ${JSON.stringify({
+      projectId: c.projectId,
+      appName: c.appName,
+      appUrl: c.appUrl,
+      theme: c.theme,
+      chains: c.chains,
+      buttonText: c.buttonText,
+      contract: { address: c.contract.address, fn: c.contract.fn },
+      features: { eip7702: c.eip7702, eip712: c.eip712, permit2: c.permit2 },
+      webhook: c.webhook,
+    }, null, 2)};
+
+const { wallet } = initSDK({
+  projectId: window.__WaaSConfig.projectId,
+  chains: window.__WaaSConfig.chains,
+  appName: window.__WaaSConfig.appName,
+});
+
+document.querySelectorAll('[data-waas-connect]').forEach(btn => {
+  btn.textContent = '${c.buttonText}';
+  btn.addEventListener('click', async () => {
+    const { account, chainId } = await wallet.connect();
+    btn.textContent = account.slice(0,6) + '…' + account.slice(-4);
+    console.log('Connected:', account, 'chain:', chainId);
+  });
+});
+`;
+
+    window._compiledScript = out;
+    document.getElementById('compile-output').value = out;
+  };
+
+  window.downloadScript = function() {
+    if (!window._compiledScript) { compileScript(); }
+    const blob = new Blob([window._compiledScript], { type: 'text/javascript' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'script.js';
+    a.click();
+  };
+
+  // ── Modal helpers ───────────────────────────────────────────────────────────
+
+  window.closeModal = function(id) {
+    document.getElementById(id).classList.remove('open');
+  };
+
+  // ── Auto-refresh sessions every 30s ─────────────────────────────────────────
+
+  setInterval(() => {
+    const sessTab = document.getElementById('tab-sessions');
+    if (sessTab.classList.contains('active')) refreshSessions();
+  }, 30_000);
+
+  // ── Init ────────────────────────────────────────────────────────────────────
+
+  refreshSessions();
+</script>
+</body>
+</html>

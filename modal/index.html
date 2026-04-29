@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IntegratedDEX WaaS — Interactive Modal Playground</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #090b16;
+      --surface:   #121626;
+      --surface2:  #1a2035;
+      --surface3:  #212844;
+      --border:    #2a3050;
+      --accent:    #7c6fff;
+      --accent2:   #a78bfa;
+      --green:     #22c55e;
+      --yellow:    #eab308;
+      --orange:    #f97316;
+      --red:       #ef4444;
+      --text:      #e2e8f0;
+      --muted:     #64748b;
+      --radius:    12px;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      text-align: center;
+      padding: 5rem 2rem 3rem;
+      background: radial-gradient(ellipse 80% 60% at 50% -20%, rgba(124,111,255,.25) 0%, transparent 70%);
+    }
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 3.4rem);
+      font-weight: 800;
+      letter-spacing: -.02em;
+      background: linear-gradient(135deg, #fff 30%, var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: .8rem;
+    }
+    .hero p { color: var(--muted); font-size: 1.05rem; max-width: 500px; margin: 0 auto 2rem; }
+
+    .hero-btns { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+
+    /* ── Live demo card ── */
+    .demo-card {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      padding: 0 2rem 3rem;
+    }
+    .status-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.2rem 1.5rem;
+      min-width: 180px;
+      text-align: center;
+    }
+    .status-card .label { font-size: .73rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: .4rem; }
+    .status-card .value { font-size: .95rem; font-weight: 600; font-family: monospace; }
+
+    /* ── Features grid ── */
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      max-width: 900px;
+      margin: 0 auto 3rem;
+      padding: 0 2rem;
+    }
+    .feature-pill {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+      text-align: center;
+      font-size: .85rem;
+    }
+    .feature-pill .icon { font-size: 1.5rem; margin-bottom: .4rem; }
+
+    /* ── Playground container ── */
+    .playground {
+      max-width: 900px;
+      margin: 0 auto 4rem;
+      padding: 0 2rem;
+    }
+
+    /* ── Tabs ── */
+    .tabs { display: flex; gap: .3rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); }
+    .tab-btn {
+      padding: .6rem 1.1rem;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-size: .87rem;
+      font-weight: 500;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: color .15s, border-color .15s;
+    }
+    .tab-btn:hover  { color: var(--text); }
+    .tab-btn.active { color: var(--accent); border-color: var(--accent); }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .card h3 { font-size: .95rem; font-weight: 600; margin-bottom: 1.1rem; }
+
+    /* ── Form elements ── */
+    label { display: block; font-size: .8rem; color: var(--muted); margin-bottom: .3rem; }
+    input, textarea, select {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: .55rem .85rem;
+      color: var(--text);
+      font-size: .88rem;
+      margin-bottom: 1rem;
+      outline: none;
+      transition: border-color .15s;
+    }
+    input:focus, textarea:focus, select:focus { border-color: var(--accent); }
+    textarea { resize: vertical; min-height: 70px; }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      padding: .55rem 1.2rem;
+      border-radius: 7px;
+      font-size: .87rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: opacity .15s, transform .08s;
+    }
+    .btn:hover  { opacity: .85; }
+    .btn:active { transform: scale(.97); }
+    .btn-primary  { background: var(--accent); color: #fff; }
+    .btn-outline  { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    .btn-green    { background: var(--green); color: #fff; }
+    .btn-orange   { background: var(--orange); color: #fff; }
+    .btn-sm       { padding: .3rem .7rem; font-size: .78rem; }
+
+    /* ── Batch builder ── */
+    .call-list { display: flex; flex-direction: column; gap: .7rem; margin-bottom: 1rem; }
+    .call-item {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      position: relative;
+    }
+    .call-item .remove-call {
+      position: absolute; top: .7rem; right: .7rem;
+      background: none; border: none;
+      color: var(--muted); font-size: 1.1rem; cursor: pointer;
+      line-height: 1;
+    }
+    .call-item .remove-call:hover { color: var(--red); }
+    .call-num { font-size: .75rem; color: var(--muted); margin-bottom: .6rem; }
+
+    /* ── Preview panel ── */
+    .preview-box {
+      background: #07090f;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      font-family: 'Fira Code', monospace;
+      font-size: .78rem;
+      line-height: 1.7;
+      color: var(--text);
+      margin-bottom: 1rem;
+      min-height: 80px;
+      white-space: pre-wrap;
+    }
+
+    /* ── Session key generator ── */
+    .pill-group { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: 1rem; }
+    .pill {
+      padding: .3rem .85rem;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      font-size: .78rem;
+      cursor: pointer;
+      transition: background .15s, border-color .15s;
+    }
+    .pill.selected { background: rgba(124,111,255,.2); border-color: var(--accent); color: var(--accent2); }
+
+    /* ── Session display ── */
+    .session-display {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      font-family: monospace;
+      font-size: .78rem;
+      line-height: 1.8;
+      display: none;
+    }
+    .session-display.visible { display: block; }
+    .sess-field { display: flex; justify-content: space-between; border-bottom: 1px solid var(--surface3); padding: .2rem 0; }
+    .sess-key   { color: var(--muted); }
+    .sess-val   { color: var(--accent2); word-break: break-all; text-align: right; max-width: 60%; }
+
+    /* ── Countdown ── */
+    .countdown {
+      display: none;
+      text-align: center;
+      padding: .8rem;
+      background: var(--surface2);
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      margin-top: .8rem;
+      color: var(--green);
+    }
+    .countdown.visible { display: block; }
+
+    /* ── Copy badge ── */
+    .copy-btn {
+      font-size: .73rem;
+      padding: .2rem .5rem;
+      margin-left: .5rem;
+      cursor: pointer;
+      background: var(--surface3);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--muted);
+      vertical-align: middle;
+    }
+    .copy-btn:hover { color: var(--text); }
+
+    /* ── Output area ── */
+    .output-line {
+      font-family: monospace;
+      font-size: .82rem;
+      padding: .4rem .8rem;
+      border-radius: 6px;
+      margin-bottom: .4rem;
+      display: none;
+    }
+    .output-line.visible { display: block; }
+    .output-success { background: rgba(34,197,94,.12); color: var(--green); }
+    .output-error   { background: rgba(239,68,68,.12);  color: var(--red); }
+    .output-info    { background: rgba(124,111,255,.1); color: var(--accent2); }
+
+    /* ── Gas estimate badge ── */
+    .gas-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: .3rem;
+      font-size: .8rem;
+      padding: .25rem .6rem;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--muted);
+    }
+
+    /* ── Sign message tab ── */
+    .sig-output {
+      word-break: break-all;
+      background: var(--surface2);
+      border-radius: 7px;
+      padding: .8rem;
+      font-family: monospace;
+      font-size: .77rem;
+      color: var(--accent2);
+      min-height: 50px;
+      margin-top: .5rem;
+    }
+
+    /* ── Code snippet ── */
+    .code-snippet {
+      background: #07090f;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.2rem 1.5rem;
+      font-family: 'Fira Code', monospace;
+      font-size: .8rem;
+      line-height: 1.75;
+      overflow-x: auto;
+      margin-bottom: 1.5rem;
+      position: relative;
+    }
+    .code-snippet .lang {
+      position: absolute; top: .7rem; right: .8rem;
+      font-size: .68rem; color: var(--muted); text-transform: uppercase;
+    }
+    .kw  { color: #c792ea; }
+    .fn  { color: #82aaff; }
+    .str { color: #c3e88d; }
+    .cm  { color: var(--muted); }
+    .num { color: #f78c6c; }
+
+    /* ── Responsive ── */
+    @media (max-width: 600px) {
+      .form-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Hero ── -->
+<section class="hero">
+  <h1>Connect Any Wallet.<br>Build Anything.</h1>
+  <p>Interactive playground for the IntegratedDEX WaaS SDK — wallet connection, EIP-7702 batch execution, session keys, and more.</p>
+  <div class="hero-btns">
+    <button class="btn btn-primary" id="hero-connect-btn" onclick="connectWallet()">🔌 Connect Wallet</button>
+    <a class="btn btn-outline" href="../dashboard/index.html">🖥️ Open Dashboard</a>
+  </div>
+</section>
+
+<!-- ── Live status cards ── -->
+<div class="demo-card">
+  <div class="status-card">
+    <div class="label">Status</div>
+    <div class="value" id="status-text" style="color:var(--muted)">Disconnected</div>
+  </div>
+  <div class="status-card">
+    <div class="label">Address</div>
+    <div class="value" id="status-address">—</div>
+  </div>
+  <div class="status-card">
+    <div class="label">Chain</div>
+    <div class="value" id="status-chain">—</div>
+  </div>
+  <div class="status-card">
+    <div class="label">Balance</div>
+    <div class="value" id="status-balance">—</div>
+  </div>
+</div>
+
+<!-- ── Features grid ── -->
+<div class="features">
+  <div class="feature-pill"><div class="icon">🔌</div>WalletConnect</div>
+  <div class="feature-pill"><div class="icon">🌈</div>RainbowKit</div>
+  <div class="feature-pill"><div class="icon">✍️</div>Permit2</div>
+  <div class="feature-pill"><div class="icon">📦</div>Multicall3</div>
+  <div class="feature-pill"><div class="icon">🔏</div>EIP-712</div>
+  <div class="feature-pill"><div class="icon">⚡</div>EIP-7702</div>
+</div>
+
+<!-- ── Playground ── -->
+<div class="playground">
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="connect">🔌 Connect</button>
+    <button class="tab-btn" data-tab="contract">📄 Contract</button>
+    <button class="tab-btn" data-tab="sign">✍️ Sign Message</button>
+    <button class="tab-btn" data-tab="batch">⚡ Batch &amp; Sessions</button>
+  </div>
+
+  <!-- ════════ CONNECT TAB ════════ -->
+  <div class="tab-content active" id="tab-connect">
+    <div class="card">
+      <h3>🔌 Connect Button Customizer</h3>
+      <div class="form-row">
+        <div>
+          <label>Button Text</label>
+          <input type="text" id="btn-text" value="Connect Wallet" oninput="updatePreview()" />
+        </div>
+        <div>
+          <label>Theme</label>
+          <select id="btn-theme" onchange="updatePreview()">
+            <option value="dark">Dark</option>
+            <option value="light">Light</option>
+            <option value="midnight">Midnight</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div>
+          <label>Border Radius</label>
+          <input type="range" id="btn-radius" min="0" max="30" value="7" oninput="updatePreview()" />
+        </div>
+        <div>
+          <label>Show address after connect</label>
+          <select id="btn-show-addr" onchange="updatePreview()">
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+          </select>
+        </div>
+      </div>
+      <div style="margin-bottom:1rem;">
+        <div style="font-size:.8rem;color:var(--muted);margin-bottom:.5rem;">Live Preview</div>
+        <div style="background:var(--surface2);border:1px dashed var(--border);border-radius:8px;padding:1.5rem;display:flex;align-items:center;justify-content:center;">
+          <button id="preview-btn" class="btn btn-primary" style="border-radius:7px;" onclick="connectWallet()">Connect Wallet</button>
+        </div>
+      </div>
+      <div style="font-size:.8rem;color:var(--muted);margin-bottom:.4rem;">Copy embed code</div>
+      <div class="code-snippet" id="embed-code">
+        <span class="lang">html</span>
+        <span class="kw">&lt;button</span> <span class="fn">data-waas-connect</span><span class="kw">&gt;</span>Connect Wallet<span class="kw">&lt;/button&gt;</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════ CONTRACT TAB ════════ -->
+  <div class="tab-content" id="tab-contract">
+    <div class="card">
+      <h3>📄 Live Contract Caller</h3>
+      <div class="form-row">
+        <div>
+          <label>Contract Address</label>
+          <input type="text" id="ct-address" placeholder="0x..." />
+        </div>
+        <div>
+          <label>Chain ID</label>
+          <select id="ct-chain">
+            <option value="1">Ethereum (1)</option>
+            <option value="56">BNB Chain (56)</option>
+            <option value="137">Polygon (137)</option>
+            <option value="43114">Avalanche (43114)</option>
+          </select>
+        </div>
+      </div>
+      <label>ABI (JSON array)</label>
+      <textarea id="ct-abi" rows="4" placeholder='[{"name":"balanceOf","type":"function","stateMutability":"view","inputs":[{"name":"account","type":"address"}],"outputs":[{"type":"uint256"}]}]'></textarea>
+      <div style="display:flex;gap:.7rem;margin-bottom:1rem;">
+        <button class="btn btn-outline" onclick="ctParseABI()">Parse ABI</button>
+      </div>
+      <div class="form-row">
+        <div>
+          <label>Function</label>
+          <select id="ct-function" onchange="ctBuildArgs()"><option value="">— Parse ABI first —</option></select>
+        </div>
+        <div>
+          <label>Type</label>
+          <select id="ct-type"><option value="read">🔵 Read</option><option value="write">🟠 Write</option></select>
+        </div>
+      </div>
+      <div id="ct-args"></div>
+      <div style="display:flex;gap:.7rem;align-items:center;flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="ctCall()">▶️ Call</button>
+        <span class="gas-badge" id="ct-gas">⛽ ~—</span>
+      </div>
+      <div id="ct-output" class="output-line" style="margin-top:.8rem;"></div>
+    </div>
+  </div>
+
+  <!-- ════════ SIGN TAB ════════ -->
+  <div class="tab-content" id="tab-sign">
+    <div class="card">
+      <h3>✍️ Sign Message</h3>
+      <label>Message to sign</label>
+      <textarea id="sign-message" rows="3" placeholder="Hello from IntegratedDEX!">Hello from IntegratedDEX!</textarea>
+      <button class="btn btn-primary" onclick="signMsg()">✍️ Sign</button>
+      <div style="margin-top:.8rem;font-size:.8rem;color:var(--muted);">Signature</div>
+      <div class="sig-output" id="sign-output">—</div>
+    </div>
+
+    <div class="card">
+      <h3>🔏 EIP-712 Typed Data</h3>
+      <label>Type name</label>
+      <input type="text" id="typed-type" value="Order" />
+      <label>Fields (JSON: {"fieldName":"solidityType"})</label>
+      <input type="text" id="typed-fields" value='{"amount":"uint256","deadline":"uint256"}' />
+      <label>Message values (JSON)</label>
+      <input type="text" id="typed-message" value='{"amount":100,"deadline":1748000000}' />
+      <button class="btn btn-primary" onclick="signTyped()">🔏 Sign Typed</button>
+      <div class="sig-output" id="typed-output">—</div>
+    </div>
+  </div>
+
+  <!-- ════════ BATCH & SESSIONS TAB ════════ -->
+  <div class="tab-content" id="tab-batch">
+
+    <!-- Batch Builder -->
+    <div class="card">
+      <h3>📦 Batch Builder (EIP-7702)</h3>
+      <p style="font-size:.82rem;color:var(--muted);margin-bottom:1rem;">
+        Combine multiple contract calls into a single transaction — one gas fee, one confirmation.
+      </p>
+      <div class="call-list" id="call-list"></div>
+      <div style="display:flex;gap:.7rem;align-items:center;flex-wrap:wrap;margin-bottom:1rem;">
+        <button class="btn btn-outline" onclick="addCall()">+ Add Call</button>
+        <span class="gas-badge" id="batch-gas">⛽ ~21,000 gas</span>
+      </div>
+
+      <div style="font-size:.8rem;color:var(--muted);margin-bottom:.5rem;">Batch Preview</div>
+      <div class="preview-box" id="batch-preview">No calls added yet.</div>
+
+      <button class="btn btn-primary" onclick="executeBatchCalls()">⚡ Execute Batch</button>
+      <div id="batch-output" class="output-line" style="margin-top:.8rem;"></div>
+    </div>
+
+    <!-- Session Key Generator -->
+    <div class="card">
+      <h3>🔑 Session Key Generator</h3>
+      <p style="font-size:.82rem;color:var(--muted);margin-bottom:1rem;">
+        Create a temporary signing key. The user signs once — you can then transact on their behalf within the defined limits.
+      </p>
+      <div class="form-row">
+        <div>
+          <label>User Wallet (connected)</label>
+          <input type="text" id="sk-user" placeholder="Connect wallet first" readonly />
+        </div>
+        <div>
+          <label>Session Key Address (auto-generated)</label>
+          <input type="text" id="sk-key" placeholder="Auto-generated on sign" readonly />
+        </div>
+      </div>
+      <label>Allowed Contracts (one per line)</label>
+      <textarea id="sk-contracts" rows="2" placeholder="0xPresaleContract&#10;0xStakingContract"></textarea>
+      <label>Allowed Functions (one per line)</label>
+      <textarea id="sk-functions" rows="2" placeholder="contribute(uint256)&#10;claim()"></textarea>
+      <div class="form-row">
+        <div>
+          <label>Spending Limit (ETH)</label>
+          <input type="text" id="sk-limit" value="0.5" />
+        </div>
+        <div>
+          <label>Duration</label>
+          <div class="pill-group" id="sk-duration">
+            <div class="pill" data-dur="3600">1hr</div>
+            <div class="pill selected" data-dur="14400">4hr</div>
+            <div class="pill" data-dur="86400">24hr</div>
+            <div class="pill" data-dur="custom">Custom</div>
+          </div>
+        </div>
+      </div>
+      <div id="sk-custom-row" style="display:none;">
+        <label>Custom duration (seconds)</label>
+        <input type="number" id="sk-custom-dur" value="7200" />
+      </div>
+      <button class="btn btn-primary" style="margin-bottom:1rem;" onclick="generateSessionKey()">🔑 Sign Session</button>
+
+      <div class="session-display" id="sk-display">
+        <div class="sess-field"><span class="sess-key">Session ID</span><span class="sess-val" id="skd-id">—</span></div>
+        <div class="sess-field"><span class="sess-key">Session Key</span><span class="sess-val" id="skd-key">—<button class="copy-btn" onclick="copyField('skd-key')">copy</button></span></div>
+        <div class="sess-field"><span class="sess-key">User</span><span class="sess-val" id="skd-user">—</span></div>
+        <div class="sess-field"><span class="sess-key">Spending Limit</span><span class="sess-val" id="skd-limit">—</span></div>
+        <div class="sess-field"><span class="sess-key">Expires At</span><span class="sess-val" id="skd-expires">—</span></div>
+        <div class="sess-field"><span class="sess-key">Signature</span><span class="sess-val" id="skd-sig">—</span></div>
+      </div>
+
+      <div class="countdown" id="sk-countdown">⏱️ Session expires in: <span id="sk-timer">—</span></div>
+    </div>
+
+  </div><!-- /tab-batch -->
+
+</div><!-- /playground -->
+
+<!-- ── Code snippets section ── -->
+<div style="max-width:900px;margin:0 auto 5rem;padding:0 2rem;">
+  <h2 style="font-size:1.1rem;font-weight:700;margin-bottom:1.5rem;color:var(--accent2);">📚 SDK Usage Examples</h2>
+
+  <div class="code-snippet">
+    <span class="lang">js</span>
+<span class="cm">// 1. Initialise the SDK</span>
+<span class="kw">import</span> { initSDK } <span class="kw">from</span> <span class="str">'./sdk/index.js'</span>;
+<span class="kw">const</span> { wallet } = initSDK({
+  projectId: <span class="str">'YOUR_WALLETCONNECT_ID'</span>,
+  chains: [<span class="num">1</span>, <span class="num">56</span>, <span class="num">137</span>],
+  appName: <span class="str">'My dApp'</span>,
+});
+  </div>
+
+  <div class="code-snippet">
+    <span class="lang">js</span>
+<span class="cm">// 2. Batch execution — approve + contribute in 1 tx</span>
+<span class="kw">import</span> { executeBatch } <span class="kw">from</span> <span class="str">'./sdk/eip7702.js'</span>;
+<span class="kw">const</span> hash = <span class="kw">await</span> <span class="fn">executeBatch</span>(provider, account, [
+  { to: tokenContract,   data: approveCalldata,    value: <span class="str">'0x0'</span> },
+  { to: presaleContract, data: contributeCalldata, value: ethAmount },
+]);
+<span class="cm">// ✅ 1 transaction, 1 gas fee, 1 signature</span>
+  </div>
+
+  <div class="code-snippet">
+    <span class="lang">js</span>
+<span class="cm">// 3. Session keys — sign once, transact silently after</span>
+<span class="kw">import</span> { createSessionKey } <span class="kw">from</span> <span class="str">'./sdk/eip7702.js'</span>;
+<span class="kw">import</span> { saveSession, onSessionCreated, executeWithSession } <span class="kw">from</span> <span class="str">'./sdk/sessionManager.js'</span>;
+
+<span class="fn">onSessionCreated</span>(({ userAddress, session }) =&gt; {
+  console.<span class="fn">log</span>(<span class="str">`✅ ${userAddress} signed a session!`</span>);
+});
+
+<span class="kw">const</span> session = <span class="kw">await</span> <span class="fn">createSessionKey</span>(provider, account, {
+  sessionPublicKey: generatedKeyAddress,
+  allowedContracts: [<span class="str">'0xPresale'</span>],
+  allowedFunctions: [<span class="str">'contribute(uint256)'</span>, <span class="str">'claim()'</span>],
+  spendingLimit: <span class="str">'0.5'</span>,
+  expiresAt: Math.<span class="fn">floor</span>(Date.<span class="fn">now</span>()/<span class="num">1000</span>) + <span class="num">3600</span>,
+  chainId: <span class="num">1</span>,
+});
+
+<span class="fn">saveSession</span>(session);
+
+<span class="cm">// Later — no wallet popup needed:</span>
+<span class="kw">const</span> tx = <span class="kw">await</span> <span class="fn">executeWithSession</span>(session.sessionKey, provider, {
+  to: <span class="str">'0xPresale'</span>,
+  data: contributeCalldata,
+});
+  </div>
+</div>
+
+<script type="module">
+  // ── Tab switching ──────────────────────────────────────────────────────────
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  // ── Duration pill toggles ──────────────────────────────────────────────────
+  document.querySelectorAll('#sk-duration .pill').forEach(p => {
+    p.addEventListener('click', () => {
+      document.querySelectorAll('#sk-duration .pill').forEach(x => x.classList.remove('selected'));
+      p.classList.add('selected');
+      document.getElementById('sk-custom-row').style.display =
+        p.dataset.dur === 'custom' ? 'block' : 'none';
+    });
+  });
+
+  // ── Simulated wallet state ─────────────────────────────────────────────────
+  let _account = null;
+  let _chainId = 1;
+
+  window.connectWallet = async function() {
+    // Simulate connection (real integration uses WaaSWallet.connect())
+    _account = '0x' + Math.random().toString(16).slice(2).padStart(40, '0');
+    _chainId = 1;
+
+    document.getElementById('status-text').style.color = 'var(--green)';
+    document.getElementById('status-text').textContent = '🟢 Connected';
+    document.getElementById('status-address').textContent = _account.slice(0,6) + '…' + _account.slice(-4);
+    document.getElementById('status-chain').textContent = 'Ethereum (1)';
+    document.getElementById('status-balance').textContent = (Math.random() * 5).toFixed(4) + ' ETH';
+
+    document.getElementById('hero-connect-btn').textContent = '✅ ' + _account.slice(0,6) + '…' + _account.slice(-4);
+    document.getElementById('sk-user').value = _account;
+  };
+
+  // ── Connect customizer ─────────────────────────────────────────────────────
+  window.updatePreview = function() {
+    const text = document.getElementById('btn-text').value || 'Connect Wallet';
+    const radius = document.getElementById('btn-radius').value;
+    const btn = document.getElementById('preview-btn');
+    btn.textContent = text;
+    btn.style.borderRadius = radius + 'px';
+  };
+
+  // ── Contract caller ────────────────────────────────────────────────────────
+  window.ctParseABI = function() {
+    const raw = document.getElementById('ct-abi').value.trim();
+    if (!raw) { alert('Paste an ABI first.'); return; }
+    let abi;
+    try { abi = JSON.parse(raw); } catch { alert('Invalid JSON.'); return; }
+    const sel = document.getElementById('ct-function');
+    sel.innerHTML = abi.filter(e => e.type === 'function').map(fn => {
+      const state = fn.stateMutability ?? (fn.constant ? 'view' : 'nonpayable');
+      const tag = ['view','pure'].includes(state) ? '🔵' : '🟠';
+      return `<option value="${fn.name}">${tag} ${fn.name}(${(fn.inputs||[]).map(i=>i.type).join(',')})</option>`;
+    }).join('');
+    ctBuildArgs();
+  };
+
+  window.ctBuildArgs = function() {
+    const raw = document.getElementById('ct-abi').value.trim();
+    const fnName = document.getElementById('ct-function').value;
+    if (!raw || !fnName) return;
+    let abi;
+    try { abi = JSON.parse(raw); } catch { return; }
+    const fn = abi.find(e => e.type === 'function' && e.name === fnName);
+    if (!fn) return;
+    document.getElementById('ct-args').innerHTML = (fn.inputs || []).map(inp => `
+      <label>${inp.name} (${inp.type})</label>
+      <input type="text" placeholder="${inp.type}" data-ct-arg="${inp.name}" />
+    `).join('');
+
+    const isView = ['view','pure'].includes(fn.stateMutability);
+    document.getElementById('ct-type').value = isView ? 'read' : 'write';
+    document.getElementById('ct-gas').textContent = '⛽ ~' + (isView ? '0 (read)' : '50,000 est.');
+  };
+
+  window.ctCall = function() {
+    const addr = document.getElementById('ct-address').value.trim();
+    const fnName = document.getElementById('ct-function').value;
+    const type = document.getElementById('ct-type').value;
+    const out = document.getElementById('ct-output');
+
+    if (!addr) { alert('Enter a contract address.'); return; }
+    if (!fnName) { alert('Select a function.'); return; }
+    if (!_account && type === 'write') { alert('Connect wallet first.'); return; }
+
+    out.className = 'output-line visible';
+    if (type === 'read') {
+      out.className += ' output-success';
+      out.textContent = `✅ Result: ${Math.floor(Math.random() * 1e18)} (simulated)`;
+    } else {
+      out.className += ' output-info';
+      out.textContent = `⚡ Tx sent (simulated): 0x${Math.random().toString(16).slice(2).padEnd(64,'0')}`;
+    }
+  };
+
+  // ── Sign message ───────────────────────────────────────────────────────────
+  window.signMsg = function() {
+    if (!_account) { alert('Connect wallet first.'); return; }
+    const msg = document.getElementById('sign-message').value;
+    const fakeSig = '0x' + Array.from({length: 130}, () => Math.floor(Math.random()*16).toString(16)).join('');
+    document.getElementById('sign-output').textContent = fakeSig;
+  };
+
+  window.signTyped = function() {
+    if (!_account) { alert('Connect wallet first.'); return; }
+    const fakeSig = '0x' + Array.from({length: 130}, () => Math.floor(Math.random()*16).toString(16)).join('');
+    document.getElementById('typed-output').textContent = fakeSig;
+  };
+
+  // ── Batch builder ──────────────────────────────────────────────────────────
+  let _calls = [];
+
+  window.addCall = function() {
+    const idx = _calls.length;
+    _calls.push({ to: '', data: '0x', value: '0' });
+    renderCalls();
+  };
+
+  window.removeCall = function(i) {
+    _calls.splice(i, 1);
+    renderCalls();
+  };
+
+  function renderCalls() {
+    const list = document.getElementById('call-list');
+    if (!_calls.length) {
+      list.innerHTML = '<div style="color:var(--muted);font-size:.85rem;">No calls yet. Click "+ Add Call".</div>';
+      updateBatchPreview();
+      return;
+    }
+    list.innerHTML = _calls.map((c, i) => `
+      <div class="call-item">
+        <button class="remove-call" onclick="removeCall(${i})">✕</button>
+        <div class="call-num">Call #${i + 1}</div>
+        <label>Contract Address</label>
+        <input type="text" value="${c.to}" placeholder="0x..." onchange="_calls[${i}].to=this.value;updateBatchPreview()" />
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem;">
+          <div>
+            <label>Calldata (hex)</label>
+            <input type="text" value="${c.data}" placeholder="0x..." onchange="_calls[${i}].data=this.value;updateBatchPreview()" />
+          </div>
+          <div>
+            <label>Value (ETH)</label>
+            <input type="text" value="${c.value}" placeholder="0" onchange="_calls[${i}].value=this.value;updateBatchPreview()" />
+          </div>
+        </div>
+      </div>
+    `).join('');
+    updateBatchPreview();
+  }
+
+  window.updateBatchPreview = function() {
+    const preview = document.getElementById('batch-preview');
+    if (!_calls.length) { preview.textContent = 'No calls added yet.'; return; }
+    const gas = 21000 + _calls.length * 30000;
+    document.getElementById('batch-gas').textContent = `⛽ ~${gas.toLocaleString()} gas`;
+    preview.textContent = _calls.map((c, i) =>
+      `Call ${i+1}:\n  to:    ${c.to || '(not set)'}\n  data:  ${c.data || '0x'}\n  value: ${c.value || '0'} ETH`
+    ).join('\n\n');
+  };
+
+  window.executeBatchCalls = function() {
+    if (!_calls.length) { alert('Add at least one call.'); return; }
+    if (!_account) { alert('Connect wallet first.'); return; }
+    const incomplete = _calls.find(c => !c.to);
+    if (incomplete) { alert('Fill in all contract addresses.'); return; }
+    const out = document.getElementById('batch-output');
+    out.className = 'output-line visible output-info';
+    const fakeTx = '0x' + Math.random().toString(16).slice(2).padEnd(64, '0');
+    out.textContent = `⚡ Batch executed (${_calls.length} calls) — tx: ${fakeTx}`;
+  };
+
+  // ── Session key generator ──────────────────────────────────────────────────
+  let _sessionTimer = null;
+
+  window.generateSessionKey = function() {
+    const user = document.getElementById('sk-user').value.trim();
+    if (!user) { alert('Connect wallet first.'); return; }
+
+    const fakeKey = '0x' + Array.from({length: 40}, () => Math.floor(Math.random()*16).toString(16)).join('');
+    const fakeSig = '0x' + Array.from({length: 130}, () => Math.floor(Math.random()*16).toString(16)).join('');
+    const id = 'sess_' + Math.random().toString(36).slice(2, 8);
+
+    const durPill = document.querySelector('#sk-duration .pill.selected');
+    let dur = parseInt(durPill?.dataset.dur === 'custom'
+      ? document.getElementById('sk-custom-dur').value
+      : durPill?.dataset.dur || '14400', 10);
+    const expiresAt = Math.floor(Date.now() / 1000) + dur;
+
+    document.getElementById('sk-key').value = fakeKey;
+    document.getElementById('skd-id').textContent = id;
+    document.getElementById('skd-key').textContent = fakeKey;
+    document.getElementById('skd-user').textContent = user;
+    document.getElementById('skd-limit').textContent = document.getElementById('sk-limit').value + ' ETH';
+    document.getElementById('skd-expires').textContent = new Date(expiresAt * 1000).toLocaleString();
+    document.getElementById('skd-sig').textContent = fakeSig.slice(0, 20) + '…';
+
+    document.getElementById('sk-display').classList.add('visible');
+
+    // Save to localStorage
+    const session = {
+      id,
+      userAddress: user,
+      sessionKey: fakeKey,
+      allowedContracts: document.getElementById('sk-contracts').value.trim().split('\n').filter(Boolean),
+      allowedFunctions: document.getElementById('sk-functions').value.trim().split('\n').filter(Boolean),
+      spendingLimit: document.getElementById('sk-limit').value || '0',
+      spendingLimitToken: 'ETH',
+      expiresAt,
+      chainId: _chainId,
+      createdAt: Math.floor(Date.now() / 1000),
+      signature: fakeSig,
+      txHash: null,
+      status: 'active',
+    };
+
+    try {
+      const existing = JSON.parse(localStorage.getItem('waas_sessions') || '[]');
+      existing.push(session);
+      localStorage.setItem('waas_sessions', JSON.stringify(existing));
+    } catch { /* ignore */ }
+
+    // Countdown
+    if (_sessionTimer) clearInterval(_sessionTimer);
+    const countdown = document.getElementById('sk-countdown');
+    const timer = document.getElementById('sk-timer');
+    countdown.classList.add('visible');
+
+    _sessionTimer = setInterval(() => {
+      const left = expiresAt - Math.floor(Date.now() / 1000);
+      if (left <= 0) {
+        timer.textContent = '⌛ Expired';
+        countdown.style.color = 'var(--red)';
+        clearInterval(_sessionTimer);
+        return;
+      }
+      const h = Math.floor(left / 3600);
+      const m = Math.floor((left % 3600) / 60);
+      const s = left % 60;
+      timer.textContent = h ? `${h}h ${m}m ${s}s` : m ? `${m}m ${s}s` : `${s}s`;
+      if (left < 3600) countdown.style.color = 'var(--yellow)';
+    }, 1000);
+  };
+
+  window.copyField = function(id) {
+    const el = document.getElementById(id);
+    const text = el.childNodes[0]?.textContent?.trim() || el.textContent?.trim();
+    navigator.clipboard.writeText(text).catch(() => {});
+  };
+
+  // ── Init ──────────────────────────────────────────────────────────────────
+  addCall(); // pre-populate one call slot
+</script>
+</body>
+</html>
