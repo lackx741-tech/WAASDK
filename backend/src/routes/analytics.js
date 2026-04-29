@@ -13,7 +13,7 @@ import { Transaction } from '../models/Transaction.js';
  */
 export async function analyticsRoutes(fastify) {
   // GET /api/analytics/overview
-  fastify.get('/overview', async (_req, reply) => {
+  fastify.get('/overview', async (_, reply) => {
     const now = Math.floor(Date.now() / 1000);
 
     const [
