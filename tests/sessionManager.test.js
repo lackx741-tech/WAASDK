@@ -282,7 +282,7 @@ describe("revokeSession", () => {
     expect(revokeSession("sess_nonexistent")).toBe(false);
   });
 
-  it("excluded revoked sessions from getActiveSessions", () => {
+  it("excludes revoked sessions from getActiveSessions", () => {
     const stored = saveSession(makeFutureSession());
     revokeSession(stored.id);
     expect(getActiveSessions(USER)).toHaveLength(0);
