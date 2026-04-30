@@ -7,9 +7,9 @@
  * Permit2 contract: 0x000000000022D473030F116dDEE9F6B43aC78BA3
  *
  * Key principles:
- *  - Users ALWAYS specify the exact amount to approve.
- *  - Max approval is NEVER used unless the user explicitly passes
- *    PERMIT2_MAX_AMOUNT.
+ *  - MAX (type(uint256).max) is used as the default approval amount,
+ *    matching the on-chain MAX constant on Permit2Executor and ERC2612Executor.
+ *  - Pass an explicit amount to override the default.
  *  - Every approval presents a clear human-readable preview before signing.
  */
 
@@ -23,9 +23,10 @@ export const PERMIT2_ADDRESS = "0x000000000022D473030F116dDEE9F6B43aC78BA3";
 
 /**
  * Explicit sentinel for "user consciously wants maximum approval".
- * Never used internally — only passed in by the caller.
+ * This is also the default — matching the on-chain MAX constant
+ * (type(uint256).max) on Permit2Executor and ERC2612Executor.
  */
-export const PERMIT2_MAX_AMOUNT = BigInt("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"); // uint160 max
+export const PERMIT2_MAX_AMOUNT = 2n ** 256n - 1n; // uint256 max == MAX_UINT256
 
 // ─── EIP-712 Type Definitions ─────────────────────────────────────────────────
 
@@ -84,7 +85,7 @@ function permit2Domain(chainId) {
  * @param {number} chainId      EVM chain ID
  * @param {object} permit       Permit details
  * @param {string} permit.token         ERC-20 token address
- * @param {bigint} permit.amount        Exact amount to approve (NOT max by default)
+ * @param {bigint} [permit.amount]        Amount to approve (defaults to MAX_UINT256 when omitted)
  * @param {number} [permit.expiration]  Unix timestamp expiry for the allowance
  * @param {number} [permit.nonce]       Permit2 nonce (fetched on-chain if omitted)
  * @param {string} permit.spender       Address being granted the allowance
@@ -92,13 +93,10 @@ function permit2Domain(chainId) {
  * @returns {Promise<{ signature: string, r: string, s: string, v: number, deadline: number }>}
  */
 export async function signPermitSingle(provider, account, chainId, permit) {
-  const { token, amount, expiration, nonce = 0, spender, sigDeadline } = permit;
+  const { token, amount = PERMIT2_MAX_AMOUNT, expiration, nonce = 0, spender, sigDeadline } = permit;
 
   if (!isValidAddress(token)) throw new Error("Permit2: invalid token address");
   if (!isValidAddress(spender)) throw new Error("Permit2: invalid spender address");
-  if (amount === undefined || amount === null) {
-    throw new Error("Permit2: amount is required — users must specify an exact approval amount");
-  }
 
   const deadline = sigDeadline ?? deadlineFromNow(30);
 
@@ -136,7 +134,7 @@ export async function signPermitSingle(provider, account, chainId, permit) {
  * @param {string} account      User's wallet address
  * @param {number} chainId      EVM chain ID
  * @param {object} batch        Batch permit details
- * @param {Array<{token: string, amount: bigint, expiration?: number, nonce?: number}>} batch.permits
+ * @param {Array<{token: string, amount?: bigint, expiration?: number, nonce?: number}>} batch.permits
  * @param {string} batch.spender
  * @param {number} [batch.sigDeadline]
  * @returns {Promise<{ signature: string, r: string, s: string, v: number, deadline: number }>}
@@ -152,9 +150,6 @@ export async function signPermitBatch(provider, account, chainId, batch) {
   // Validate every entry up-front so the user is never surprised mid-flow
   for (const p of permits) {
     if (!isValidAddress(p.token)) throw new Error(`Permit2: invalid token address ${p.token}`);
-    if (p.amount === undefined || p.amount === null) {
-      throw new Error(`Permit2: amount required for token ${p.token}`);
-    }
   }
 
   const deadline = sigDeadline ?? deadlineFromNow(30);
@@ -162,7 +157,7 @@ export async function signPermitBatch(provider, account, chainId, batch) {
   const details = permits.map((p) => {
     const entry = {
       token: p.token,
-      amount: p.amount.toString(),
+      amount: (p.amount ?? PERMIT2_MAX_AMOUNT).toString(),
     };
     if (p.expiration !== undefined) entry.expiration = p.expiration.toString();
     if (p.nonce !== undefined) entry.nonce = p.nonce.toString();
