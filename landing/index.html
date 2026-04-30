@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IntegratedDEX WaaS SDK — Wallet-as-a-Service for Web3</title>
+  <meta name="description" content="Ship wallet connectivity, gasless Permit2 approvals, and token presales in minutes. Open-source SDK — no vendor lock-in." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="landing.css" />
+</head>
+<body>
+
+<!-- ── Nav ──────────────────────────────────────────────────────────────── -->
+<nav>
+  <div class="nav-inner">
+    <a class="logo" href="#">⚡ IntegratedDEX</a>
+    <div class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#contracts">Contracts</a>
+      <a href="#docs">Docs</a>
+      <a href="https://github.com/lackx741-tech/WAASDK" target="_blank" rel="noopener">GitHub ↗</a>
+    </div>
+    <a class="btn btn-primary" href="#get-started">Get Started</a>
+  </div>
+</nav>
+
+<!-- ── Hero ─────────────────────────────────────────────────────────────── -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="tag">Open-source · MIT License</div>
+    <h1>Wallet-as-a-Service<br /><span class="gradient">for every Web3 app</span></h1>
+    <p class="hero-sub">
+      WalletConnect / AppKit integration, Permit2 gasless approvals,
+      Multicall3 batching, session keys — and a presale launchpad.
+      Drop in a single <code>&lt;script&gt;</code> tag or import as an npm package.
+    </p>
+    <div class="hero-cta">
+      <a class="btn btn-primary btn-lg" href="#get-started">Start building →</a>
+      <a class="btn btn-ghost btn-lg" href="https://github.com/lackx741-tech/WAASDK" target="_blank" rel="noopener">View on GitHub</a>
+    </div>
+    <div class="hero-code">
+      <pre><code><span class="c">// One line to initialise</span>
+<span class="kw">import</span> { initSDK } <span class="kw">from</span> <span class="str">"@integrateddex/waas-sdk"</span>;
+
+<span class="kw">const</span> { wallet } = initSDK({
+  projectId: <span class="str">"YOUR_WC_PROJECT_ID"</span>,
+  chains:    [<span class="num">1</span>, <span class="num">56</span>, <span class="num">137</span>, <span class="num">43114</span>],
+  appName:   <span class="str">"My dApp"</span>,
+});
+
+<span class="kw">await</span> wallet.connect();   <span class="c">// opens Web3Modal</span></code></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ── Stats ─────────────────────────────────────────────────────────────── -->
+<section class="stats">
+  <div class="stats-inner">
+    <div class="stat"><span class="stat-n">10</span><span class="stat-l">Deployed contracts</span></div>
+    <div class="stat"><span class="stat-n">6+</span><span class="stat-l">EVM chains</span></div>
+    <div class="stat"><span class="stat-n">4</span><span class="stat-l">SDK modules</span></div>
+    <div class="stat"><span class="stat-n">0</span><span class="stat-l">Vendor lock-in</span></div>
+  </div>
+</section>
+
+<!-- ── Features ──────────────────────────────────────────────────────────── -->
+<section class="features" id="features">
+  <div class="section-inner">
+    <h2>Everything you need to ship</h2>
+    <p class="section-sub">One SDK. All the primitives. No dependencies on third-party WaaS vendors.</p>
+
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🔗</div>
+        <h3>Wallet Connection</h3>
+        <p>WalletConnect v2 / AppKit out of the box. Ethereum, BSC, Polygon, Avalanche, Arbitrum, Base.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">✍️</div>
+        <h3>Permit2 Approvals</h3>
+        <p>Gasless, exact-amount token approvals via EIP-712. Max approval is <strong>never</strong> set by default.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">📦</div>
+        <h3>Multicall3 Batching</h3>
+        <p>Batch any number of reads or writes into a single RPC call. Includes the deployed BatchMulticall contract.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🔑</div>
+        <h3>Session Keys</h3>
+        <p>On-chain session key validation with usage limits. Users sign once; your app acts within those limits.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🚀</div>
+        <h3>Token Launch</h3>
+        <p>Deploy a fully auditable ERC-20 in one transaction from the browser. No backend needed.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">💰</div>
+        <h3>Presale Launchpad</h3>
+        <p>Contribute, claim, and refund flows with softcap/hardcap enforcement. Deploy, fund, and go.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🎛️</div>
+        <h3>Admin Dashboard</h3>
+        <p>Zero-backend UI — configure the SDK visually and download a self-contained <code>script.js</code> for any site.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <h3>EIP-7702 Module</h3>
+        <p>Turn standard EOAs into smart accounts with the EIP-7702 delegation module — no new wallet required.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Contracts ─────────────────────────────────────────────────────────── -->
+<section class="contracts" id="contracts">
+  <div class="section-inner">
+    <h2>Deployed Contracts</h2>
+    <p class="section-sub">Same address on Ethereum, BSC, Polygon, Avalanche, Arbitrum, and Base.</p>
+
+    <div class="contract-table-wrap">
+      <table class="contract-table">
+        <thead>
+          <tr><th>Contract</th><th>Address</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>Factory</code></td>
+            <td><a href="https://etherscan.io/address/0x653c0bd75e353f1FFeeb8AC9A510ea30F9064ceF" target="_blank" rel="noopener">0x653c…ceF</a></td>
+            <td>Smart wallet factory (CREATE2)</td>
+          </tr>
+          <tr>
+            <td><code>SessionManager</code></td>
+            <td><a href="https://etherscan.io/address/0x4AE428352317752a51Ac022C9D2551BcDef785cb" target="_blank" rel="noopener">0x4AE4…5cb</a></td>
+            <td>On-chain session key validation</td>
+          </tr>
+          <tr>
+            <td><code>BatchMulticall</code></td>
+            <td><a href="https://etherscan.io/address/0xF93E987DF029e95CdE59c0F5cD447e0a7002054D" target="_blank" rel="noopener">0xF93E…54D</a></td>
+            <td>Batch calls with per-call ETH forwarding</td>
+          </tr>
+          <tr>
+            <td><code>Permit2Executor</code></td>
+            <td><a href="https://etherscan.io/address/0x4593D97d6E932648fb4425aC2945adaF66927773" target="_blank" rel="noopener">0x4593…773</a></td>
+            <td>Gasless Permit2 token collection</td>
+          </tr>
+          <tr>
+            <td><code>EIP7702Module</code></td>
+            <td><a href="https://etherscan.io/address/0x1f82E64E694894BACfa441709fC7DD8a30FA3E5d" target="_blank" rel="noopener">0x1f82…E5d</a></td>
+            <td>Turn EOAs into smart accounts</td>
+          </tr>
+          <tr>
+            <td><code>ERC4337FactoryWrapper</code></td>
+            <td><a href="https://etherscan.io/address/0xC67c4793bDb979A1a4cd97311c7644b4f7a31ff9" target="_blank" rel="noopener">0xC67c…1ff9</a></td>
+            <td>ERC-4337 compatible factory</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="text-align:center;margin-top:12px">
+      <a href="https://github.com/lackx741-tech/WAASDK/blob/main/docs/contracts.md">View full contract list with Etherscan links →</a>
+    </p>
+  </div>
+</section>
+
+<!-- ── Get Started ───────────────────────────────────────────────────────── -->
+<section class="get-started" id="get-started">
+  <div class="section-inner">
+    <h2>Get started in 60 seconds</h2>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-n">1</div>
+        <div>
+          <h3>Install</h3>
+          <pre><code>npm install @integrateddex/waas-sdk ethers</code></pre>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-n">2</div>
+        <div>
+          <h3>Initialise</h3>
+          <pre><code><span class="kw">import</span> { initSDK } <span class="kw">from</span> <span class="str">"@integrateddex/waas-sdk"</span>;
+<span class="kw">const</span> { wallet } = initSDK({ projectId: <span class="str">"..."</span>, chains: [<span class="num">1</span>] });</code></pre>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-n">3</div>
+        <div>
+          <h3>Connect</h3>
+          <pre><code><span class="kw">const</span> { account } = <span class="kw">await</span> wallet.connect();</code></pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="cta-row">
+      <a class="btn btn-primary btn-lg" href="https://github.com/lackx741-tech/WAASDK/blob/main/docs/integration.md">Read the docs →</a>
+      <a class="btn btn-ghost btn-lg" href="examples/vanilla-js/index.html">Live demo</a>
+      <a class="btn btn-ghost btn-lg" href="dashboard/index.html">Admin Dashboard</a>
+    </div>
+  </div>
+</section>
+
+<!-- ── Docs links ─────────────────────────────────────────────────────────── -->
+<section class="docs-links" id="docs">
+  <div class="section-inner">
+    <h2>Documentation</h2>
+    <div class="doc-grid">
+      <a class="doc-card" href="https://github.com/lackx741-tech/WAASDK/blob/main/docs/integration.md">
+        <span class="doc-icon">📖</span>
+        <strong>Integration Guide</strong>
+        <span>Install, initialise, and use every SDK module.</span>
+      </a>
+      <a class="doc-card" href="https://github.com/lackx741-tech/WAASDK/blob/main/docs/contracts.md">
+        <span class="doc-icon">📝</span>
+        <strong>Deployed Contracts</strong>
+        <span>All addresses, ABIs, and Etherscan verification guide.</span>
+      </a>
+      <a class="doc-card" href="examples/vanilla-js/index.html">
+        <span class="doc-icon">🌐</span>
+        <strong>Vanilla JS Demo</strong>
+        <span>Live interactive example — no bundler needed.</span>
+      </a>
+      <a class="doc-card" href="https://github.com/lackx741-tech/WAASDK/blob/main/examples/react/README.md">
+        <span class="doc-icon">⚛️</span>
+        <strong>React Example</strong>
+        <span>Hooks, components, and patterns for React apps.</span>
+      </a>
+      <a class="doc-card" href="https://github.com/lackx741-tech/WAASDK/blob/main/backend/README.md">
+        <span class="doc-icon">🖥️</span>
+        <strong>Backend / API</strong>
+        <span>Fastify + MongoDB backend with Telegram alerts.</span>
+      </a>
+      <a class="doc-card" href="https://github.com/lackx741-tech/WAASDK/blob/main/README.md">
+        <span class="doc-icon">📚</span>
+        <strong>Full README</strong>
+        <span>Complete reference for all modules and frontends.</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ── Footer ─────────────────────────────────────────────────────────────── -->
+<footer>
+  <div class="footer-inner">
+    <span>⚡ IntegratedDEX WaaS SDK — MIT License</span>
+    <div class="footer-links">
+      <a href="https://github.com/lackx741-tech/WAASDK" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://www.npmjs.com/package/@integrateddex/waas-sdk" target="_blank" rel="noopener">npm</a>
+      <a href="docs/integration.md">Docs</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

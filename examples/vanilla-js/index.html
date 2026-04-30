@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WaaS SDK — Vanilla JS Example</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      font-family: system-ui, sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      max-width: 600px;
+      margin: 60px auto;
+      padding: 0 20px;
+    }
+    h1 { font-size: 1.6rem; margin-bottom: 4px; }
+    p  { color: #94a3b8; margin-bottom: 24px; font-size: .95rem; }
+    .card {
+      background: #1e2330;
+      border: 1px solid #2d3748;
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-bottom: 16px;
+    }
+    .card h2 { font-size: 1rem; margin: 0 0 12px; color: #7dd3fc; }
+    label  { display: block; font-size: .85rem; color: #94a3b8; margin-bottom: 4px; }
+    input  {
+      width: 100%; padding: 8px 12px; border-radius: 8px;
+      border: 1px solid #2d3748; background: #0f1117; color: #e2e8f0;
+      font-size: .95rem; margin-bottom: 12px;
+    }
+    button {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 9px 18px; border-radius: 8px; border: none;
+      background: #3b82f6; color: #fff; font-size: .9rem;
+      cursor: pointer; transition: background .15s;
+    }
+    button:hover { background: #2563eb; }
+    button:disabled { background: #374151; cursor: not-allowed; }
+    .output {
+      background: #0f1117; border: 1px solid #2d3748; border-radius: 8px;
+      padding: 12px; font-size: .82rem; color: #86efac;
+      white-space: pre-wrap; word-break: break-all; min-height: 48px;
+      margin-top: 8px;
+    }
+    .badge {
+      display: inline-block; padding: 2px 10px; border-radius: 20px;
+      font-size: .78rem; font-weight: 600;
+    }
+    .badge-connected    { background: #14532d; color: #86efac; }
+    .badge-disconnected { background: #3f1515; color: #fca5a5; }
+  </style>
+</head>
+<body>
+
+<h1>⚡ WaaS SDK Demo</h1>
+<p>Vanilla JS — no bundler required. Open this file in your browser.</p>
+
+<!-- ── Setup ──────────────────────────────────────────────────────────────── -->
+<div class="card">
+  <h2>🔧 Config</h2>
+  <label for="projectId">WalletConnect Project ID</label>
+  <input id="projectId" placeholder="Get one at cloud.walletconnect.com" />
+
+  <label for="chainIds">Chain IDs (comma-separated)</label>
+  <input id="chainIds" value="1,137,56" />
+
+  <button id="initBtn">Initialise SDK</button>
+  <div class="output" id="initOut">SDK not initialised yet.</div>
+</div>
+
+<!-- ── Wallet ─────────────────────────────────────────────────────────────── -->
+<div class="card">
+  <h2>🔗 Wallet  <span class="badge badge-disconnected" id="statusBadge">Disconnected</span></h2>
+  <button id="connectBtn" disabled>Connect Wallet</button>
+  <button id="disconnectBtn" disabled style="background:#374151">Disconnect</button>
+  <div class="output" id="walletOut">—</div>
+</div>
+
+<!-- ── Utils ──────────────────────────────────────────────────────────────── -->
+<div class="card">
+  <h2>🛠 Utilities</h2>
+  <label for="utilAddr">Address</label>
+  <input id="utilAddr" placeholder="0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045" />
+  <button id="utilBtn">Run Utils</button>
+  <div class="output" id="utilOut">—</div>
+</div>
+
+<!-- ── Multicall ──────────────────────────────────────────────────────────── -->
+<div class="card">
+  <h2>📦 Multicall3 — batch balance reads</h2>
+  <label for="rpcUrl">JSON-RPC URL</label>
+  <input id="rpcUrl" placeholder="https://mainnet.infura.io/v3/YOUR_KEY" />
+  <button id="multicallBtn">Run Multicall</button>
+  <div class="output" id="multicallOut">—</div>
+</div>
+
+<!-- ── ethers v6 ──────────────────────────────────────────────────────────── -->
+<script src="https://cdn.jsdelivr.net/npm/ethers@6/dist/ethers.umd.min.js"></script>
+
+<!--
+  In a real project, serve the built bundle:
+    npm run build  →  dist/script.js
+
+  For this standalone demo we import from the SDK source via a module script.
+  If you have the npm package installed, swap the import to:
+    import { ... } from "@integrateddex/waas-sdk";
+-->
+<script type="module">
+  import {
+    initSDK,
+    isValidAddress,
+    shortenAddress,
+    parseAmount,
+    formatAmount,
+    getChainInfo,
+    getNativeCurrencySymbol,
+    getTxUrl,
+    deadlineFromNow,
+    multicallRead,
+    buildCall,
+  } from "../../sdk/index.js";
+
+  let sdk = null;
+
+  // ── Helpers ─────────────────────────────────────────────────────────────────
+  const log = (id, msg) => { document.getElementById(id).textContent = msg; };
+
+  // ── Init ────────────────────────────────────────────────────────────────────
+  document.getElementById("initBtn").addEventListener("click", () => {
+    const projectId = document.getElementById("projectId").value.trim();
+    const chains    = document.getElementById("chainIds").value
+      .split(",").map(s => parseInt(s.trim(), 10)).filter(Boolean);
+
+    if (!projectId) { log("initOut", "⚠️  Enter a WalletConnect project ID first."); return; }
+
+    sdk = initSDK({ projectId, chains, appName: "WaaS Demo" });
+
+    sdk.wallet.on("connect",      ({ account, chainId }) => {
+      document.getElementById("statusBadge").textContent = "Connected";
+      document.getElementById("statusBadge").className  = "badge badge-connected";
+      log("walletOut", `account : ${account}\nchainId : ${chainId}`);
+      document.getElementById("disconnectBtn").disabled = false;
+    });
+
+    sdk.wallet.on("disconnect", () => {
+      document.getElementById("statusBadge").textContent = "Disconnected";
+      document.getElementById("statusBadge").className  = "badge badge-disconnected";
+      log("walletOut", "—");
+      document.getElementById("disconnectBtn").disabled = true;
+    });
+
+    sdk.wallet.on("chainChanged", ({ chainId }) => {
+      log("walletOut", prev => `${prev}\nChain changed → ${chainId}`);
+    });
+
+    document.getElementById("connectBtn").disabled    = false;
+    log("initOut", `✅ SDK initialised\nchains: [${chains.join(", ")}]`);
+  });
+
+  // ── Connect ──────────────────────────────────────────────────────────────────
+  document.getElementById("connectBtn").addEventListener("click", async () => {
+    if (!sdk) return;
+    try {
+      log("walletOut", "Opening wallet dialog…");
+      await sdk.wallet.connect();
+    } catch (e) {
+      log("walletOut", `❌ ${e.message}`);
+    }
+  });
+
+  document.getElementById("disconnectBtn").addEventListener("click", async () => {
+    if (!sdk) return;
+    await sdk.wallet.disconnect();
+  });
+
+  // ── Utils ────────────────────────────────────────────────────────────────────
+  document.getElementById("utilBtn").addEventListener("click", () => {
+    const addr = document.getElementById("utilAddr").value.trim()
+      || "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045";
+
+    const lines = [
+      `isValidAddress : ${isValidAddress(addr)}`,
+      `shortenAddress : ${shortenAddress(addr)}`,
+      `parseAmount("1.5", 18) : ${parseAmount("1.5", 18).toString()}`,
+      `formatAmount(1500000000000000000n) : ${formatAmount(1500000000000000000n)}`,
+      `getChainInfo(1).name : ${getChainInfo(1)?.name}`,
+      `getNativeCurrencySymbol(56) : ${getNativeCurrencySymbol(56)}`,
+      `getTxUrl("0xabc123", 1) : ${getTxUrl("0xabc123", 1)}`,
+      `deadlineFromNow(30) : ${deadlineFromNow(30)}`,
+    ];
+    log("utilOut", lines.join("\n"));
+  });
+
+  // ── Multicall ────────────────────────────────────────────────────────────────
+  document.getElementById("multicallBtn").addEventListener("click", async () => {
+    const rpcUrl = document.getElementById("rpcUrl").value.trim();
+    if (!rpcUrl) { log("multicallOut", "⚠️  Enter a JSON-RPC URL first."); return; }
+
+    log("multicallOut", "Fetching…");
+    try {
+      const provider = new ethers.JsonRpcProvider(rpcUrl);
+
+      // Encode two ETH balance-of-EOA checks (eth_getBalance via Multicall3)
+      // Using getEthBalance which is Multicall3-native (no ABI encoding needed here)
+      const MULTICALL3 = "0xcA11bde05977b3631167028862bE2a173976CA11";
+      const iface = new ethers.Interface([
+        "function getEthBalance(address addr) view returns (uint256)",
+      ]);
+      const addr1 = "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"; // vitalik.eth
+      const addr2 = "0xBE0eB53F46cd790Cd13851d5EFf43D12404d33E8"; // binance
+
+      const results = await multicallRead(provider, [
+        buildCall(MULTICALL3, iface.encodeFunctionData("getEthBalance", [addr1])),
+        buildCall(MULTICALL3, iface.encodeFunctionData("getEthBalance", [addr2])),
+      ]);
+
+      const fmt = (r) => r.success
+        ? ethers.formatEther(ethers.AbiCoder.defaultAbiCoder().decode(["uint256"], r.returnData)[0]) + " ETH"
+        : "call failed";
+
+      log("multicallOut",
+        `vitalik.eth  (${shortenAddress(addr1)}) : ${fmt(results[0])}\n` +
+        `Binance Hot  (${shortenAddress(addr2)}) : ${fmt(results[1])}`
+      );
+    } catch (e) {
+      const msg = e.code === "NETWORK_ERROR" || e.message?.includes("could not detect network")
+        ? "❌ Could not connect to the RPC provider. Please check your URL and try again."
+        : `❌ ${e.message}`;
+      log("multicallOut", msg);
+    }
+  });
+</script>
+</body>
+</html>
