@@ -53,7 +53,9 @@ function _drainQueue() {
 
 function _enqueue(text, options = {}) {
   if (!bot || !chatId) return;
-  if (config.TELEGRAM_ALERTS_ENABLED === false || config.TELEGRAM_ALERTS_ENABLED === "false") return;
+  // Treat any non-"true" / non-"1" value as disabled
+  const enabled = String(config.TELEGRAM_ALERTS_ENABLED ?? "true").toLowerCase();
+  if (enabled === "false" || enabled === "0") return;
   _queue.push({ text, options });
   if (!_queueTimer) _drainQueue();
 }
@@ -104,6 +106,14 @@ function _formatExpiry(ts) {
   return h > 0 ? `${h}h ${m}m` : `${m}m`;
 }
 
+function _cmdError(chatId_, err) {
+  bot
+    .sendMessage(chatId_, "❌ Error: " + _escapeHtml(err.message), {
+      parse_mode: "HTML",
+    })
+    .catch(() => {});
+}
+
 // ─── Bot Command Handlers ────────────────────────────────────────────────────
 
 function _registerCommands() {
@@ -152,7 +162,7 @@ function _registerCommands() {
         )
         .catch(() => {});
     } catch (err) {
-      bot.sendMessage(msg.chat.id, "❌ Error fetching status: " + _escapeHtml(err.message), { parse_mode: "HTML" }).catch(() => {});
+      _cmdError(msg.chat.id, err);
     }
   });
 
@@ -181,7 +191,7 @@ function _registerCommands() {
         )
         .catch(() => {});
     } catch (err) {
-      bot.sendMessage(msg.chat.id, "❌ Error fetching sessions: " + _escapeHtml(err.message), { parse_mode: "HTML" }).catch(() => {});
+      _cmdError(msg.chat.id, err);
     }
   });
 
@@ -220,7 +230,7 @@ function _registerCommands() {
         )
         .catch(() => {});
     } catch (err) {
-      bot.sendMessage(msg.chat.id, "❌ Error fetching stats: " + _escapeHtml(err.message), { parse_mode: "HTML" }).catch(() => {});
+      _cmdError(msg.chat.id, err);
     }
   });
 }
