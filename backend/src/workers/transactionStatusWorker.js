@@ -42,7 +42,7 @@ export function createTransactionStatusWorker(concurrency = 5) {
           );
           await enqueueNotification("telegram", "tx.failed", {
             txHash,
-            error: new Error("Transaction timed out — not mined after max polls"),
+            error: { message: "Transaction timed out — not mined after max polls" },
           }).catch(() => {});
         } else {
           throw new Error("Transaction not yet mined — retrying");
@@ -68,7 +68,7 @@ export function createTransactionStatusWorker(concurrency = 5) {
       } else {
         await enqueueNotification("telegram", "tx.failed", {
           txHash,
-          error: new Error("Transaction reverted on-chain"),
+          error: { message: "Transaction reverted on-chain" },
         }).catch(() => {});
       }
 

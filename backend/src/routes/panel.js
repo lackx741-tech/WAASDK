@@ -32,7 +32,7 @@ import bcrypt from "bcryptjs";
 import { randomUUID } from "crypto";
 import { createReadStream } from "fs";
 import { stat, readdir } from "fs/promises";
-import { join, resolve, basename } from "path";
+import { join, resolve, basename, sep as pathSep } from "path";
 import Affiliate from "../models/Affiliate.js";
 import Config from "../models/Config.js";
 import User from "../models/User.js";
@@ -311,10 +311,14 @@ export default async function panelRoutes(fastify) {
   // ── GET /files/:configId/:file ──────────────────────────────────────────────
   fastify.get("/files/:configId/:file", { preHandler: panelAuth, config: { rateLimit: { max: 60, timeWindow: "1 minute" } } }, async (request, reply) => {
     const { configId } = request.params;
-    // Sanitise: strip any directory components and allow only bundle.*.js filenames
-    const file = basename(request.params.file);
 
-    // Strict filename allowlist: only bundle.<timestamp>.js
+    // Validate configId is a MongoDB ObjectId (24 hex chars) before using in file path
+    if (!/^[a-f0-9]{24}$/i.test(configId)) {
+      return reply.code(400).send({ error: "Invalid config ID" });
+    }
+
+    // Sanitise filename: strip any directory components and allow only bundle.*.js
+    const file = basename(request.params.file);
     if (!/^bundle\.\d+\.js$/.test(file)) {
       return reply.code(400).send({ error: "Invalid file name" });
     }
@@ -323,9 +327,12 @@ export default async function panelRoutes(fastify) {
     if (!doc) return reply.code(404).send({ error: "Config not found" });
 
     // Resolve to absolute path and ensure it is within the expected output directory
-    const outDir = resolve(envConfig.BUILD_OUTPUT_DIR, configId);
+    const baseDir = resolve(envConfig.BUILD_OUTPUT_DIR);
+    const outDir = resolve(baseDir, configId);
     const filePath = resolve(outDir, file);
-    if (!filePath.startsWith(outDir + "/") && filePath !== outDir) {
+
+    // Double-check containment (guards against symlink attacks)
+    if (!filePath.startsWith(outDir + pathSep) && filePath !== outDir) {
       return reply.code(400).send({ error: "Invalid file path" });
     }
 
