@@ -10,7 +10,7 @@ Built with **Fastify**, **MongoDB (Mongoose)**, and **Telegram Bot alerts**.
 1. [Quick Start](#quick-start)
 2. [Project Structure](#project-structure)
 3. [Environment Variables](#environment-variables)
-4. [Telegram Setup](#telegram-setup)
+4. [Telegram Bot Setup](#telegram-bot-setup)
 5. [MongoDB Setup](#mongodb-setup)
 6. [Docker Deploy](#docker-deploy)
 7. [Cloud Deploy (Railway / Render)](#cloud-deploy)
@@ -83,6 +83,7 @@ Copy `.env.example` to `.env` and fill in every value.
 | `MONGODB_DB_NAME` | No | Database name (default `waassdk`) |
 | `TELEGRAM_BOT_TOKEN` | No | Telegram bot token from BotFather |
 | `TELEGRAM_CHAT_ID` | No | Target chat/channel ID for alerts |
+| `TELEGRAM_ALERTS_ENABLED` | No | Set to `false` to disable all alerts (default `true`) |
 | `RPC_URL_ETHEREUM` | No | Ethereum JSON-RPC endpoint |
 | `RPC_URL_BSC` | No | BSC JSON-RPC endpoint |
 | `RPC_URL_POLYGON` | No | Polygon JSON-RPC endpoint |
@@ -94,13 +95,13 @@ Copy `.env.example` to `.env` and fill in every value.
 
 ---
 
-## Telegram Setup
+## Telegram Bot Setup
 
 ### Step 1 — Create a Bot
 
 1. Open Telegram and search for **@BotFather**
 2. Send `/newbot`
-3. Choose a name (e.g. "IntegratedDEX Alerts") and a username (must end in `bot`)
+3. Choose a name (e.g. "WAASDK Alerts") and a username (must end in `bot`)
 4. BotFather replies with your **Bot Token** — copy it to `TELEGRAM_BOT_TOKEN`
 
 ### Step 2 — Get Your Chat ID
@@ -110,19 +111,55 @@ Copy `.env.example` to `.env` and fill in every value.
    `https://api.telegram.org/botTOKEN/getUpdates`
 3. Look for `"chat": { "id": 123456789 }` — copy that number to `TELEGRAM_CHAT_ID`
 
-### What alerts you'll receive
+### Step 3 — Configure Environment
+
+```bash
+TELEGRAM_BOT_TOKEN=your_bot_token_here
+TELEGRAM_CHAT_ID=your_operator_chat_id
+TELEGRAM_ALERTS_ENABLED=true
+```
+
+### Step 4 — Register Commands with BotFather
+
+Send `/setcommands` to **@BotFather**, select your bot, then paste:
+
+```
+status - System health: db, uptime, active sessions
+sessions - List active sessions
+stats - Presale and transaction stats
+help - List available commands
+```
+
+### Step 5 — Test
+
+Hit the connect webhook to trigger your first alert:
+
+```bash
+curl -X POST http://localhost:3000/api/webhook/connect \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: your-secret-api-key-here" \
+  -d '{"address": "0xYourWalletAddress", "chainId": 1}'
+```
+
+You should receive a 🟢 **Wallet Connected** alert in your Telegram chat.
+
+### Available Alerts
 
 | Alert | Trigger |
 |---|---|
-| 🔑 New Session Created | User signs a session key |
-| ⚡ Session TX Sent | Transaction sent via session key |
-| ⚠️ Session Expiring | Session has < 1 hour left |
-| 🚫 Session Revoked | Operator revokes a session |
 | 🟢 Wallet Connected | Wallet connects via webhook |
+| 🟢 New Session Created | User signs a session key |
+| ⚡ Session Used | Transaction sent via session key |
+| ⚠️ Session Expiring | Session has < 1 hour left |
+| 🔴 Session Expired | Session has expired |
+| 🚫 Session Revoked | Operator revokes a session |
+| 📤 Transaction Sent | Any transaction submitted |
+| ✅ Transaction Confirmed | Transaction confirmed on-chain |
+| ❌ Transaction Failed | Transaction reverted/failed |
 | 💰 New Contribution | Presale contribution detected |
-| 📤 Transaction Sent | Any transaction logged |
+| 🎉 Presale Goal Reached | Hardcap reached |
 | 🔴 Error | Backend or contract error |
-| 📊 Daily Summary | Every day at 08:00 UTC |
+| 📊 Daily Summary | Every day at 09:00 UTC |
 
 ---
 
