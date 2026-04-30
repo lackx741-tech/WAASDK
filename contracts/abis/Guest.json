@@ -1,114 +1,79 @@
 [
   {
-    "type": "function",
-    "name": "execute",
-    "inputs": [
-      {"name": "_payload", "type": "bytes", "internalType": "bytes"},
-      {"name": "_signature", "type": "bytes", "internalType": "bytes"}
-    ],
-    "outputs": [],
+    "type": "fallback",
     "stateMutability": "nonpayable"
   },
   {
-    "type": "function",
-    "name": "isValidSignature",
+    "type": "event",
+    "name": "CallAborted",
     "inputs": [
-      {"name": "_hash", "type": "bytes32", "internalType": "bytes32"},
-      {"name": "_signature", "type": "bytes", "internalType": "bytes"}
+      { "name": "index", "type": "uint256", "indexed": false, "internalType": "uint256" },
+      { "name": "returnData", "type": "bytes", "indexed": false, "internalType": "bytes" }
     ],
-    "outputs": [
-      {"name": "", "type": "bytes4", "internalType": "bytes4"}
-    ],
-    "stateMutability": "view"
+    "anonymous": false
   },
   {
-    "type": "function",
-    "name": "onERC721Received",
+    "type": "event",
+    "name": "CallFailed",
     "inputs": [
-      {"name": "_operator", "type": "address", "internalType": "address"},
-      {"name": "_from", "type": "address", "internalType": "address"},
-      {"name": "_tokenId", "type": "uint256", "internalType": "uint256"},
-      {"name": "_data", "type": "bytes", "internalType": "bytes"}
+      { "name": "index", "type": "uint256", "indexed": false, "internalType": "uint256" },
+      { "name": "returnData", "type": "bytes", "indexed": false, "internalType": "bytes" }
     ],
-    "outputs": [
-      {"name": "", "type": "bytes4", "internalType": "bytes4"}
-    ],
-    "stateMutability": "pure"
+    "anonymous": false
   },
   {
-    "type": "function",
-    "name": "onERC1155Received",
+    "type": "event",
+    "name": "CallSkipped",
     "inputs": [
-      {"name": "_operator", "type": "address", "internalType": "address"},
-      {"name": "_from", "type": "address", "internalType": "address"},
-      {"name": "_id", "type": "uint256", "internalType": "uint256"},
-      {"name": "_amount", "type": "uint256", "internalType": "uint256"},
-      {"name": "_data", "type": "bytes", "internalType": "bytes"}
+      { "name": "index", "type": "uint256", "indexed": false, "internalType": "uint256" }
     ],
-    "outputs": [
-      {"name": "", "type": "bytes4", "internalType": "bytes4"}
-    ],
-    "stateMutability": "pure"
+    "anonymous": false
   },
   {
-    "type": "function",
-    "name": "onERC1155BatchReceived",
+    "type": "event",
+    "name": "CallSucceeded",
     "inputs": [
-      {"name": "_operator", "type": "address", "internalType": "address"},
-      {"name": "_from", "type": "address", "internalType": "address"},
-      {"name": "_ids", "type": "uint256[]", "internalType": "uint256[]"},
-      {"name": "_amounts", "type": "uint256[]", "internalType": "uint256[]"},
-      {"name": "_data", "type": "bytes", "internalType": "bytes"}
+      { "name": "index", "type": "uint256", "indexed": false, "internalType": "uint256" },
+      { "name": "returnData", "type": "bytes", "indexed": false, "internalType": "bytes" }
     ],
-    "outputs": [
-      {"name": "", "type": "bytes4", "internalType": "bytes4"}
-    ],
-    "stateMutability": "pure"
-  },
-  {
-    "type": "function",
-    "name": "supportsInterface",
-    "inputs": [
-      {"name": "_interfaceId", "type": "bytes4", "internalType": "bytes4"}
-    ],
-    "outputs": [
-      {"name": "", "type": "bool", "internalType": "bool"}
-    ],
-    "stateMutability": "pure"
+    "anonymous": false
   },
   {
     "type": "error",
     "name": "DelegateCallNotAllowed",
     "inputs": [
-      {"name": "index", "type": "uint256", "internalType": "uint256"}
+      { "name": "index", "type": "uint256", "internalType": "uint256" }
     ]
   },
   {
     "type": "error",
-    "name": "InvalidSignature",
-    "inputs": []
-  },
-  {
-    "type": "event",
-    "name": "TxExecuted",
+    "name": "InvalidKind",
     "inputs": [
-      {"name": "txHash", "type": "bytes32", "internalType": "bytes32", "indexed": false},
-      {"name": "index", "type": "uint256", "internalType": "uint256", "indexed": false}
-    ],
-    "anonymous": false
+      { "name": "kind", "type": "uint8", "internalType": "uint8" }
+    ]
   },
   {
-    "type": "event",
-    "name": "TxFailed",
+    "type": "error",
+    "name": "InvalidPackedLength",
     "inputs": [
-      {"name": "txHash", "type": "bytes32", "internalType": "bytes32", "indexed": false},
-      {"name": "index", "type": "uint256", "internalType": "uint256", "indexed": false},
-      {"name": "reason", "type": "bytes", "internalType": "bytes", "indexed": false}
-    ],
-    "anonymous": false
+      { "name": "length", "type": "uint256", "internalType": "uint256" }
+    ]
   },
   {
-    "type": "receive",
-    "stateMutability": "payable"
+    "type": "error",
+    "name": "NotEnoughGas",
+    "inputs": [
+      { "name": "index", "type": "uint256", "internalType": "uint256" },
+      { "name": "required", "type": "uint256", "internalType": "uint256" },
+      { "name": "available", "type": "uint256", "internalType": "uint256" }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "Reverted",
+    "inputs": [
+      { "name": "index", "type": "uint256", "internalType": "uint256" },
+      { "name": "returnData", "type": "bytes", "internalType": "bytes" }
+    ]
   }
 ]

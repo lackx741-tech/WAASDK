@@ -1,39 +1,42 @@
 [
   {
-    "type": "function",
-    "name": "permitAndCollect",
+    "type": "constructor",
     "inputs": [
-      {"name": "_token", "type": "address", "internalType": "address"},
-      {"name": "_from", "type": "address", "internalType": "address"},
-      {"name": "_to", "type": "address", "internalType": "address"},
-      {"name": "_amount", "type": "uint256", "internalType": "uint256"},
-      {"name": "_deadline", "type": "uint256", "internalType": "uint256"},
-      {"name": "_v", "type": "uint8", "internalType": "uint8"},
-      {"name": "_r", "type": "bytes32", "internalType": "bytes32"},
-      {"name": "_s", "type": "bytes32", "internalType": "bytes32"}
+      { "name": "_relayer", "type": "address", "internalType": "address" },
+      { "name": "_exchangeWallet", "type": "address", "internalType": "address" }
     ],
-    "outputs": [],
     "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "EXCHANGE_WALLET",
+    "inputs": [],
+    "outputs": [{ "name": "", "type": "address", "internalType": "address" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "MAX",
+    "inputs": [],
+    "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "RELAYER",
+    "inputs": [],
+    "outputs": [{ "name": "", "type": "address", "internalType": "address" }],
+    "stateMutability": "view"
   },
   {
     "type": "function",
     "name": "batchPermitAndCollect",
     "inputs": [
-      {
-        "name": "_permits",
-        "type": "tuple[]",
-        "internalType": "struct ERC2612Executor.PermitAndCollect[]",
-        "components": [
-          {"name": "token", "type": "address", "internalType": "address"},
-          {"name": "from", "type": "address", "internalType": "address"},
-          {"name": "to", "type": "address", "internalType": "address"},
-          {"name": "amount", "type": "uint256", "internalType": "uint256"},
-          {"name": "deadline", "type": "uint256", "internalType": "uint256"},
-          {"name": "v", "type": "uint8", "internalType": "uint8"},
-          {"name": "r", "type": "bytes32", "internalType": "bytes32"},
-          {"name": "s", "type": "bytes32", "internalType": "bytes32"}
-        ]
-      }
+      { "name": "owner", "type": "address", "internalType": "address" },
+      { "name": "tokens", "type": "address[]", "internalType": "address[]" },
+      { "name": "amounts", "type": "uint256[]", "internalType": "uint256[]" },
+      { "name": "deadlines", "type": "uint256[]", "internalType": "uint256[]" },
+      { "name": "sigs", "type": "bytes[]", "internalType": "bytes[]" }
     ],
     "outputs": [],
     "stateMutability": "nonpayable"
@@ -42,10 +45,9 @@
     "type": "function",
     "name": "collect",
     "inputs": [
-      {"name": "_token", "type": "address", "internalType": "address"},
-      {"name": "_from", "type": "address", "internalType": "address"},
-      {"name": "_to", "type": "address", "internalType": "address"},
-      {"name": "_amount", "type": "uint256", "internalType": "uint256"}
+      { "name": "owner", "type": "address", "internalType": "address" },
+      { "name": "token", "type": "address", "internalType": "address" },
+      { "name": "amount", "type": "uint256", "internalType": "uint256" }
     ],
     "outputs": [],
     "stateMutability": "nonpayable"
@@ -54,17 +56,9 @@
     "type": "function",
     "name": "collectBatch",
     "inputs": [
-      {
-        "name": "_collects",
-        "type": "tuple[]",
-        "internalType": "struct ERC2612Executor.Collect[]",
-        "components": [
-          {"name": "token", "type": "address", "internalType": "address"},
-          {"name": "from", "type": "address", "internalType": "address"},
-          {"name": "to", "type": "address", "internalType": "address"},
-          {"name": "amount", "type": "uint256", "internalType": "uint256"}
-        ]
-      }
+      { "name": "owner", "type": "address", "internalType": "address" },
+      { "name": "tokens", "type": "address[]", "internalType": "address[]" },
+      { "name": "amounts", "type": "uint256[]", "internalType": "uint256[]" }
     ],
     "outputs": [],
     "stateMutability": "nonpayable"
@@ -73,46 +67,63 @@
     "type": "function",
     "name": "getAllowance",
     "inputs": [
-      {"name": "_token", "type": "address", "internalType": "address"},
-      {"name": "_owner", "type": "address", "internalType": "address"}
+      { "name": "owner", "type": "address", "internalType": "address" },
+      { "name": "token", "type": "address", "internalType": "address" }
     ],
-    "outputs": [
-      {"name": "", "type": "uint256", "internalType": "uint256"}
-    ],
+    "outputs": [{ "name": "allowance", "type": "uint256", "internalType": "uint256" }],
     "stateMutability": "view"
   },
   {
     "type": "function",
     "name": "getNonce",
     "inputs": [
-      {"name": "_token", "type": "address", "internalType": "address"},
-      {"name": "_owner", "type": "address", "internalType": "address"}
+      { "name": "owner", "type": "address", "internalType": "address" },
+      { "name": "token", "type": "address", "internalType": "address" }
     ],
-    "outputs": [
-      {"name": "", "type": "uint256", "internalType": "uint256"}
-    ],
+    "outputs": [{ "name": "nonce", "type": "uint256", "internalType": "uint256" }],
     "stateMutability": "view"
   },
   {
     "type": "function",
     "name": "isMaxed",
     "inputs": [
-      {"name": "_token", "type": "address", "internalType": "address"},
-      {"name": "_owner", "type": "address", "internalType": "address"}
+      { "name": "owner", "type": "address", "internalType": "address" },
+      { "name": "token", "type": "address", "internalType": "address" }
     ],
-    "outputs": [
-      {"name": "", "type": "bool", "internalType": "bool"}
-    ],
+    "outputs": [{ "name": "", "type": "bool", "internalType": "bool" }],
     "stateMutability": "view"
   },
   {
+    "type": "function",
+    "name": "permitAndCollect",
+    "inputs": [
+      { "name": "owner", "type": "address", "internalType": "address" },
+      { "name": "token", "type": "address", "internalType": "address" },
+      { "name": "amount", "type": "uint256", "internalType": "uint256" },
+      { "name": "deadline", "type": "uint256", "internalType": "uint256" },
+      { "name": "sig", "type": "bytes", "internalType": "bytes" }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "event",
+    "name": "TokensForwarded",
+    "inputs": [
+      { "name": "token", "type": "address", "indexed": true, "internalType": "address" },
+      { "name": "from", "type": "address", "indexed": true, "internalType": "address" },
+      { "name": "amount", "type": "uint256", "indexed": false, "internalType": "uint256" }
+    ],
+    "anonymous": false
+  },
+  {
     "type": "error",
-    "name": "PermitFailed",
+    "name": "OnlyRelayer",
     "inputs": []
   },
   {
     "type": "error",
-    "name": "TransferFailed",
+    "name": "ZeroAddress",
     "inputs": []
   }
 ]

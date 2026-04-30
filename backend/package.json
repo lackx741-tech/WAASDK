@@ -1,0 +1,41 @@
+{
+  "name": "waassdk-backend",
+  "version": "1.0.0",
+  "description": "Production-ready backend for WAASDK — Fastify, MongoDB, Telegram alerts",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
+  },
+  "dependencies": {
+    "fastify": "^5.4.0",
+    "@fastify/cors": "^11.2.0",
+    "@fastify/helmet": "^13.0.2",
+    "@fastify/rate-limit": "^10.3.0",
+    "mongoose": "^8.4.1",
+    "node-telegram-bot-api": "^0.65.1",
+    "node-cron": "^4.2.1",
+    "pino-pretty": "^10.3.1",
+    "dotenv": "^16.4.5",
+    "fastify-plugin": "^4.5.1"
+  },
+  "overrides": {
+    "form-data": "^4.0.4",
+    "tough-cookie": "^4.1.4",
+    "qs": "^6.14.0"
+  },
+  "keywords": [
+    "waas",
+    "fastify",
+    "mongodb",
+    "telegram",
+    "web3",
+    "backend"
+  ],
+  "license": "MIT",
+  "author": "IntegratedDEX",
+  "engines": {
+    "node": ">=20"
+  }
+}

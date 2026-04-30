@@ -1,87 +1,81 @@
 [
   {
     "type": "function",
-    "name": "recoverSapientSignature",
-    "inputs": [
-      {"name": "_payload", "type": "bytes", "internalType": "bytes"},
-      {"name": "_signature", "type": "bytes", "internalType": "bytes"}
-    ],
-    "outputs": [
-      {"name": "", "type": "bytes32", "internalType": "bytes32"}
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "validatePermission",
-    "inputs": [
-      {
-        "name": "_permission",
-        "type": "tuple",
-        "internalType": "struct SessionManager.Permission",
-        "components": [
-          {"name": "target", "type": "address", "internalType": "address"},
-          {"name": "valueLimit", "type": "uint256", "internalType": "uint256"},
-          {
-            "name": "rules",
-            "type": "tuple[]",
-            "internalType": "struct SessionManager.ParameterRule[]",
-            "components": [
-              {"name": "cumulative", "type": "bool", "internalType": "bool"},
-              {"name": "operation", "type": "uint8", "internalType": "enum SessionManager.Operation"},
-              {"name": "value", "type": "bytes32", "internalType": "bytes32"},
-              {"name": "offset", "type": "uint256", "internalType": "uint256"},
-              {"name": "mask", "type": "bytes32", "internalType": "bytes32"}
-            ]
-          }
-        ]
-      },
-      {"name": "_callData", "type": "bytes", "internalType": "bytes"},
-      {"name": "_callValue", "type": "uint256", "internalType": "uint256"}
-    ],
-    "outputs": [],
-    "stateMutability": "pure"
-  },
-  {
-    "type": "function",
-    "name": "incrementUsageLimit",
-    "inputs": [
-      {"name": "_imageHash", "type": "bytes32", "internalType": "bytes32"},
-      {"name": "_usageHash", "type": "bytes32", "internalType": "bytes32"},
-      {"name": "_amount", "type": "uint256", "internalType": "uint256"}
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "getLimitUsage",
-    "inputs": [
-      {"name": "_imageHash", "type": "bytes32", "internalType": "bytes32"},
-      {"name": "_usageHash", "type": "bytes32", "internalType": "bytes32"}
-    ],
-    "outputs": [
-      {"name": "", "type": "uint256", "internalType": "uint256"}
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "MAX_SPACE",
     "inputs": [],
-    "outputs": [
-      {"name": "", "type": "bytes32", "internalType": "bytes32"}
-    ],
+    "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
     "stateMutability": "view"
   },
   {
     "type": "function",
     "name": "VALUE_TRACKING_ADDRESS",
     "inputs": [],
-    "outputs": [
-      {"name": "", "type": "address", "internalType": "address"}
-    ],
+    "outputs": [{ "name": "", "type": "address", "internalType": "address" }],
     "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getLimitUsage",
+    "inputs": [
+      { "name": "wallet", "type": "address", "internalType": "address" },
+      { "name": "sessionSigner", "type": "address", "internalType": "address" },
+      { "name": "limitHash", "type": "bytes32", "internalType": "bytes32" }
+    ],
+    "outputs": [{ "name": "usage", "type": "uint256", "internalType": "uint256" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "incrementUsageLimit",
+    "inputs": [
+      { "name": "sessionSigner", "type": "address", "internalType": "address" },
+      { "name": "limitHash", "type": "bytes32", "internalType": "bytes32" },
+      { "name": "amount", "type": "uint256", "internalType": "uint256" }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "recoverSapientSignature",
+    "inputs": [
+      { "name": "digest", "type": "bytes32", "internalType": "bytes32" },
+      { "name": "sig", "type": "bytes", "internalType": "bytes" }
+    ],
+    "outputs": [{ "name": "imageHash", "type": "bytes32", "internalType": "bytes32" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "validatePermission",
+    "inputs": [
+      { "name": "sessionSigner", "type": "address", "internalType": "address" },
+      {
+        "name": "permission",
+        "type": "tuple",
+        "internalType": "struct ISessionManager.Permission",
+        "components": [
+          { "name": "target", "type": "address", "internalType": "address" },
+          { "name": "rules", "type": "bytes32[]", "internalType": "bytes32[]" }
+        ]
+      },
+      { "name": "callTarget", "type": "address", "internalType": "address" },
+      { "name": "callData", "type": "bytes", "internalType": "bytes" },
+      { "name": "callValue", "type": "uint256", "internalType": "uint256" }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "event",
+    "name": "LimitUsageUpdated",
+    "inputs": [
+      { "name": "wallet", "type": "address", "indexed": true, "internalType": "address" },
+      { "name": "sessionSigner", "type": "address", "indexed": true, "internalType": "address" },
+      { "name": "limitHash", "type": "bytes32", "indexed": true, "internalType": "bytes32" },
+      { "name": "usage", "type": "uint256", "indexed": false, "internalType": "uint256" }
+    ],
+    "anonymous": false
   },
   {
     "type": "error",
@@ -90,30 +84,37 @@
   },
   {
     "type": "error",
-    "name": "PermissionRejected",
+    "name": "InvalidPermission",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidSapientSignature",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "LimitExceeded",
     "inputs": [
-      {"name": "index", "type": "uint256", "internalType": "uint256"},
-      {"name": "rule", "type": "bytes32", "internalType": "bytes32"}
+      { "name": "limit", "type": "uint256", "internalType": "uint256" },
+      { "name": "used", "type": "uint256", "internalType": "uint256" }
     ]
   },
   {
     "type": "error",
-    "name": "UsageLimitExceeded",
+    "name": "PermissionNotFound",
     "inputs": []
   },
   {
     "type": "error",
-    "name": "InvalidSignatureEncoding",
-    "inputs": []
+    "name": "SessionExpired",
+    "inputs": [
+      { "name": "expiry", "type": "uint256", "internalType": "uint256" }
+    ]
   },
   {
-    "type": "event",
-    "name": "UsageLimitUpdated",
-    "inputs": [
-      {"name": "imageHash", "type": "bytes32", "internalType": "bytes32", "indexed": true},
-      {"name": "usageHash", "type": "bytes32", "internalType": "bytes32", "indexed": true},
-      {"name": "usage", "type": "uint256", "internalType": "uint256", "indexed": false}
-    ],
-    "anonymous": false
+    "type": "error",
+    "name": "ZeroAddress",
+    "inputs": []
   }
 ]

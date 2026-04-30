@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WaaS SDK — Admin Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="dashboard.css" />
+</head>
+<body>
+
+  <!-- ── Header ──────────────────────────────────────────────────────────── -->
+  <header>
+    <div class="logo">⚡ <span>WaaS SDK</span> Admin Dashboard</div>
+    <button class="theme-toggle" id="themeBtn">☀️ Light</button>
+  </header>
+
+  <!-- ── Main ────────────────────────────────────────────────────────────── -->
+  <main>
+
+    <!-- Tab bar -->
+    <nav class="tab-bar" role="tablist">
+      <button class="tab-btn active" data-tab="tab-general"  role="tab">🔧 General</button>
+      <button class="tab-btn"        data-tab="tab-wallet"   role="tab">🔗 Wallet</button>
+      <button class="tab-btn"        data-tab="tab-contract" role="tab">📄 Contract</button>
+      <button class="tab-btn"        data-tab="tab-advanced" role="tab">⚙️ Advanced</button>
+      <button class="tab-btn"        data-tab="tab-compile"  role="tab">🚀 Compile</button>
+    </nav>
+
+    <!-- ────────────────────────── GENERAL TAB ──────────────────────────── -->
+    <section id="tab-general" class="tab-panel active" role="tabpanel">
+
+      <div class="card">
+        <div class="card-title">App Identity</div>
+
+        <div class="field">
+          <label for="appName">App Name</label>
+          <input type="text" id="appName" placeholder="IntegratedDEX" value="IntegratedDEX" />
+        </div>
+
+        <div class="field">
+          <label for="appDescription">App Description</label>
+          <input type="text" id="appDescription" placeholder="A WaaS-powered dApp" />
+        </div>
+
+        <div class="field">
+          <label for="projectId">WalletConnect Project ID <span style="color:var(--danger)">*</span></label>
+          <input type="text" id="projectId" placeholder="Paste your WalletConnect Cloud project ID" />
+          <p class="help">Get yours free at <a href="https://cloud.walletconnect.com" target="_blank" rel="noopener" style="color:var(--accent)">cloud.walletconnect.com</a></p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Appearance</div>
+
+        <div class="field">
+          <label for="themeSelect">Theme</label>
+          <select id="themeSelect">
+            <option value="dark">🌙 Dark</option>
+            <option value="light">☀️ Light</option>
+            <option value="auto">🖥 Auto (system)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">UI Labels</div>
+
+        <div class="grid-2">
+          <div class="field">
+            <label for="connectText">Connect Button Text</label>
+            <input type="text" id="connectText" placeholder="Connect Wallet" value="Connect Wallet" />
+          </div>
+          <div class="field">
+            <label for="connectedText">Connected Button Text</label>
+            <input type="text" id="connectedText" placeholder="Connected" value="Connected" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="loadingText">Loading Text</label>
+          <input type="text" id="loadingText" placeholder="Connecting…" value="Connecting…" />
+        </div>
+
+        <div class="field">
+          <label for="txFunctionName">Transaction Function Name</label>
+          <input type="text" id="txFunctionName" placeholder="e.g. mint, stake, claimReward" />
+          <p class="help">The primary action function that will be called on your contract.</p>
+        </div>
+      </div>
+
+    </section><!-- /tab-general -->
+
+    <!-- ────────────────────────── WALLET TAB ───────────────────────────── -->
+    <section id="tab-wallet" class="tab-panel" role="tabpanel">
+
+      <div class="card">
+        <div class="card-title">Supported Chains</div>
+        <div class="checkbox-group">
+          <label class="checkbox-item">
+            <input type="checkbox" id="chainEth" checked />
+            <span>🔷 Ethereum (1)</span>
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" id="chainBsc" />
+            <span>🟡 BNB Chain (56)</span>
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" id="chainPoly" />
+            <span>🟣 Polygon (137)</span>
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" id="chainAvax" />
+            <span>🔴 Avalanche (43114)</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Wallet Thresholds</div>
+
+        <div class="field">
+          <label for="minBalance">Min Wallet Balance Threshold (USD)</label>
+          <input type="number" id="minBalance" placeholder="0" min="0" step="0.01" value="0" />
+          <p class="help">Show a warning if the connected wallet balance is below this value. Set 0 to disable.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Options</div>
+
+        <div class="toggle-row">
+          <span class="toggle-label">Single-chain mode</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="singleChain" />
+            <div class="toggle-track"></div>
+            <div class="toggle-thumb"></div>
+          </label>
+        </div>
+
+        <div class="toggle-row">
+          <span class="toggle-label">Auto-load scripts</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="autoLoad" checked />
+            <div class="toggle-track"></div>
+            <div class="toggle-thumb"></div>
+          </label>
+        </div>
+
+        <div class="field" style="margin-top:.5rem">
+          <label for="modalStyle">Modal Style</label>
+          <select id="modalStyle">
+            <option value="walletconnect">WalletConnect (Web3Modal)</option>
+            <option value="rainbowkit">RainbowKit</option>
+          </select>
+        </div>
+      </div>
+
+    </section><!-- /tab-wallet -->
+
+    <!-- ────────────────────────── CONTRACT TAB ─────────────────────────── -->
+    <section id="tab-contract" class="tab-panel" role="tabpanel">
+
+      <div class="card">
+        <div class="card-title">Contract Identity</div>
+
+        <div class="field">
+          <label for="contractName">Contract Name / Label</label>
+          <input type="text" id="contractName" placeholder="e.g. MyNFT, StakingPool" />
+        </div>
+
+        <div class="field">
+          <label for="contractAddress">Contract Address</label>
+          <div class="address-wrap">
+            <input type="text" id="contractAddress" placeholder="0x…" autocomplete="off" />
+            <span class="address-indicator" id="addressIndicator"></span>
+          </div>
+          <p class="help">Checksummed or lowercase — both are accepted.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">ABI</div>
+
+        <div class="field">
+          <label for="abiInput">Contract ABI (JSON)</label>
+          <textarea id="abiInput" rows="8" placeholder='Paste your ABI here, e.g.:
+[
+  {
+    "name": "mint",
+    "type": "function",
+    "stateMutability": "nonpayable",
+    "inputs": [{"name": "to", "type": "address"}, {"name": "amount", "type": "uint256"}],
+    "outputs": []
+  }
+]'></textarea>
+          <p class="help">Copy the ABI from Remix (Compilation Details → ABI) or your Hardhat/Foundry artifacts.</p>
+        </div>
+
+        <div class="field">
+          <label for="fnSelector">Function Selector</label>
+          <select id="fnSelector">
+            <option value="">— Paste valid ABI first —</option>
+          </select>
+          <p class="help">Auto-populated from the ABI above. Select the function you want to call.</p>
+        </div>
+
+        <div id="fnArgBuilder"></div>
+      </div>
+
+    </section><!-- /tab-contract -->
+
+    <!-- ────────────────────────── ADVANCED TAB ─────────────────────────── -->
+    <section id="tab-advanced" class="tab-panel" role="tabpanel">
+
+      <div class="card">
+        <div class="card-title">Error Handling</div>
+
+        <div class="field">
+          <label for="retryCount">Retry Count</label>
+          <input type="number" id="retryCount" min="0" max="10" value="3" />
+          <p class="help">Number of times to retry a failed RPC call before throwing.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Logging</div>
+
+        <div class="field">
+          <label for="logFormat">Log Format</label>
+          <select id="logFormat">
+            <option value="detailed">Detailed</option>
+            <option value="json">JSON</option>
+            <option value="minimal">Minimal</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Runtime Options</div>
+
+        <div class="toggle-row">
+          <span class="toggle-label">Session caching</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="sessionCaching" checked />
+            <div class="toggle-track"></div>
+            <div class="toggle-thumb"></div>
+          </label>
+        </div>
+
+        <div class="toggle-row">
+          <span class="toggle-label">Post-transaction page refresh</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="postTxRefresh" />
+            <div class="toggle-track"></div>
+            <div class="toggle-thumb"></div>
+          </label>
+        </div>
+
+        <div class="toggle-row">
+          <span class="toggle-label">Typed data enforcement (EIP-712)</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="eip712" checked />
+            <div class="toggle-track"></div>
+            <div class="toggle-thumb"></div>
+          </label>
+        </div>
+      </div>
+
+    </section><!-- /tab-advanced -->
+
+    <!-- ────────────────────────── COMPILE TAB ──────────────────────────── -->
+    <section id="tab-compile" class="tab-panel" role="tabpanel">
+
+      <div class="compile-hero">
+        <h2>🚀 Compile SDK</h2>
+        <p>
+          Reads your configuration from all tabs, generates a self-contained
+          <code>script.js</code>, and lets you copy or download it instantly.
+          Drop the file into any HTML page with a single <code>&lt;script&gt;</code> tag.
+        </p>
+
+        <div class="compile-actions">
+          <button class="btn btn-primary" id="compileBtn">⚡ Generate script.js</button>
+        </div>
+      </div>
+
+      <!-- Live config preview -->
+      <div class="card">
+        <div class="card-title">Current Configuration</div>
+        <pre id="configPreview">Click "Generate script.js" to preview.</pre>
+      </div>
+
+      <!-- Output -->
+      <div class="card" id="outputSection">
+        <div class="card-title">Generated script.js</div>
+        <div class="output-area">
+          <textarea id="scriptOutput" readonly placeholder="Your compiled script.js will appear here after you click Generate…"></textarea>
+        </div>
+        <div class="output-toolbar">
+          <button class="btn btn-secondary" id="copyBtn">📋 Copy</button>
+          <button class="btn btn-success"   id="downloadBtn">⬇️ Download script.js</button>
+        </div>
+      </div>
+
+      <!-- Embed instructions -->
+      <div class="card">
+        <div class="card-title">How to embed</div>
+        <pre style="font-family:var(--mono);font-size:.82rem;color:var(--text-muted);white-space:pre-wrap">&lt;!-- 1. Add ethers.js (required) --&gt;
+&lt;script src="https://cdn.jsdelivr.net/npm/ethers@6/dist/ethers.umd.min.js"&gt;&lt;/script&gt;
+
+&lt;!-- 2. Add your compiled script --&gt;
+&lt;script src="script.js"&gt;&lt;/script&gt;
+
+&lt;!-- 3. Use the SDK --&gt;
+&lt;script&gt;
+  // SDK auto-inits on DOMContentLoaded
+  // Access the config:
+  console.log(WaaSSDK.CONFIG);
+
+  // Load your contract (once you have a provider):
+  // const contract = WaaSSDK.loadContract(WaaSSDK.CONFIG.contractAddress, WaaSSDK.CONFIG.abi, provider);
+  // const result   = await WaaSSDK.readContract(contract, "balanceOf", ["0xYourAddress"]);
+  // const receipt  = await WaaSSDK.writeContract(contract, "mint", ["0xTo", amount]);
+&lt;/script&gt;</pre>
+      </div>
+
+    </section><!-- /tab-compile -->
+
+  </main>
+
+  <!-- Toast notification -->
+  <div id="toast" role="status" aria-live="polite"></div>
+
+  <script src="dashboard.js"></script>
+</body>
+</html>

@@ -3,7 +3,7 @@
     "type": "function",
     "name": "MAX",
     "inputs": [],
-    "outputs": [{"name": "", "type": "uint256", "internalType": "uint256"}],
+    "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
     "stateMutability": "view"
   },
   {
@@ -11,14 +11,14 @@
     "name": "batch",
     "inputs": [
       {
-        "name": "_calls",
+        "name": "calls",
         "type": "tuple[]",
         "internalType": "struct BatchMulticall.Call[]",
         "components": [
-          {"name": "target", "type": "address", "internalType": "address"},
-          {"name": "value", "type": "uint256", "internalType": "uint256"},
-          {"name": "data", "type": "bytes", "internalType": "bytes"},
-          {"name": "revertOnError", "type": "bool", "internalType": "bool"}
+          { "name": "target", "type": "address", "internalType": "address" },
+          { "name": "value", "type": "uint256", "internalType": "uint256" },
+          { "name": "data", "type": "bytes", "internalType": "bytes" },
+          { "name": "allowFailure", "type": "bool", "internalType": "bool" }
         ]
       }
     ],
@@ -29,30 +29,18 @@
     "type": "function",
     "name": "batchStatic",
     "inputs": [
-      {
-        "name": "_calls",
-        "type": "tuple[]",
-        "internalType": "struct BatchMulticall.Call[]",
-        "components": [
-          {"name": "target", "type": "address", "internalType": "address"},
-          {"name": "value", "type": "uint256", "internalType": "uint256"},
-          {"name": "data", "type": "bytes", "internalType": "bytes"},
-          {"name": "revertOnError", "type": "bool", "internalType": "bool"}
-        ]
-      }
+      { "name": "targets", "type": "address[]", "internalType": "address[]" },
+      { "name": "data", "type": "bytes[]", "internalType": "bytes[]" }
     ],
-    "outputs": [
-      {"name": "_results", "type": "bytes[]", "internalType": "bytes[]"}
-    ],
+    "outputs": [{ "name": "results", "type": "bytes[]", "internalType": "bytes[]" }],
     "stateMutability": "view"
   },
   {
     "type": "event",
     "name": "BatchExecuted",
     "inputs": [
-      {"name": "index", "type": "uint256", "internalType": "uint256", "indexed": true},
-      {"name": "success", "type": "bool", "internalType": "bool", "indexed": false},
-      {"name": "result", "type": "bytes", "internalType": "bytes", "indexed": false}
+      { "name": "caller", "type": "address", "indexed": true, "internalType": "address" },
+      { "name": "callsExecuted", "type": "uint256", "indexed": false, "internalType": "uint256" }
     ],
     "anonymous": false
   }
