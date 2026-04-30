@@ -7,9 +7,27 @@ services:
     depends_on:
       mongo:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     restart: unless-stopped
     environment:
       - MONGODB_URI=mongodb://mongo:27017/waassdk
+      - REDIS_URL=redis://redis:6379
+
+  # ─── Worker process (BullMQ consumers) ──────────────────────────────────────
+  workers:
+    build: .
+    command: node src/workers/runner.js
+    env_file: .env
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017/waassdk
+      - REDIS_URL=redis://redis:6379
 
   mongo:
     image: mongo:7
@@ -22,5 +40,19 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
 volumes:
   mongo_data:
+  redis_data:
+
