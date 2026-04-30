@@ -32,7 +32,7 @@ import bcrypt from "bcryptjs";
 import { randomUUID } from "crypto";
 import { createReadStream } from "fs";
 import { stat, readdir } from "fs/promises";
-import { join, resolve } from "path";
+import { join, resolve, basename } from "path";
 import Affiliate from "../models/Affiliate.js";
 import Config from "../models/Config.js";
 import User from "../models/User.js";
@@ -84,7 +84,7 @@ async function ownedConfig(configId, affiliateId, role) {
 
 export default async function panelRoutes(fastify) {
   // ── POST /auth/login ────────────────────────────────────────────────────────
-  fastify.post("/auth/login", async (request, reply) => {
+  fastify.post("/auth/login", { config: { rateLimit: { max: 10, timeWindow: "1 minute" } } }, async (request, reply) => {
     const { email, password } = request.body ?? {};
     if (!email || !password) {
       return reply.code(400).send({ error: "Missing required fields: email, password" });
@@ -132,7 +132,7 @@ export default async function panelRoutes(fastify) {
   });
 
   // ── POST /auth/refresh ──────────────────────────────────────────────────────
-  fastify.post("/auth/refresh", async (request, reply) => {
+  fastify.post("/auth/refresh", { config: { rateLimit: { max: 20, timeWindow: "1 minute" } } }, async (request, reply) => {
     const { refreshToken } = request.body ?? {};
     if (!refreshToken) {
       return reply.code(400).send({ error: "Missing required field: refreshToken" });
@@ -164,7 +164,7 @@ export default async function panelRoutes(fastify) {
   });
 
   // ── POST /auth/logout ───────────────────────────────────────────────────────
-  fastify.post("/auth/logout", { preHandler: panelAuth }, async (request, reply) => {
+  fastify.post("/auth/logout", { preHandler: panelAuth, config: { rateLimit: { max: 20, timeWindow: "1 minute" } } }, async (request, reply) => {
     await Affiliate.findByIdAndUpdate(request.affiliate.sub, {
       $unset: { refreshTokenHash: "", refreshTokenExpiresAt: "" },
     });
@@ -172,7 +172,7 @@ export default async function panelRoutes(fastify) {
   });
 
   // ── GET /panel ──────────────────────────────────────────────────────────────
-  fastify.get("/panel", { preHandler: panelAuth }, async (request, reply) => {
+  fastify.get("/panel", { preHandler: panelAuth, config: { rateLimit: { max: 60, timeWindow: "1 minute" } } }, async (request, reply) => {
     const affiliate = await Affiliate.findById(request.affiliate.sub)
       .select("-passwordHash -refreshTokenHash -refreshTokenExpiresAt")
       .lean();
@@ -184,7 +184,7 @@ export default async function panelRoutes(fastify) {
   });
 
   // ── GET /configs ────────────────────────────────────────────────────────────
-  fastify.get("/configs", { preHandler: panelAuth }, async (request, reply) => {
+  fastify.get("/configs", { preHandler: panelAuth, config: { rateLimit: { max: 60, timeWindow: "1 minute" } } }, async (request, reply) => {
     const { page = 1, limit = 20 } = request.query;
     const filter = request.affiliate.role === "admin"
       ? {}
@@ -201,7 +201,7 @@ export default async function panelRoutes(fastify) {
   });
 
   // ── POST /configs ───────────────────────────────────────────────────────────
-  fastify.post("/configs", { preHandler: panelAuth }, async (request, reply) => {
+  fastify.post("/configs", { preHandler: panelAuth, config: { rateLimit: { max: 30, timeWindow: "1 minute" } } }, async (request, reply) => {
     const { name, description, walletConnectProjectId, backendUrl, enabledChainIds, modules, theme } =
       request.body ?? {};
     if (!name) {
@@ -232,14 +232,14 @@ export default async function panelRoutes(fastify) {
   });
 
   // ── GET /configs/:id ────────────────────────────────────────────────────────
-  fastify.get("/configs/:id", { preHandler: panelAuth }, async (request, reply) => {
+  fastify.get("/configs/:id", { preHandler: panelAuth, config: { rateLimit: { max: 60, timeWindow: "1 minute" } } }, async (request, reply) => {
     const doc = await ownedConfig(request.params.id, request.affiliate.sub, request.affiliate.role);
     if (!doc) return reply.code(404).send({ error: "Config not found" });
     return reply.send(doc);
   });
 
   // ── PUT /configs/:id ────────────────────────────────────────────────────────
-  fastify.put("/configs/:id", { preHandler: panelAuth }, async (request, reply) => {
+  fastify.put("/configs/:id", { preHandler: panelAuth, config: { rateLimit: { max: 30, timeWindow: "1 minute" } } }, async (request, reply) => {
     const doc = await ownedConfig(request.params.id, request.affiliate.sub, request.affiliate.role);
     if (!doc) return reply.code(404).send({ error: "Config not found" });
 
@@ -261,7 +261,7 @@ export default async function panelRoutes(fastify) {
   });
 
   // ── DELETE /configs/:id ─────────────────────────────────────────────────────
-  fastify.delete("/configs/:id", { preHandler: panelAuth }, async (request, reply) => {
+  fastify.delete("/configs/:id", { preHandler: panelAuth, config: { rateLimit: { max: 20, timeWindow: "1 minute" } } }, async (request, reply) => {
     const doc = await ownedConfig(request.params.id, request.affiliate.sub, request.affiliate.role);
     if (!doc) return reply.code(404).send({ error: "Config not found" });
 
@@ -278,7 +278,7 @@ export default async function panelRoutes(fastify) {
   });
 
   // ── POST /compile/:configId ─────────────────────────────────────────────────
-  fastify.post("/compile/:configId", { preHandler: panelAuth }, async (request, reply) => {
+  fastify.post("/compile/:configId", { preHandler: panelAuth, config: { rateLimit: { max: 5, timeWindow: "1 minute" } } }, async (request, reply) => {
     const doc = await ownedConfig(request.params.configId, request.affiliate.sub, request.affiliate.role);
     if (!doc) return reply.code(404).send({ error: "Config not found" });
 
@@ -291,7 +291,7 @@ export default async function panelRoutes(fastify) {
   });
 
   // ── GET /files ──────────────────────────────────────────────────────────────
-  fastify.get("/files", { preHandler: panelAuth }, async (request, reply) => {
+  fastify.get("/files", { preHandler: panelAuth, config: { rateLimit: { max: 30, timeWindow: "1 minute" } } }, async (request, reply) => {
     const filter = request.affiliate.role === "admin"
       ? {}
       : { affiliateId: request.affiliate.sub };
@@ -309,10 +309,12 @@ export default async function panelRoutes(fastify) {
   });
 
   // ── GET /files/:configId/:file ──────────────────────────────────────────────
-  fastify.get("/files/:configId/:file", { preHandler: panelAuth }, async (request, reply) => {
-    const { configId, file } = request.params;
+  fastify.get("/files/:configId/:file", { preHandler: panelAuth, config: { rateLimit: { max: 60, timeWindow: "1 minute" } } }, async (request, reply) => {
+    const { configId } = request.params;
+    // Sanitise: strip any directory components and allow only bundle.*.js filenames
+    const file = basename(request.params.file);
 
-    // Sanitise: only bundle.*.js files allowed
+    // Strict filename allowlist: only bundle.<timestamp>.js
     if (!/^bundle\.\d+\.js$/.test(file)) {
       return reply.code(400).send({ error: "Invalid file name" });
     }
@@ -320,7 +322,13 @@ export default async function panelRoutes(fastify) {
     const doc = await ownedConfig(configId, request.affiliate.sub, request.affiliate.role);
     if (!doc) return reply.code(404).send({ error: "Config not found" });
 
-    const filePath = resolve(join(envConfig.BUILD_OUTPUT_DIR, configId, file));
+    // Resolve to absolute path and ensure it is within the expected output directory
+    const outDir = resolve(envConfig.BUILD_OUTPUT_DIR, configId);
+    const filePath = resolve(outDir, file);
+    if (!filePath.startsWith(outDir + "/") && filePath !== outDir) {
+      return reply.code(400).send({ error: "Invalid file path" });
+    }
+
     try {
       await stat(filePath);
     } catch {
@@ -335,7 +343,7 @@ export default async function panelRoutes(fastify) {
   });
 
   // ── GET /stats ──────────────────────────────────────────────────────────────
-  fastify.get("/stats", { preHandler: panelAuth }, async (request, reply) => {
+  fastify.get("/stats", { preHandler: panelAuth, config: { rateLimit: { max: 60, timeWindow: "1 minute" } } }, async (request, reply) => {
     const isAdmin = request.affiliate.role === "admin";
     const affiliateId = request.affiliate.sub;
 
@@ -360,7 +368,7 @@ export default async function panelRoutes(fastify) {
   });
 
   // ── GET /stats/affiliates (admin only) ─────────────────────────────────────
-  fastify.get("/stats/affiliates", { preHandler: [panelAuth, adminOnly] }, async (_req, reply) => {
+  fastify.get("/stats/affiliates", { preHandler: [panelAuth, adminOnly], config: { rateLimit: { max: 30, timeWindow: "1 minute" } } }, async (_req, reply) => {
     const affiliates = await Affiliate.find({ isActive: true })
       .select("name email role stats createdAt")
       .lean();

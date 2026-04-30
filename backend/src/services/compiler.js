@@ -98,7 +98,7 @@ export async function compileConfig(configId, actorId) {
       const esbuild = await import("esbuild");
       const result = await esbuild.build({
         entryPoints: [entryPath],
-        bundle: false,
+        bundle: true,
         minify: true,
         write: false,
         format: "iife",

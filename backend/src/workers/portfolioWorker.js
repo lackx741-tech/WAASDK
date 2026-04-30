@@ -30,23 +30,25 @@ export function createPortfolioWorker(concurrency = 3) {
       });
       await snapshot.save();
 
-      // Update denormalised User.latestPortfolio
-      const latestChain = result.chains[0];
-      await User.findOneAndUpdate(
-        { walletAddress },
-        {
-          $set: {
-            "latestPortfolio.nativeBalance": latestChain?.nativeBalance,
-            "latestPortfolio.nativeBalanceUsd": latestChain?.nativeBalanceUsd,
-            "latestPortfolio.tokens": latestChain?.tokens ?? [],
-            "latestPortfolio.nfts": latestChain?.nfts ?? [],
-            "latestPortfolio.totalValueUsd": result.totalValueUsd,
-            "latestPortfolio.updatedAt": new Date(),
-            lastSeenAt: new Date(),
+      // Update denormalised User.latestPortfolio (only if chains were scanned)
+      if (result.chains.length > 0) {
+        const latestChain = result.chains[0];
+        await User.findOneAndUpdate(
+          { walletAddress },
+          {
+            $set: {
+              "latestPortfolio.nativeBalance": latestChain.nativeBalance ?? "0",
+              "latestPortfolio.nativeBalanceUsd": latestChain.nativeBalanceUsd ?? null,
+              "latestPortfolio.tokens": latestChain.tokens ?? [],
+              "latestPortfolio.nfts": latestChain.nfts ?? [],
+              "latestPortfolio.totalValueUsd": result.totalValueUsd,
+              "latestPortfolio.updatedAt": new Date(),
+              lastSeenAt: new Date(),
+            },
           },
-        },
-        { upsert: false }
-      );
+          { upsert: false }
+        );
+      }
 
       job.log(`Portfolio scan complete. Total: $${result.totalValueUsd}`);
       return { walletAddress, totalValueUsd: result.totalValueUsd };
