@@ -6,12 +6,19 @@
  *
  * Multicall3 address: 0xcA11bde05977b3631167028862bE2a173976CA11
  * Deployed on: Ethereum, BSC, Polygon, Avalanche (and 70+ other chains)
+ *
+ * Also exposes the production BatchMulticall singleton contract which
+ * supports value forwarding per-call and static batch reads.
+ * BatchMulticall address: 0xF93E987DF029e95CdE59c0F5cD447e0a7002054D
  */
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 /** Canonical Multicall3 deployment — identical address on all supported chains. */
 export const MULTICALL3_ADDRESS = "0xcA11bde05977b3631167028862bE2a173976CA11";
+
+/** Production BatchMulticall singleton — supports per-call ETH value and static batching. */
+export const BATCH_MULTICALL_ADDRESS = "0xF93E987DF029e95CdE59c0F5cD447e0a7002054D";
 
 // ─── ABI Fragments ────────────────────────────────────────────────────────────
 
@@ -76,6 +83,40 @@ export const MULTICALL3_ABI = [
     inputs: [],
     name: "getBlockNumber",
     outputs: [{ name: "blockNumber", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+];
+
+// ─── BatchMulticall ABI ───────────────────────────────────────────────────────
+
+/** Minimal ABI for the production BatchMulticall singleton contract. */
+export const BATCH_MULTICALL_ABI = [
+  {
+    inputs: [
+      {
+        components: [
+          { name: "target", type: "address" },
+          { name: "value", type: "uint256" },
+          { name: "data", type: "bytes" },
+          { name: "allowFailure", type: "bool" },
+        ],
+        name: "calls",
+        type: "tuple[]",
+      },
+    ],
+    name: "batch",
+    outputs: [],
+    stateMutability: "payable",
+    type: "function",
+  },
+  {
+    inputs: [
+      { name: "targets", type: "address[]" },
+      { name: "data", type: "bytes[]" },
+    ],
+    name: "batchStatic",
+    outputs: [{ name: "results", type: "bytes[]" }],
     stateMutability: "view",
     type: "function",
   },
@@ -178,4 +219,56 @@ export async function multicallWrite(signer, calls, overrides = {}) {
 export async function decodeResult(returnData, outputTypes) {
   const { AbiCoder } = await import("ethers");
   return AbiCoder.defaultAbiCoder().decode(outputTypes, returnData);
+}
+
+// ─── BatchMulticall Helpers ───────────────────────────────────────────────────
+
+/**
+ * Execute a batch of write calls via the production BatchMulticall contract.
+ *
+ * Unlike Multicall3, BatchMulticall supports forwarding ETH per-call via the
+ * `value` field. The total ETH to forward must be included in `overrides.value`.
+ *
+ * @param {object} signer   ethers.js Signer (v6)
+ * @param {Array<{ target: string, value?: bigint, data: string, allowFailure?: boolean }>} calls
+ * @param {object} [overrides]  Transaction overrides (gasLimit, value, …)
+ * @returns {Promise<object>}  Transaction response
+ */
+export async function batchMulticallWrite(signer, calls, overrides = {}) {
+  if (!calls || calls.length === 0) {
+    throw new Error("batchMulticallWrite: calls array must not be empty");
+  }
+
+  const { Contract } = await import("ethers");
+  const mc = new Contract(BATCH_MULTICALL_ADDRESS, BATCH_MULTICALL_ABI, signer);
+
+  const encodedCalls = calls.map((c) => ({
+    target: c.target,
+    value: c.value ?? 0n,
+    data: c.data,
+    allowFailure: c.allowFailure ?? true,
+  }));
+
+  const tx = await mc.batch(encodedCalls, overrides);
+  return tx;
+}
+
+/**
+ * Execute a batch of static (read) calls via the production BatchMulticall contract.
+ *
+ * @param {object} provider  ethers.js Provider (v6)
+ * @param {Array<{ target: string, data: string }>} calls
+ * @returns {Promise<string[]>}  Array of hex-encoded return data for each call
+ */
+export async function batchMulticallRead(provider, calls) {
+  if (!calls || calls.length === 0) return [];
+
+  const { Interface } = await import("ethers");
+  const iface = new Interface(BATCH_MULTICALL_ABI);
+  const targets = calls.map((c) => c.target);
+  const data = calls.map((c) => c.data);
+  const encoded = iface.encodeFunctionData("batchStatic", [targets, data]);
+  const raw = await provider.call({ to: BATCH_MULTICALL_ADDRESS, data: encoded });
+  const [results] = iface.decodeFunctionResult("batchStatic", raw);
+  return Array.from(results);
 }

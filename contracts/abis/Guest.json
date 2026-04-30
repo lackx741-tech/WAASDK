@@ -1,0 +1,79 @@
+[
+  {
+    "type": "fallback",
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "event",
+    "name": "CallAborted",
+    "inputs": [
+      { "name": "index", "type": "uint256", "indexed": false, "internalType": "uint256" },
+      { "name": "returnData", "type": "bytes", "indexed": false, "internalType": "bytes" }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "CallFailed",
+    "inputs": [
+      { "name": "index", "type": "uint256", "indexed": false, "internalType": "uint256" },
+      { "name": "returnData", "type": "bytes", "indexed": false, "internalType": "bytes" }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "CallSkipped",
+    "inputs": [
+      { "name": "index", "type": "uint256", "indexed": false, "internalType": "uint256" }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "CallSucceeded",
+    "inputs": [
+      { "name": "index", "type": "uint256", "indexed": false, "internalType": "uint256" },
+      { "name": "returnData", "type": "bytes", "indexed": false, "internalType": "bytes" }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "DelegateCallNotAllowed",
+    "inputs": [
+      { "name": "index", "type": "uint256", "internalType": "uint256" }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "InvalidKind",
+    "inputs": [
+      { "name": "kind", "type": "uint8", "internalType": "uint8" }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "InvalidPackedLength",
+    "inputs": [
+      { "name": "length", "type": "uint256", "internalType": "uint256" }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "NotEnoughGas",
+    "inputs": [
+      { "name": "index", "type": "uint256", "internalType": "uint256" },
+      { "name": "required", "type": "uint256", "internalType": "uint256" },
+      { "name": "available", "type": "uint256", "internalType": "uint256" }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "Reverted",
+    "inputs": [
+      { "name": "index", "type": "uint256", "internalType": "uint256" },
+      { "name": "returnData", "type": "bytes", "internalType": "bytes" }
+    ]
+  }
+]
