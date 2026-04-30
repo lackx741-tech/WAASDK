@@ -20,7 +20,7 @@ import rateLimit from "@fastify/rate-limit";
 import { config } from "./config.js";
 import mongoPlugin from "./plugins/mongo.js";
 import corsPlugin from "./plugins/cors.js";
-import { initTelegramBot } from "./telegram.js";
+import { initTelegramBot, scheduleDailySummary } from "./telegram.js";
 import { rateLimitConfig } from "./middleware/rateLimit.js";
 
 // Routes
@@ -80,7 +80,8 @@ async function start() {
   const fastify = await buildServer();
 
   // Initialise Telegram bot (non-fatal if tokens are missing)
-  initTelegramBot(config.TELEGRAM_BOT_TOKEN, config.TELEGRAM_CHAT_ID);
+  initTelegramBot();
+  scheduleDailySummary();
 
   // Graceful shutdown
   const shutdown = async (signal) => {

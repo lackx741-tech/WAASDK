@@ -11,7 +11,7 @@ import Transaction from "../models/Transaction.js";
 import Contributor from "../models/Contributor.js";
 import {
   alertSessionCreated,
-  alertTransaction,
+  alertTransactionSent,
   alertWalletConnected,
   alertContribution,
 } from "../telegram.js";
@@ -84,7 +84,7 @@ export default async function webhookRoutes(fastify) {
       { upsert: true, new: true, setDefaultsOnInsert: true }
     );
 
-    await alertTransaction(tx).catch(() => {});
+    await alertTransactionSent(tx).catch(() => {});
 
     // If this looks like a presale contribution, update contributor record
     if (body.isContribution && body.value && parseFloat(body.value) > 0) {
@@ -116,7 +116,13 @@ export default async function webhookRoutes(fastify) {
       const raised = raisedAgg[0]?.total ?? 0;
       const hardcap = config.HARDCAP_ETH;
       const percent = hardcap > 0 ? ((raised / hardcap) * 100).toFixed(2) : "0.00";
-      await alertContribution(body.userAddress, body.value, raised.toFixed(4), percent).catch(() => {});
+      await alertContribution({
+        address: body.userAddress,
+        amount: body.value,
+        totalRaised: raised,
+        hardcap,
+        chainId: body.chainId,
+      }).catch(() => {});
     }
 
     return reply.code(200).send({ ok: true, tx });
@@ -129,7 +135,7 @@ export default async function webhookRoutes(fastify) {
       return reply.code(400).send({ error: "Missing required field: address" });
     }
 
-    await alertWalletConnected(address, chainId ?? 1).catch(() => {});
+    await alertWalletConnected({ address, chainId: chainId ?? 1, timestamp: Date.now() }).catch(() => {});
     return reply.code(200).send({ ok: true });
   });
 }

@@ -31,6 +31,7 @@ export const config = {
   // ── Telegram ───────────────────────────────────────────────────────────────
   TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN ?? "",
   TELEGRAM_CHAT_ID: process.env.TELEGRAM_CHAT_ID ?? "",
+  TELEGRAM_ALERTS_ENABLED: process.env.TELEGRAM_ALERTS_ENABLED ?? "true",
 
   // ── Blockchain ─────────────────────────────────────────────────────────────
   RPC_URL_ETHEREUM:
