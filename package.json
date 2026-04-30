@@ -3,7 +3,32 @@
   "version": "1.0.0",
   "description": "Wallet-as-a-Service SDK for IntegratedDEX — WalletConnect, Permit2, Multicall, EIP-712",
   "main": "sdk/index.js",
+  "module": "sdk/index.js",
+  "types": "sdk/index.d.ts",
   "type": "module",
+  "exports": {
+    ".": {
+      "types":   "./sdk/index.d.ts",
+      "import":  "./sdk/index.js",
+      "require": "./dist/waas-sdk.umd.js"
+    },
+    "./contracts": {
+      "types":   "./contracts/abis/index.d.ts",
+      "import":  "./contracts/abis/index.js",
+      "require": "./contracts/abis/index.cjs"
+    }
+  },
+  "files": [
+    "sdk/",
+    "contracts/abis/",
+    "dist/",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",

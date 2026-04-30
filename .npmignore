@@ -1,0 +1,19 @@
+# Development & tooling
+.github/
+tests/
+backend/
+dashboard/
+presale/
+launch/
+landing/
+examples/
+docs/
+
+# Config files not needed at runtime
+vite.config.js
+vitest.config.js
+eslint.config.js
+.env*
+
+# Build artefacts that shouldn't be republished
+node_modules/
