@@ -19,12 +19,15 @@ Includes a presale launchpad and token launch frontend.
    - [Multicall3](#multicall3)
    - [EIP-712 Signing](#eip-712-signing)
    - [Utilities](#utilities)
-6. [Presale Launchpad](#presale-launchpad)
-7. [Token Launch](#token-launch)
-8. [Smart Contracts](#smart-contracts)
-9. [CI / CD](#ci--cd)
-10. [Contributing](#contributing)
-11. [License](#license)
+6. [Admin Dashboard](#admin-dashboard)
+7. [Smart Contract Integration](#smart-contract-integration)
+8. [Getting script.js](#getting-scriptjs)
+9. [Presale Launchpad](#presale-launchpad)
+10. [Token Launch](#token-launch)
+11. [Smart Contracts](#smart-contracts)
+12. [CI / CD](#ci--cd)
+13. [Contributing](#contributing)
+14. [License](#license)
 
 ---
 
@@ -37,6 +40,8 @@ Includes a presale launchpad and token launch frontend.
 | `sdk/multicall.js` | Batch reads and writes via Multicall3 |
 | `sdk/eip712.js` | EIP-712 typed-data signing helpers |
 | `sdk/utils.js` | Chain info, address validation, amount formatting |
+| `sdk/contract.js` | Load any contract by address + ABI; read, write, events |
+| `dashboard/` | Visual compile UI — configure and download `script.js` |
 | `presale/` | Presale launchpad frontend (contribute / claim / refund) |
 | `launch/` | Token launch frontend (deploy ERC-20 in one tx) |
 | `contracts/` | Auditable Solidity contracts (Presale, TokenLaunch) |
@@ -59,7 +64,12 @@ Includes a presale launchpad and token launch frontend.
 │   ├── permit2.js      # Permit2 gasless approval module
 │   ├── multicall.js    # Multicall3 execution module
 │   ├── eip712.js       # EIP-712 typed data helpers
+│   ├── contract.js     # Smart contract integration (load/read/write/events)
 │   └── utils.js        # Chain info, formatting, validation
+├── dashboard/
+│   ├── index.html      # Admin dashboard (open in browser — no server needed)
+│   ├── dashboard.js    # Dashboard logic
+│   └── dashboard.css   # Dashboard styles
 ├── presale/
 │   ├── index.html
 │   ├── presale.js
@@ -253,6 +263,151 @@ getNativeCurrencySymbol(56);        // "BNB"
 getTxUrl("0xHash", 1);             // "https://etherscan.io/tx/0xHash"
 deadlineFromNow(30);               // Unix timestamp 30 minutes from now
 ```
+
+---
+
+## Admin Dashboard
+
+The Admin Dashboard is a **zero-backend, single-file** UI that lets you configure the
+SDK visually and compile a self-contained `script.js` you can drop into any website.
+
+### Open the dashboard
+
+```bash
+# Option A — open directly in your browser (no server needed)
+open dashboard/index.html          # macOS
+xdg-open dashboard/index.html      # Linux
+start dashboard/index.html         # Windows
+
+# Option B — serve with Vite dev server (hot reload)
+npm run dev
+# then visit http://localhost:5173/dashboard/
+```
+
+### Dashboard tabs
+
+| Tab | What you configure |
+|---|---|
+| 🔧 **General** | App name, description, WalletConnect project ID, theme, button labels |
+| 🔗 **Wallet** | Supported chains, min balance threshold, modal style, toggles |
+| 📄 **Contract** | Contract address + ABI, auto-populated function selector, argument builder |
+| ⚙️ **Advanced** | Retry count, log format, session caching, EIP-712 enforcement |
+| 🚀 **Compile** | Generate, preview, copy, or download `script.js` |
+
+### Workflow
+
+1. Fill in your **WalletConnect project ID** on the General tab.
+2. Go to **Contract** → paste your contract address and ABI.
+3. Select the function you want to expose (the dropdown is populated from your ABI).
+4. Go to **Compile** → click **Generate script.js**.
+5. Click **Download script.js** and embed it in your site (see [Getting script.js](#getting-scriptjs)).
+
+---
+
+## Smart Contract Integration
+
+`sdk/contract.js` provides four functions for interacting with any deployed EVM contract.
+
+```js
+import {
+  loadContract,
+  readContract,
+  writeContract,
+  getContractEvents,
+  contractEvents,
+} from "./sdk/index.js";
+```
+
+### Load a contract
+
+```js
+// provider = ethers.BrowserProvider / JsonRpcProvider / signer
+const contract = loadContract("0xYourContractAddress", abi, provider);
+```
+
+### Read a view/pure function
+
+```js
+// balanceOf(address) → uint256
+const balance = await readContract(contract, "balanceOf", ["0xAddress"]);
+console.log(balance.toString());
+```
+
+### Write a state-changing function
+
+```js
+// Always shows a console preview before submitting.
+// contract must be connected to a signer.
+const signer   = await wallet.getSigner();
+const signed   = contract.connect(signer);
+
+const receipt  = await writeContract(signed, "mint", ["0xTo", 1000n]);
+console.log("Minted in tx:", receipt.hash);
+```
+
+### Fetch past events
+
+```js
+const transfers = await getContractEvents(contract, "Transfer", 18_000_000);
+transfers.forEach((e) => console.log(e.args));
+```
+
+### Listen for SDK events
+
+```js
+contractEvents.on("contractCallSuccess", ({ type, functionName, result, txHash }) => {
+  console.log(`${type} call to ${functionName} succeeded`, result ?? txHash);
+});
+
+contractEvents.on("contractCallError", ({ type, functionName, error }) => {
+  console.error(`${type} call to ${functionName} failed`, error);
+});
+```
+
+---
+
+## Getting script.js
+
+### Option A — Admin Dashboard (no build tools needed)
+
+1. Open `dashboard/index.html` in your browser.
+2. Configure the SDK in the dashboard.
+3. Click **🚀 Generate script.js** on the Compile tab.
+4. Click **⬇️ Download script.js**.
+5. Place the file alongside your HTML and add:
+
+```html
+<!-- Peer dependency — ethers.js v6 -->
+<script src="https://cdn.jsdelivr.net/npm/ethers@6/dist/ethers.umd.min.js"></script>
+
+<!-- Your compiled SDK -->
+<script src="script.js"></script>
+
+<script>
+  // Auto-initialised on DOMContentLoaded.
+  // Access the embedded config:
+  console.log(WaaSSDK.CONFIG);
+
+  // Load your contract (requires an ethers provider):
+  // const provider = new ethers.BrowserProvider(window.ethereum);
+  // const contract = WaaSSDK.loadContract(WaaSSDK.CONFIG.contractAddress, WaaSSDK.CONFIG.abi, provider);
+  // const receipt  = await WaaSSDK.writeContract(contract, "mint", ["0xTo", amount]);
+</script>
+```
+
+### Option B — Build with Vite
+
+```bash
+npm run build
+```
+
+Outputs three bundles to `dist/`:
+
+| File | Format | Use case |
+|---|---|---|
+| `dist/script.js` | IIFE | Plain `<script src="dist/script.js">` — no bundler required |
+| `dist/waas-sdk.es.js` | ES module | Modern bundlers (Vite, webpack, Rollup) |
+| `dist/waas-sdk.umd.js` | UMD | CommonJS / AMD / legacy environments |
 
 ---
 

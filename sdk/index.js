@@ -53,6 +53,14 @@ export {
   sleep,
 } from "./utils.js";
 
+export {
+  loadContract,
+  readContract,
+  writeContract,
+  getContractEvents,
+  contractEvents,
+} from "./contract.js";
+
 // ─── SDK Factory ──────────────────────────────────────────────────────────────
 
 /**
