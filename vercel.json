@@ -1,5 +1,4 @@
 {
-  "_docs": "Values prefixed with @ in 'env' are Vercel secret references. Create them in Vercel Dashboard → Settings → Environment Variables.",
   "buildCommand": "npm run build",
   "installCommand": "npm ci",
   "framework": "vite",
