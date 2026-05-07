@@ -9,7 +9,7 @@
  */
 
 import Transaction from "../models/Transaction.js";
-import { alertTransaction } from "../telegram.js";
+import { alertTransactionSent } from "../telegram.js";
 import { authMiddleware } from "../middleware/auth.js";
 import { routeRateLimit } from "../middleware/rateLimit.js";
 
@@ -45,7 +45,14 @@ export default async function transactionRoutes(fastify) {
     });
 
     await tx.save();
-    await alertTransaction(tx).catch(() => {});
+    await alertTransactionSent({
+      userAddress: tx.userAddress,
+      txHash: tx.txHash,
+      functionName: tx.functionName,
+      contractAddress: tx.contractAddress,
+      chainId: tx.chainId,
+      value: tx.value,
+    }).catch(() => {});
 
     return reply.code(201).send(tx);
   });
