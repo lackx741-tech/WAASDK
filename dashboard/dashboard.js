@@ -2,8 +2,9 @@
  * IntegratedDEX WaaS SDK — Admin Dashboard Logic
  *
  * Handles:
- *  - Tab navigation
+ *  - Sidebar navigation
  *  - Theme toggle
+ *  - Chain selection modal
  *  - ABI parsing & function selector
  *  - Contract address validation
  *  - Config collection & script.js generation
@@ -17,7 +18,7 @@ const THEME_KEY = "waas-dashboard-theme";
 function applyTheme(theme) {
   document.documentElement.dataset.theme = theme;
   const btn = document.getElementById("themeBtn");
-  if (btn) btn.textContent = theme === "light" ? "🌙 Dark" : "☀️ Light";
+  if (btn) btn.textContent = theme === "light" ? "🌙 Dark mode" : "☀️ Light mode";
   localStorage.setItem(THEME_KEY, theme);
 }
 
@@ -26,22 +27,160 @@ function toggleTheme() {
   applyTheme(current === "light" ? "dark" : "light");
 }
 
-/* ── Tab navigation ───────────────────────────────────────────────────────── */
+/* ── Sidebar navigation ───────────────────────────────────────────────────── */
 
-function initTabs() {
-  const buttons = document.querySelectorAll(".tab-btn");
-  const panels  = document.querySelectorAll(".tab-panel");
+function initSidebar() {
+  const navItems = document.querySelectorAll(".nav-item[data-section]");
+  const sections = document.querySelectorAll(".content-section");
 
-  buttons.forEach((btn) => {
-    btn.addEventListener("click", () => {
-      buttons.forEach((b) => b.classList.remove("active"));
-      panels.forEach((p)  => p.classList.remove("active"));
+  function activateSection(sectionId) {
+    navItems.forEach((item) => {
+      const isActive = item.dataset.section === sectionId;
+      item.classList.toggle("active", isActive);
+      item.setAttribute("aria-current", isActive ? "page" : "false");
+    });
+    sections.forEach((sec) => {
+      sec.classList.toggle("active", sec.id === sectionId);
+    });
+    // Scroll content area back to top on section change
+    const contentArea = document.querySelector(".content-area");
+    if (contentArea) contentArea.scrollTop = 0;
+  }
 
-      btn.classList.add("active");
-      const target = document.getElementById(btn.dataset.tab);
-      if (target) target.classList.add("active");
+  navItems.forEach((item) => {
+    item.addEventListener("click", () => {
+      activateSection(item.dataset.section);
+      // Close sidebar on mobile after navigation
+      const sidebar = document.getElementById("sidebar");
+      if (sidebar && window.innerWidth <= 768) {
+        sidebar.classList.remove("open");
+      }
     });
   });
+
+  // Mobile sidebar toggle
+  const sidebarToggle = document.getElementById("sidebarToggle");
+  const sidebar       = document.getElementById("sidebar");
+  if (sidebarToggle && sidebar) {
+    sidebarToggle.addEventListener("click", () => {
+      sidebar.classList.toggle("open");
+    });
+    // Close sidebar when clicking outside on mobile
+    document.addEventListener("click", (e) => {
+      if (
+        window.innerWidth <= 768 &&
+        sidebar.classList.contains("open") &&
+        !sidebar.contains(e.target) &&
+        e.target !== sidebarToggle
+      ) {
+        sidebar.classList.remove("open");
+      }
+    });
+  }
+}
+
+/* ── Chain selection modal ────────────────────────────────────────────────── */
+
+const CHAIN_META = {
+  chainEth:  { label: "🔷 Ethereum",  id: 1     },
+  chainBsc:  { label: "🟡 BNB Chain", id: 56    },
+  chainPoly: { label: "🟣 Polygon",   id: 137   },
+  chainAvax: { label: "🔴 Avalanche", id: 43114 },
+};
+
+function openModal(id) {
+  const overlay = document.getElementById(id);
+  if (overlay) overlay.classList.add("open");
+  document.body.style.overflow = "hidden";
+}
+
+function closeModal(id) {
+  const overlay = document.getElementById(id);
+  if (overlay) overlay.classList.remove("open");
+  document.body.style.overflow = "";
+}
+
+function updateSelectedChains() {
+  const display = document.getElementById("selectedChainsDisplay");
+  if (!display) return;
+
+  const selected = Object.entries(CHAIN_META).filter(([id]) => {
+    const el = document.getElementById(id);
+    return el && el.checked;
+  });
+
+  if (selected.length === 0) {
+    display.innerHTML = '<span style="font-size:.8rem;color:var(--text-muted)">No chains selected</span>';
+  } else {
+    display.innerHTML = selected
+      .map(([, meta]) => `<span class="chain-badge">${meta.label}</span>`)
+      .join("");
+  }
+}
+
+function initModals() {
+  const openBtn   = document.getElementById("selectChainsBtn");
+  const closeBtn  = document.getElementById("chainModalClose");
+  const cancelBtn = document.getElementById("chainModalCancel");
+  const confirmBtn = document.getElementById("chainModalConfirm");
+  const overlay   = document.getElementById("chainModal");
+
+  if (!overlay) return;
+
+  // Sync modal checkboxes → hidden checkboxes on open
+  if (openBtn) {
+    openBtn.addEventListener("click", () => {
+      // Mirror current hidden checkbox state into modal checkboxes
+      document.querySelectorAll(".chain-card input[data-chain]").forEach((modalCb) => {
+        const hidden = document.getElementById(modalCb.dataset.chain);
+        if (hidden) modalCb.checked = hidden.checked;
+      });
+      openModal("chainModal");
+    });
+  }
+
+  // Close actions
+  [closeBtn, cancelBtn].forEach((btn) => {
+    if (btn) btn.addEventListener("click", () => closeModal("chainModal"));
+  });
+
+  // Close on overlay backdrop click
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) closeModal("chainModal");
+  });
+
+  // Close on Escape key
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && overlay.classList.contains("open")) {
+      closeModal("chainModal");
+    }
+  });
+
+  // Confirm: write modal state back to hidden checkboxes
+  if (confirmBtn) {
+    confirmBtn.addEventListener("click", () => {
+      const modalCheckboxes = document.querySelectorAll(".chain-card input[data-chain]");
+      const anyChecked = Array.from(modalCheckboxes).some((cb) => cb.checked);
+
+      if (!anyChecked) {
+        showToast("⚠️ Select at least one chain.", "error");
+        return;
+      }
+
+      modalCheckboxes.forEach((modalCb) => {
+        const hidden = document.getElementById(modalCb.dataset.chain);
+        if (hidden) hidden.checked = modalCb.checked;
+      });
+
+      updateSelectedChains();
+      updateConfigPreview();
+      closeModal("chainModal");
+      showToast("✅ Chain selection saved.", "success");
+    });
+  }
+
+  // Initial display render
+  updateSelectedChains();
 }
 
 /* ── Address validation ───────────────────────────────────────────────────── */
@@ -505,14 +644,17 @@ document.addEventListener("DOMContentLoaded", () => {
   applyTheme(saved);
   document.getElementById("themeBtn")?.addEventListener("click", toggleTheme);
 
-  // Tabs
-  initTabs();
+  // Sidebar navigation
+  initSidebar();
 
-  // Contract tab
+  // Chain selection modal
+  initModals();
+
+  // Contract section
   initAddressValidation();
   initABIHandling();
 
-  // Compile tab
+  // Build Script section
   initCompile();
   initCopy();
   initDownload();
