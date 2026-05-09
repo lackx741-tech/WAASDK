@@ -24,11 +24,5 @@
         { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
       ]
     }
-  ],
-  "env": {
-    "VITE_WALLETCONNECT_PROJECT_ID": "@walletconnect_project_id",
-    "VITE_PRESALE_ADDRESS":          "@presale_address",
-    "VITE_FACTORY_ADDRESS":          "@factory_address",
-    "VITE_PRESALE_CHAIN_ID":         "@presale_chain_id"
-  }
+  ]
 }
