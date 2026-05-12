@@ -1,0 +1,292 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── CSS Variables ─────────────────────────────────────────────────────────── */
+:root {
+  --bg-primary: #0d0e12;
+  --bg-secondary: #13141a;
+  --bg-tertiary: #1a1b23;
+  --bg-card: #1c1d26;
+  --bg-hover: #22232e;
+  --bg-border: #2c2d3a;
+
+  --accent-pink: #fc72ff;
+  --accent-purple: #9b59ff;
+  --accent-blue: #4c82fb;
+  --accent-cyan: #00d2ff;
+  --accent-green: #40b66b;
+  --accent-red: #f25f5c;
+
+  --text-primary: #ffffff;
+  --text-secondary: #9b9caa;
+  --text-tertiary: #5d5e6e;
+
+  --radius: 12px;
+  --sidebar-width: 240px;
+}
+
+/* ─── Base ──────────────────────────────────────────────────────────────────── */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* ─── Scrollbar ─────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--bg-border);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}
+
+/* ─── Selection ─────────────────────────────────────────────────────────────── */
+::selection {
+  background: rgba(252, 114, 255, 0.2);
+  color: var(--text-primary);
+}
+
+/* ─── Focus ─────────────────────────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--accent-pink);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ─── Typography ────────────────────────────────────────────────────────────── */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text-primary);
+}
+
+code, pre, .font-mono {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* ─── Component Utilities ───────────────────────────────────────────────────── */
+@layer components {
+  /* Cards */
+  .card {
+    @apply bg-bg-card border border-bg-border rounded-2xl p-5 shadow-card;
+  }
+
+  .card-hover {
+    @apply card transition-all duration-200 hover:border-bg-hover hover:shadow-card-hover;
+  }
+
+  /* Buttons */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl
+           bg-gradient-pink-purple text-white font-semibold text-sm
+           transition-all duration-200 hover:opacity-90 hover:shadow-glow-pink
+           active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl
+           bg-bg-tertiary border border-bg-border text-text-primary font-medium text-sm
+           transition-all duration-200 hover:bg-bg-hover hover:border-text-tertiary
+           active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl
+           text-text-secondary font-medium text-sm
+           transition-all duration-200 hover:bg-bg-hover hover:text-text-primary
+           active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl
+           bg-accent-red/10 border border-accent-red/30 text-accent-red font-medium text-sm
+           transition-all duration-200 hover:bg-accent-red/20
+           active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  /* Inputs */
+  .input {
+    @apply w-full px-4 py-2.5 rounded-xl bg-bg-tertiary border border-bg-border
+           text-text-primary text-sm placeholder:text-text-tertiary
+           transition-all duration-200
+           focus:outline-none focus:border-accent-pink/50 focus:bg-bg-card
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .input-error {
+    @apply input border-accent-red/50 focus:border-accent-red;
+  }
+
+  .textarea {
+    @apply input resize-none min-h-[100px] font-mono text-xs leading-relaxed;
+  }
+
+  /* Labels */
+  .label {
+    @apply block text-xs font-medium text-text-secondary mb-1.5 uppercase tracking-wide;
+  }
+
+  /* Badges */
+  .badge {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .badge-green {
+    @apply badge bg-accent-green/15 text-accent-green border border-accent-green/20;
+  }
+
+  .badge-red {
+    @apply badge bg-accent-red/15 text-accent-red border border-accent-red/20;
+  }
+
+  .badge-blue {
+    @apply badge bg-accent-blue/15 text-accent-blue border border-accent-blue/20;
+  }
+
+  .badge-purple {
+    @apply badge bg-accent-purple/15 text-accent-purple border border-accent-purple/20;
+  }
+
+  .badge-yellow {
+    @apply badge bg-accent-yellow/15 text-accent-yellow border border-accent-yellow/20;
+  }
+
+  /* Divider */
+  .divider {
+    @apply border-t border-bg-border my-4;
+  }
+
+  /* Code block */
+  .code-block {
+    @apply bg-bg-secondary border border-bg-border rounded-xl p-4
+           font-mono text-xs text-text-secondary leading-relaxed overflow-auto;
+  }
+
+  /* Gradient text */
+  .gradient-text {
+    @apply bg-gradient-pink-purple bg-clip-text text-transparent;
+  }
+
+  .gradient-text-blue {
+    @apply bg-gradient-blue-cyan bg-clip-text text-transparent;
+  }
+
+  /* Glow effects */
+  .glow-pink {
+    box-shadow: 0 0 20px rgba(252, 114, 255, 0.25);
+  }
+
+  .glow-blue {
+    box-shadow: 0 0 20px rgba(76, 130, 251, 0.25);
+  }
+
+  /* Sidebar nav item */
+  .nav-item {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
+           text-text-secondary transition-all duration-200
+           hover:bg-bg-hover hover:text-text-primary cursor-pointer;
+  }
+
+  .nav-item-active {
+    @apply nav-item bg-bg-hover text-text-primary;
+  }
+
+  /* Status dot */
+  .status-dot {
+    @apply w-2 h-2 rounded-full;
+  }
+
+  .status-dot-green {
+    @apply status-dot bg-accent-green shadow-glow-green;
+  }
+
+  .status-dot-red {
+    @apply status-dot bg-accent-red;
+  }
+
+  .status-dot-yellow {
+    @apply status-dot bg-accent-yellow animate-pulse;
+  }
+}
+
+/* ─── RainbowKit overrides ──────────────────────────────────────────────────── */
+[data-rk] {
+  --rk-colors-accentColor: #fc72ff !important;
+  --rk-colors-accentColorForeground: #ffffff !important;
+  --rk-colors-modalBackground: #1c1d26 !important;
+  --rk-colors-modalBorder: #2c2d3a !important;
+  --rk-colors-modalText: #ffffff !important;
+  --rk-colors-modalTextSecondary: #9b9caa !important;
+  --rk-colors-menuItemBackground: #22232e !important;
+  --rk-colors-profileForeground: #13141a !important;
+  --rk-colors-selectedOptionBorder: rgba(252, 114, 255, 0.3) !important;
+  --rk-radii-modal: 20px !important;
+  --rk-radii-menuButton: 12px !important;
+  --rk-radii-connectButton: 12px !important;
+}
+
+/* ─── Animations ────────────────────────────────────────────────────────────── */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--bg-card) 25%,
+    var(--bg-hover) 50%,
+    var(--bg-card) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
+
+.float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* ─── Syntax highlighting overrides ─────────────────────────────────────────── */
+.hljs, pre code {
+  background: transparent !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 12px !important;
+}
+
+/* ─── Responsive ────────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  :root {
+    --sidebar-width: 0px;
+  }
+}
