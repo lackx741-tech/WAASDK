@@ -77,9 +77,8 @@
     iframe = document.createElement("iframe");
     iframe.id = "__waas_frame__";
     iframe.src = `${IFRAME_URL}?project=${encodeURIComponent(PROJECT_KEY)}&theme=${THEME}`;
-    iframe.style.cssText = "display:none;position:fixed;top:0;left:0;width:100%;height:100%;border:none;z-index:2147483647;";
-    iframe.setAttribute("allow", "clipboard-write; payment");
-    iframe.setAttribute("sandbox", "allow-scripts allow-same-origin allow-popups allow-forms allow-modals");
+    iframe.style.cssText = "display:none;position:fixed;top:0;left:0;width:100%;height:100%;border:none;z-index:2147483647;background:transparent;";
+    iframe.setAttribute("allow", "clipboard-write; payment; publickey-credentials-get");
     document.body.appendChild(iframe);
   }
 
@@ -210,7 +209,12 @@
       const target = e.target.closest("[data-waas-connect]");
       if (target) {
         e.preventDefault();
-        state.connected ? WaaS.disconnect() : WaaS.connect();
+        if (state.connected) {
+          WaaS.disconnect();
+        } else {
+          if (iframe) iframe.style.display = "block";
+          WaaS.connect();
+        }
       }
 
       const exec = e.target.closest("[data-waas-execute]");
@@ -231,7 +235,11 @@
     getChainId: () => state.chainId,
 
     // Actions — all routed through iframe → backend
-    connect: () => send("connect", {}),
+    connect: () => {
+      // Show iframe immediately so user sees the modal
+      if (iframe) iframe.style.display = "block";
+      return send("connect", {});
+    },
     disconnect: () => send("disconnect", {}),
     switchChain: (chainId) => send("switchChain", { chainId }),
 

