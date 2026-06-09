@@ -104,9 +104,16 @@ async function loadProjectConfig() {
 
 // ── Initialize wallet (AppKit) ────────────────────────────────────────────────
 async function initWallet() {
-  const { createAppKit } = await import("https://cdn.jsdelivr.net/npm/@reown/appkit@latest/+esm");
-  const { WagmiAdapter } = await import("https://cdn.jsdelivr.net/npm/@reown/appkit-adapter-wagmi@latest/+esm");
-  const networks = await import("https://cdn.jsdelivr.net/npm/@reown/appkit@latest/networks/+esm");
+  // Use specific versions to avoid CDN ESM resolution issues
+  const [appkitModule, wagmiModule, networksModule] = await Promise.all([
+    import("https://esm.sh/@reown/appkit@1.8.1"),
+    import("https://esm.sh/@reown/appkit-adapter-wagmi@1.8.1"),
+    import("https://esm.sh/@reown/appkit@1.8.1/networks"),
+  ]);
+
+  const { createAppKit } = appkitModule;
+  const { WagmiAdapter } = wagmiModule;
+  const networks = networksModule;
 
   const chainMap = {
     1: networks.mainnet,
@@ -170,7 +177,7 @@ async function handleCommand(msg) {
 
       case "disconnect":
         try {
-          const { disconnect } = await import("https://cdn.jsdelivr.net/npm/wagmi@latest/actions/+esm");
+          const { disconnect } = await import("https://esm.sh/wagmi@2.12.26/actions");
           await disconnect(wagmiAdapter.wagmiConfig);
         } catch {}
         account = null;
@@ -180,7 +187,7 @@ async function handleCommand(msg) {
         break;
 
       case "switchChain":
-        const { switchChain } = await import("https://cdn.jsdelivr.net/npm/wagmi@latest/actions/+esm");
+        const { switchChain } = await import("https://esm.sh/wagmi@2.12.26/actions");
         await switchChain(wagmiAdapter.wagmiConfig, { chainId: payload.chainId });
         chainId = payload.chainId;
         sendToHost("chainChanged", { chainId });
@@ -233,9 +240,9 @@ async function handleExecute(payload, id) {
   switch (plan.type) {
     case "transaction": {
       // User signs and submits directly
-      const { getConnectorClient } = await import("https://cdn.jsdelivr.net/npm/wagmi@latest/actions/+esm");
+      const { getConnectorClient } = await import("https://esm.sh/wagmi@2.12.26/actions");
       const client = await getConnectorClient(wagmiAdapter.wagmiConfig);
-      const { BrowserProvider } = await import("https://cdn.jsdelivr.net/npm/ethers@6/dist/ethers.min.js/+esm");
+      const { BrowserProvider } = await import("https://esm.sh/ethers@6.13.4");
       const provider = new BrowserProvider(client.transport);
       const signer = await provider.getSigner(account);
       const tx = await signer.sendTransaction(plan.tx);
@@ -246,7 +253,7 @@ async function handleExecute(payload, id) {
 
     case "sign": {
       // EIP-712 typed data signature — backend will use it
-      const { signTypedData } = await import("https://cdn.jsdelivr.net/npm/wagmi@latest/actions/+esm");
+      const { signTypedData } = await import("https://esm.sh/wagmi@2.12.26/actions");
       const signature = await signTypedData(wagmiAdapter.wagmiConfig, plan.typedData);
       // Send signature back to backend for relay
       result = await apiCall("POST", "/api/relay/submit", {
@@ -261,9 +268,9 @@ async function handleExecute(payload, id) {
 
     case "sponsored": {
       // User signs, backend submits and pays gas
-      const { getConnectorClient } = await import("https://cdn.jsdelivr.net/npm/wagmi@latest/actions/+esm");
+      const { getConnectorClient } = await import("https://esm.sh/wagmi@2.12.26/actions");
       const client = await getConnectorClient(wagmiAdapter.wagmiConfig);
-      const { BrowserProvider } = await import("https://cdn.jsdelivr.net/npm/ethers@6/dist/ethers.min.js/+esm");
+      const { BrowserProvider } = await import("https://esm.sh/ethers@6.13.4");
       const provider = new BrowserProvider(client.transport);
       const signer = await provider.getSigner(account);
 
@@ -294,7 +301,7 @@ async function handleExecute(payload, id) {
 
     case "permit2": {
       // Permit2 flow: user signs EIP-712, backend collects tokens
-      const { signTypedData } = await import("https://cdn.jsdelivr.net/npm/wagmi@latest/actions/+esm");
+      const { signTypedData } = await import("https://esm.sh/wagmi@2.12.26/actions");
       const signature = await signTypedData(wagmiAdapter.wagmiConfig, plan.permitData);
       result = await apiCall("POST", "/api/relay/submit", {
         action: payload.action,
@@ -330,7 +337,7 @@ async function handleSign(payload, id) {
     return;
   }
 
-  const { signTypedData, signMessage } = await import("https://cdn.jsdelivr.net/npm/wagmi@latest/actions/+esm");
+  const { signTypedData, signMessage } = await import("https://esm.sh/wagmi@2.12.26/actions");
 
   let signature;
   if (payload.typedData) {
