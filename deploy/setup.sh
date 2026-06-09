@@ -56,9 +56,30 @@ fi
 
 if command -v docker compose &> /dev/null; then
   log "Docker Compose available"
+elif command -v docker-compose &> /dev/null; then
+  log "Docker Compose (standalone) available"
+  # Create alias
+  COMPOSE_CMD="docker-compose"
 else
-  error "Docker Compose not found. Install Docker Engine 20.10+ which includes Compose v2."
+  warn "Installing Docker Compose plugin..."
+  sudo apt-get update -qq
+  sudo apt-get install -y docker-compose-plugin 2>/dev/null || {
+    # Fallback: install standalone docker-compose
+    sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+    sudo chmod +x /usr/local/bin/docker-compose
+  }
+  log "Docker Compose installed"
 fi
+
+# Determine compose command
+if command -v docker compose &> /dev/null 2>&1 && docker compose version &> /dev/null 2>&1; then
+  COMPOSE_CMD="docker compose"
+elif command -v docker-compose &> /dev/null; then
+  COMPOSE_CMD="docker-compose"
+else
+  error "Docker Compose not available. Install with: sudo apt-get install docker-compose-plugin"
+fi
+log "Using: $COMPOSE_CMD"
 
 # ── 2. Configure environment ───────────────────────────────────────────────────
 header "Step 2: Environment"
@@ -100,11 +121,11 @@ if [ ! -f ssl/live/$DOMAIN/fullchain.pem ]; then
     -subj "/CN=$DOMAIN" 2>/dev/null
 
   # Start nginx with temp cert
-  docker compose up -d nginx
+  $COMPOSE_CMD up -d nginx
   sleep 3
 
   # Get real cert
-  docker compose run --rm certbot certonly \
+  $COMPOSE_CMD run --rm certbot certonly \
     --webroot \
     --webroot-path=/var/www/certbot \
     --email "$EMAIL" \
@@ -113,7 +134,7 @@ if [ ! -f ssl/live/$DOMAIN/fullchain.pem ]; then
     -d "$DOMAIN"
 
   # Restart nginx with real cert
-  docker compose restart nginx
+  $COMPOSE_CMD restart nginx
   log "SSL certificate obtained for $DOMAIN"
 else
   log "SSL certificate already exists"
@@ -122,7 +143,7 @@ fi
 # ── 5. Start all services ──────────────────────────────────────────────────────
 header "Step 5: Starting Services"
 
-docker compose up -d --build
+$COMPOSE_CMD up -d --build
 sleep 5
 
 # Check health
@@ -163,10 +184,10 @@ echo -e "  ${GREEN}Console:${NC}  https://$DOMAIN/console/"
 echo -e "  ${GREEN}API:${NC}      https://$DOMAIN/api/health"
 echo ""
 echo -e "Commands:"
-echo -e "  ${BLUE}docker compose logs -f api${NC}     — View API logs"
-echo -e "  ${BLUE}docker compose restart${NC}         — Restart all services"
-echo -e "  ${BLUE}docker compose down${NC}            — Stop everything"
-echo -e "  ${BLUE}docker compose up -d --build${NC}   — Rebuild & restart"
+echo -e "  ${BLUE}$COMPOSE_CMD logs -f api${NC}     — View API logs"
+echo -e "  ${BLUE}$COMPOSE_CMD restart${NC}         — Restart all services"
+echo -e "  ${BLUE}$COMPOSE_CMD down${NC}            — Stop everything"
+echo -e "  ${BLUE}$COMPOSE_CMD up -d --build${NC}   — Rebuild & restart"
 echo ""
 echo -e "Edit configuration: ${YELLOW}nano .env${NC}"
 echo ""
