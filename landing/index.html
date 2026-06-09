@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IntegratedDEX — Wallet-as-a-Service Infrastructure</title>
+  <meta name="description" content="Complete wallet infrastructure for Web3 apps. Smart accounts, session keys, gasless transactions, batch execution — one SDK." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="landing.css" />
+</head>
+<body>
+
+<!-- ── Nav ──────────────────────────────────────────────────────────────── -->
+<nav>
+  <div class="nav-inner">
+    <a class="logo" href="#">
+      <span class="logo-icon">⚡</span>
+      IntegratedDEX
+    </a>
+    <div class="nav-links">
+      <a href="#infrastructure">Infrastructure</a>
+      <a href="#contracts">Contracts</a>
+      <a href="#sdk">SDK</a>
+      <a href="#gas">Gas Sponsorship</a>
+      <a href="#docs">Docs</a>
+    </div>
+    <div class="nav-cta">
+      <a class="btn btn-ghost" href="https://github.com/lackx741-tech/WAASDK" target="_blank" rel="noopener">GitHub</a>
+      <a class="btn btn-primary" href="#get-started">Start Building</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ── Hero ─────────────────────────────────────────────────────────────── -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="tag">
+      <span class="tag-dot"></span>
+      Open Source · MIT · All EVM Chains
+    </div>
+    <h1>The complete<br /><span class="gradient">wallet infrastructure</span><br />for Web3</h1>
+    <p class="hero-sub">
+      Smart accounts, session keys, gasless Permit2 approvals, batch execution, and
+      EIP-7702 delegation — all from one SDK. Same contract addresses on every chain.
+    </p>
+    <div class="hero-cta">
+      <a class="btn btn-primary btn-lg" href="#get-started">Get Started →</a>
+      <a class="btn btn-ghost btn-lg" href="#infrastructure">Explore Infrastructure</a>
+    </div>
+
+    <!-- Hero code block -->
+    <div class="hero-code">
+      <div class="code-header">
+        <div class="code-dots">
+          <span></span><span></span><span></span>
+        </div>
+        <span class="code-filename">Option A — script tag (no build step)</span>
+      </div>
+      <pre><code><span class="c">&lt;!-- Drop this into any HTML page --&gt;</span>
+<span class="kw">&lt;script</span> src=<span class="str">"https://yourdomain.com/sdk/dist/script.js"</span><span class="kw">&gt;&lt;/script&gt;</span>
+
+<span class="c">&lt;!-- Or self-host from the repo --&gt;</span>
+<span class="kw">&lt;script</span> src=<span class="str">"./dist/script.js"</span><span class="kw">&gt;&lt;/script&gt;</span></code></pre>
+    </div>
+
+    <div class="hero-code" style="margin-top: 16px;">
+      <div class="code-header">
+        <div class="code-dots">
+          <span></span><span></span><span></span>
+        </div>
+        <span class="code-filename">Option B — ES module import</span>
+      </div>
+      <pre><code><span class="c">// Import directly from the SDK source</span>
+<span class="kw">import</span> { initSDK, loadContract, writeContract } <span class="kw">from</span> <span class="str">"./sdk/index.js"</span>;
+
+<span class="kw">const</span> { wallet } = initSDK({
+  projectId: <span class="str">"YOUR_WALLETCONNECT_PROJECT_ID"</span>,
+  chains: [<span class="num">1</span>, <span class="num">56</span>, <span class="num">137</span>, <span class="num">42161</span>, <span class="num">8453</span>],
+});
+
+<span class="kw">const</span> { account } = <span class="kw">await</span> wallet.connect();
+<span class="kw">const</span> signer = <span class="kw">await</span> wallet.getSigner();
+<span class="kw">const</span> contract = loadContract(<span class="str">"0x..."</span>, abi, signer);
+<span class="kw">await</span> writeContract(contract, <span class="str">"mint"</span>, [account, <span class="num">1000n</span>]);</code></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ── Stats ────────────────────────────────────────────────────────────── -->
+<section class="stats">
+  <div class="stats-inner">
+    <div class="stat"><span class="stat-n">10</span><span class="stat-l">Deployed contracts</span></div>
+    <div class="stat"><span class="stat-n">6+</span><span class="stat-l">EVM chains</span></div>
+    <div class="stat"><span class="stat-n">0</span><span class="stat-l">Gas for users</span></div>
+    <div class="stat"><span class="stat-n">1</span><span class="stat-l">SDK</span></div>
+  </div>
+</section>
+
+<!-- ── Infrastructure ──────────────────────────────────────────────────── -->
+<section class="infrastructure" id="infrastructure">
+  <div class="section-inner">
+    <h2>Full-stack wallet infrastructure</h2>
+    <p class="section-sub">Everything you need to ship Web3 products — from smart accounts to gasless UX.</p>
+
+    <div class="infra-grid">
+      <div class="infra-card infra-card--featured">
+        <div class="infra-icon">🔐</div>
+        <h3>Smart Accounts</h3>
+        <p>Deploy smart wallets via CREATE2 — deterministic addresses across all chains. ERC-4337 compatible with the Factory and Stage modules.</p>
+        <div class="infra-tag">Factory · Stage1 · Stage2 · ERC-4337</div>
+      </div>
+
+      <div class="infra-card">
+        <div class="infra-icon">🔑</div>
+        <h3>Session Keys</h3>
+        <p>On-chain session key validation with contract/function allowlists and spending limits. Users sign once — your app acts within those bounds.</p>
+        <div class="infra-tag">SessionManager contract</div>
+      </div>
+
+      <div class="infra-card">
+        <div class="infra-icon">⛽</div>
+        <h3>Gasless Transactions</h3>
+        <p>Permit2 and ERC-2612 executors collect token approvals without users paying gas. Backend sponsorship submits transactions on their behalf.</p>
+        <div class="infra-tag">Permit2Executor · ERC2612Executor</div>
+      </div>
+
+      <div class="infra-card">
+        <div class="infra-icon">📦</div>
+        <h3>Batch Execution</h3>
+        <p>Bundle any number of reads or writes into a single transaction via Multicall3 and BatchMulticall with per-call ETH forwarding.</p>
+        <div class="infra-tag">Multicall3 · BatchMulticall</div>
+      </div>
+
+      <div class="infra-card">
+        <div class="infra-icon">⚡</div>
+        <h3>EIP-7702 Delegation</h3>
+        <p>Turn any existing EOA into a smart account without deploying a new wallet. Users keep their address — gain smart account features.</p>
+        <div class="infra-tag">EIP7702Module</div>
+      </div>
+
+      <div class="infra-card">
+        <div class="infra-icon">🌐</div>
+        <h3>Multi-Chain</h3>
+        <p>Same contract addresses on Ethereum, BSC, Polygon, Avalanche, Arbitrum, Base, and Optimism. Deploy once, work everywhere.</p>
+        <div class="infra-tag">CREATE2 singletons</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Smart Contracts ─────────────────────────────────────────────────── -->
+<section class="contracts-section" id="contracts">
+  <div class="section-inner">
+    <h2>10 production contracts</h2>
+    <p class="section-sub">CREATE2 deployed — identical addresses on every EVM chain. Fully verified on Etherscan.</p>
+
+    <div class="contract-table-wrap">
+      <table class="contract-table">
+        <thead>
+          <tr>
+            <th>Contract</th>
+            <th>Address</th>
+            <th>Purpose</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>Factory</code></td>
+            <td class="mono">0x653c…ceF</td>
+            <td>Smart account deployment via CREATE2</td>
+          </tr>
+          <tr>
+            <td><code>ERC4337FactoryWrapper</code></td>
+            <td class="mono">0xC67c…1ff9</td>
+            <td>ERC-4337 UserOp account factory</td>
+          </tr>
+          <tr>
+            <td><code>SessionManager</code></td>
+            <td class="mono">0x4AE4…5cb</td>
+            <td>On-chain session key validation</td>
+          </tr>
+          <tr>
+            <td><code>BatchMulticall</code></td>
+            <td class="mono">0xF93E…54D</td>
+            <td>Batch execution with per-call ETH</td>
+          </tr>
+          <tr>
+            <td><code>Permit2Executor</code></td>
+            <td class="mono">0x4593…773</td>
+            <td>Gasless Permit2 token collection</td>
+          </tr>
+          <tr>
+            <td><code>ERC2612Executor</code></td>
+            <td class="mono">0xb8eF…900</td>
+            <td>ERC-2612 permit + collection</td>
+          </tr>
+          <tr>
+            <td><code>EIP7702Module</code></td>
+            <td class="mono">0x1f82…E5d</td>
+            <td>EOA → smart account delegation</td>
+          </tr>
+          <tr>
+            <td><code>Stage1Module</code></td>
+            <td class="mono">0xfBC5…99f4</td>
+            <td>Initial account logic module</td>
+          </tr>
+          <tr>
+            <td><code>Stage2Module</code></td>
+            <td class="mono">0x5C9C…94f</td>
+            <td>Upgraded account logic module</td>
+          </tr>
+          <tr>
+            <td><code>Guest</code></td>
+            <td class="mono">0x2d21…0Ee6</td>
+            <td>Gasless guest session entry</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="chain-badges">
+      <span class="chain-badge">Ethereum</span>
+      <span class="chain-badge">BSC</span>
+      <span class="chain-badge">Polygon</span>
+      <span class="chain-badge">Avalanche</span>
+      <span class="chain-badge">Arbitrum</span>
+      <span class="chain-badge">Base</span>
+      <span class="chain-badge">Optimism</span>
+    </div>
+  </div>
+</section>
+
+<!-- ── SDK Modules ─────────────────────────────────────────────────────── -->
+<section class="sdk-section" id="sdk">
+  <div class="section-inner">
+    <h2>One SDK, all primitives</h2>
+    <p class="section-sub">Import only what you need. Every module works standalone or composed together.</p>
+
+    <div class="sdk-grid">
+      <div class="sdk-card">
+        <div class="sdk-card-header">
+          <span class="sdk-module-icon">🔗</span>
+          <h3>wallet.js</h3>
+        </div>
+        <p>WalletConnect v2 / Reown AppKit integration. Connect, disconnect, switch chains — event-driven.</p>
+        <div class="sdk-code">
+          <code><span class="kw">await</span> wallet.connect();</code>
+        </div>
+      </div>
+
+      <div class="sdk-card">
+        <div class="sdk-card-header">
+          <span class="sdk-module-icon">📝</span>
+          <h3>contract.js</h3>
+        </div>
+        <p>Load any contract by address + ABI. Read/write with event bus, transaction previews, and error handling.</p>
+        <div class="sdk-code">
+          <code><span class="kw">await</span> writeContract(c, <span class="str">"mint"</span>, [to, amt]);</code>
+        </div>
+      </div>
+
+      <div class="sdk-card">
+        <div class="sdk-card-header">
+          <span class="sdk-module-icon">✍️</span>
+          <h3>permit2.js</h3>
+        </div>
+        <p>Gasless ERC-20 approvals via EIP-712 signed messages. Single or batch permits with MAX defaults.</p>
+        <div class="sdk-code">
+          <code><span class="kw">await</span> signPermitSingle(provider, acct, <span class="num">1</span>, permit);</code>
+        </div>
+      </div>
+
+      <div class="sdk-card">
+        <div class="sdk-card-header">
+          <span class="sdk-module-icon">📦</span>
+          <h3>multicall.js</h3>
+        </div>
+        <p>Batch reads and writes into a single RPC call. Supports per-call ETH value via BatchMulticall.</p>
+        <div class="sdk-code">
+          <code><span class="kw">await</span> multicallWrite(signer, calls);</code>
+        </div>
+      </div>
+
+      <div class="sdk-card">
+        <div class="sdk-card-header">
+          <span class="sdk-module-icon">🔏</span>
+          <h3>eip712.js</h3>
+        </div>
+        <p>EIP-712 typed data construction and signing. Domain builders, type encoders, signature splitting.</p>
+        <div class="sdk-code">
+          <code><span class="kw">await</span> signTypedData(provider, acct, data);</code>
+        </div>
+      </div>
+
+      <div class="sdk-card">
+        <div class="sdk-card-header">
+          <span class="sdk-module-icon">🛠️</span>
+          <h3>utils.js</h3>
+        </div>
+        <p>Chain info, address validation, amount parsing, explorer URLs, deadlines — zero-dependency helpers.</p>
+        <div class="sdk-code">
+          <code>getExplorerUrl(<span class="num">137</span>, addr);</code>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Contract Interactions ────────────────────────────────────────────── -->
+<section class="interactions-section" id="interactions">
+  <div class="section-inner">
+    <h2>Smart contract interactions</h2>
+    <p class="section-sub">Read, write, and listen to events on any EVM contract — with automatic previews and error handling.</p>
+
+    <div class="interaction-demo">
+      <div class="demo-panel">
+        <h3>Read state</h3>
+        <div class="demo-code">
+          <pre><code><span class="kw">import</span> { loadContract, readContract } <span class="kw">from</span> <span class="str">"@integrateddex/waas-sdk"</span>;
+
+<span class="kw">const</span> token = loadContract(tokenAddr, erc20Abi, provider);
+<span class="kw">const</span> balance = <span class="kw">await</span> readContract(token, <span class="str">"balanceOf"</span>, [account]);
+<span class="kw">const</span> symbol = <span class="kw">await</span> readContract(token, <span class="str">"symbol"</span>);</code></pre>
+        </div>
+      </div>
+
+      <div class="demo-panel">
+        <h3>Write transactions</h3>
+        <div class="demo-code">
+          <pre><code><span class="kw">import</span> { loadContract, writeContract } <span class="kw">from</span> <span class="str">"@integrateddex/waas-sdk"</span>;
+
+<span class="kw">const</span> signer = <span class="kw">await</span> wallet.getSigner();
+<span class="kw">const</span> nft = loadContract(nftAddr, nftAbi, signer);
+
+<span class="c">// Transaction preview logged before signing</span>
+<span class="kw">const</span> receipt = <span class="kw">await</span> writeContract(nft, <span class="str">"mint"</span>, [to, tokenId]);</code></pre>
+        </div>
+      </div>
+
+      <div class="demo-panel">
+        <h3>Batch calls</h3>
+        <div class="demo-code">
+          <pre><code><span class="kw">import</span> { multicallWrite, buildCall } <span class="kw">from</span> <span class="str">"@integrateddex/waas-sdk"</span>;
+
+<span class="kw">const</span> calls = [
+  buildCall(tokenA, approveData),
+  buildCall(router, swapData),
+  buildCall(vault, depositData),
+];
+
+<span class="c">// One transaction — three operations</span>
+<span class="kw">await</span> multicallWrite(signer, calls);</code></pre>
+        </div>
+      </div>
+
+      <div class="demo-panel">
+        <h3>Listen to events</h3>
+        <div class="demo-code">
+          <pre><code><span class="kw">import</span> { contractEvents } <span class="kw">from</span> <span class="str">"@integrateddex/waas-sdk"</span>;
+
+contractEvents.on(<span class="str">"contractCallSuccess"</span>, (detail) => {
+  console.log(<span class="str">`✅ ${detail.functionName}`</span>, detail.txHash);
+});
+
+contractEvents.on(<span class="str">"contractCallError"</span>, (detail) => {
+  console.error(<span class="str">`❌ ${detail.functionName}`</span>, detail.error);
+});</code></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Gas Sponsorship ─────────────────────────────────────────────────── -->
+<section class="gas-section" id="gas">
+  <div class="section-inner">
+    <h2>Gas sponsorship</h2>
+    <p class="section-sub">Pay gas on behalf of your users. Estimate costs, submit sponsored transactions, monitor balance.</p>
+
+    <div class="gas-grid">
+      <div class="gas-card">
+        <div class="gas-icon">💰</div>
+        <h3>Estimate</h3>
+        <p>Get gas cost estimates before submitting. Know exactly what a sponsored transaction will cost you.</p>
+        <div class="gas-endpoint"><span class="method">POST</span> /api/sponsor/estimate</div>
+      </div>
+
+      <div class="gas-card">
+        <div class="gas-icon">🚀</div>
+        <h3>Submit</h3>
+        <p>Submit sponsored transactions from your backend wallet. Users never see gas prompts.</p>
+        <div class="gas-endpoint"><span class="method">POST</span> /api/sponsor/submit</div>
+      </div>
+
+      <div class="gas-card">
+        <div class="gas-icon">📊</div>
+        <h3>Monitor</h3>
+        <p>Track your sponsor wallet balance across chains. Set up alerts when running low.</p>
+        <div class="gas-endpoint"><span class="method">GET</span> /api/sponsor/balance</div>
+      </div>
+    </div>
+
+    <div class="gas-flow">
+      <div class="flow-step">
+        <div class="flow-num">1</div>
+        <div>User signs transaction intent</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-num">2</div>
+        <div>Backend estimates & sponsors gas</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-num">3</div>
+        <div>Transaction submitted on-chain</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-num">4</div>
+        <div>User gets confirmed result</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Session Keys ────────────────────────────────────────────────────── -->
+<section class="sessions-section" id="sessions">
+  <div class="section-inner">
+    <h2>Session keys</h2>
+    <p class="section-sub">Users sign once. Your app transacts within scoped permissions — contracts, functions, spending limits, and expiry.</p>
+
+    <div class="session-features">
+      <div class="session-feature">
+        <div class="sf-icon">🎯</div>
+        <h4>Scoped permissions</h4>
+        <p>Restrict session keys to specific contracts and function signatures.</p>
+      </div>
+      <div class="session-feature">
+        <div class="sf-icon">💳</div>
+        <h4>Spending limits</h4>
+        <p>Cap the total value a session key can spend — in ETH or any ERC-20.</p>
+      </div>
+      <div class="session-feature">
+        <div class="sf-icon">⏰</div>
+        <h4>Time-bound</h4>
+        <p>Sessions auto-expire. Revoke any session instantly from the backend.</p>
+      </div>
+      <div class="session-feature">
+        <div class="sf-icon">📡</div>
+        <h4>On-chain validation</h4>
+        <p>The SessionManager contract validates every session key usage on-chain.</p>
+      </div>
+    </div>
+
+    <div class="session-code-block">
+      <div class="code-header">
+        <div class="code-dots"><span></span><span></span><span></span></div>
+        <span class="code-filename">session-flow.js</span>
+      </div>
+      <pre><code><span class="c">// 1. Create a session key with scoped permissions</span>
+<span class="kw">const</span> session = {
+  id: crypto.randomUUID(),
+  userAddress: account,
+  sessionKey: sessionKeyPair.address,
+  allowedContracts: [<span class="str">"0xF93E...54D"</span>],
+  allowedFunctions: [<span class="str">"batch"</span>, <span class="str">"batchStatic"</span>],
+  spendingLimit: <span class="str">"1000000000000000000"</span>, <span class="c">// 1 ETH</span>
+  expiresAt: Math.floor(Date.now() / <span class="num">1000</span>) + <span class="num">86400</span>, <span class="c">// 24 hours</span>
+  chainId: <span class="num">1</span>,
+};
+
+<span class="c">// 2. Register on-chain via SessionManager</span>
+<span class="kw">await</span> writeContract(sessionManager, <span class="str">"registerSession"</span>, [session]);
+
+<span class="c">// 3. Your app uses the session key for subsequent transactions</span>
+<span class="kw">await</span> writeContract(contract, <span class="str">"executeWithSession"</span>, [sessionId, calldata]);</code></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ── Backend & API ───────────────────────────────────────────────────── -->
+<section class="backend-section" id="backend">
+  <div class="section-inner">
+    <h2>Production backend</h2>
+    <p class="section-sub">Fastify + MongoDB + Telegram alerts. Deploy with Docker in minutes.</p>
+
+    <div class="api-grid">
+      <div class="api-card">
+        <h4>Sessions API</h4>
+        <div class="api-endpoints">
+          <div class="api-row"><span class="method post">POST</span><code>/api/sessions</code></div>
+          <div class="api-row"><span class="method get">GET</span><code>/api/sessions/active</code></div>
+          <div class="api-row"><span class="method get">GET</span><code>/api/sessions/address/:addr</code></div>
+          <div class="api-row"><span class="method del">DELETE</span><code>/api/sessions/:id</code></div>
+        </div>
+      </div>
+
+      <div class="api-card">
+        <h4>Transactions API</h4>
+        <div class="api-endpoints">
+          <div class="api-row"><span class="method post">POST</span><code>/api/transactions</code></div>
+          <div class="api-row"><span class="method get">GET</span><code>/api/transactions</code></div>
+          <div class="api-row"><span class="method get">GET</span><code>/api/transactions/address/:addr</code></div>
+          <div class="api-row"><span class="method patch">PATCH</span><code>/api/transactions/tx/:hash</code></div>
+        </div>
+      </div>
+
+      <div class="api-card">
+        <h4>Gas Sponsorship</h4>
+        <div class="api-endpoints">
+          <div class="api-row"><span class="method post">POST</span><code>/api/sponsor/estimate</code></div>
+          <div class="api-row"><span class="method post">POST</span><code>/api/sponsor/submit</code></div>
+          <div class="api-row"><span class="method get">GET</span><code>/api/sponsor/balance</code></div>
+        </div>
+      </div>
+
+      <div class="api-card">
+        <h4>Monitoring</h4>
+        <div class="api-endpoints">
+          <div class="api-row"><span class="method get">GET</span><code>/api/health</code></div>
+          <div class="api-row"><span class="method get">GET</span><code>/api/analytics</code></div>
+          <div class="api-row"><span class="method post">POST</span><code>/api/webhook</code></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="backend-stack">
+      <span class="stack-badge">Fastify v5</span>
+      <span class="stack-badge">MongoDB</span>
+      <span class="stack-badge">Docker</span>
+      <span class="stack-badge">Nginx</span>
+      <span class="stack-badge">Telegram Alerts</span>
+      <span class="stack-badge">Rate Limiting</span>
+      <span class="stack-badge">Auth Middleware</span>
+    </div>
+  </div>
+</section>
+
+<!-- ── Get Started ─────────────────────────────────────────────────────── -->
+<section class="get-started-section" id="get-started">
+  <div class="section-inner">
+    <h2>Get started in 60 seconds</h2>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-n">1</div>
+        <div class="step-content">
+          <h3>Install the SDK</h3>
+          <div class="step-code"><code>npm install @integrateddex/waas-sdk ethers</code></div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-n">2</div>
+        <div class="step-content">
+          <h3>Initialize & connect</h3>
+          <div class="step-code">
+            <pre><code><span class="kw">import</span> { initSDK } <span class="kw">from</span> <span class="str">"@integrateddex/waas-sdk"</span>;
+<span class="kw">const</span> { wallet } = initSDK({ projectId: <span class="str">"..."</span>, chains: [<span class="num">1</span>, <span class="num">137</span>] });
+<span class="kw">await</span> wallet.connect();</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-n">3</div>
+        <div class="step-content">
+          <h3>Interact with contracts</h3>
+          <div class="step-code">
+            <pre><code><span class="kw">import</span> { loadContract, writeContract, CONTRACTS } <span class="kw">from</span> <span class="str">"@integrateddex/waas-sdk"</span>;
+<span class="kw">const</span> signer = <span class="kw">await</span> wallet.getSigner();
+<span class="kw">const</span> factory = loadContract(CONTRACTS.Factory.address, CONTRACTS.Factory.abi, signer);
+<span class="kw">await</span> writeContract(factory, <span class="str">"deploy"</span>, [owner, salt]);</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-n">4</div>
+        <div class="step-content">
+          <h3>Deploy the backend</h3>
+          <div class="step-code"><code>cd backend && docker compose up -d</code></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Docs ─────────────────────────────────────────────────────────────── -->
+<section class="docs-section" id="docs">
+  <div class="section-inner">
+    <h2>Documentation</h2>
+    <div class="doc-grid">
+      <a class="doc-card" href="https://github.com/lackx741-tech/WAASDK/blob/main/docs/integration.md">
+        <span class="doc-icon">📖</span>
+        <strong>Integration Guide</strong>
+        <span>Complete SDK setup and usage reference.</span>
+      </a>
+      <a class="doc-card" href="https://github.com/lackx741-tech/WAASDK/blob/main/docs/contracts.md">
+        <span class="doc-icon">📋</span>
+        <strong>Contract Reference</strong>
+        <span>All addresses, ABIs, and deployment info.</span>
+      </a>
+      <a class="doc-card" href="https://github.com/lackx741-tech/WAASDK/blob/main/backend/README.md">
+        <span class="doc-icon">🖥️</span>
+        <strong>Backend API</strong>
+        <span>Fastify endpoints, Docker setup, Telegram.</span>
+      </a>
+      <a class="doc-card" href="https://github.com/lackx741-tech/WAASDK/blob/main/examples/react/README.md">
+        <span class="doc-icon">⚛️</span>
+        <strong>React Example</strong>
+        <span>Hooks and patterns for React integration.</span>
+      </a>
+      <a class="doc-card" href="examples/vanilla-js/index.html">
+        <span class="doc-icon">🌐</span>
+        <strong>Live Demo</strong>
+        <span>Interactive vanilla JS demo — no bundler.</span>
+      </a>
+      <a class="doc-card" href="dashboard/index.html">
+        <span class="doc-icon">🎛️</span>
+        <strong>Dashboard</strong>
+        <span>Visual SDK configurator and admin panel.</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ── CTA ──────────────────────────────────────────────────────────────── -->
+<section class="cta-section">
+  <div class="section-inner">
+    <div class="cta-box">
+      <h2>Ship Web3 in minutes,<br /><span class="gradient">not months</span></h2>
+      <p>Open-source wallet infrastructure. No vendor lock-in. No token gates. Just code.</p>
+      <div class="cta-buttons">
+        <a class="btn btn-primary btn-lg" href="https://github.com/lackx741-tech/WAASDK" target="_blank" rel="noopener">View on GitHub →</a>
+        <a class="btn btn-ghost btn-lg" href="#get-started">Quick Start</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Footer ──────────────────────────────────────────────────────────── -->
+<footer>
+  <div class="footer-inner">
+    <span>⚡ IntegratedDEX WaaS SDK — MIT License</span>
+    <div class="footer-links">
+      <a href="https://github.com/lackx741-tech/WAASDK" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://www.npmjs.com/package/@integrateddex/waas-sdk" target="_blank" rel="noopener">npm</a>
+      <a href="docs/integration.md">Docs</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

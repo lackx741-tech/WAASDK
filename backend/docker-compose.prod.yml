@@ -1,0 +1,78 @@
+## Production Docker Compose — WAASDK Backend
+## Usage:
+##   cp .env.example .env   # fill in real values
+##   docker compose -f docker-compose.prod.yml up -d
+##
+## Includes: API, MongoDB with auth, Nginx reverse proxy with SSL
+
+services:
+  # ── API Server ──────────────────────────────────────────────────────────────
+  api:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - NODE_ENV=production
+      - MONGODB_URI=mongodb://waassdk_user:${MONGO_PASSWORD}@mongo:27017/waassdk?authSource=waassdk
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # ── MongoDB with Authentication ─────────────────────────────────────────────
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ADMIN_PASSWORD}
+      MONGO_INITDB_DATABASE: waassdk
+    volumes:
+      - mongo_data:/data/db
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/init.js:ro
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD", "mongosh", "-u", "admin", "-p", "${MONGO_ADMIN_PASSWORD}", "--authenticationDatabase", "admin", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Nginx Reverse Proxy + SSL ───────────────────────────────────────────────
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+      - certbot_data:/var/www/certbot:ro
+    depends_on:
+      - api
+    networks:
+      - internal
+
+  # ── Certbot (SSL auto-renewal) ──────────────────────────────────────────────
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - ./ssl:/etc/letsencrypt
+      - certbot_data:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+
+volumes:
+  mongo_data:
+  certbot_data:
+
+networks:
+  internal:
+    driver: bridge

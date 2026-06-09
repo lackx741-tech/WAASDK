@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IntegratedDEX — Console</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="console.css" />
+</head>
+<body>
+
+<!-- ── Auth Screen ─────────────────────────────────────────────────────── -->
+<div id="auth-screen" class="screen active">
+  <div class="auth-container">
+    <div class="auth-logo">⚡ IntegratedDEX</div>
+    <h1 id="auth-title">Sign in to Console</h1>
+    <p class="auth-sub" id="auth-sub">Manage your WaaS infrastructure</p>
+
+    <form id="auth-form" autocomplete="off">
+      <div class="field" id="name-field" style="display:none">
+        <label for="auth-name">Name</label>
+        <input type="text" id="auth-name" placeholder="Your name" />
+      </div>
+      <div class="field">
+        <label for="auth-email">Email</label>
+        <input type="email" id="auth-email" placeholder="you@example.com" required />
+      </div>
+      <div class="field">
+        <label for="auth-password">Password</label>
+        <input type="password" id="auth-password" placeholder="••••••••" required minlength="8" />
+      </div>
+      <button type="submit" class="btn btn-primary btn-full" id="auth-submit">Sign In</button>
+    </form>
+
+    <p class="auth-toggle">
+      <span id="auth-toggle-text">Don't have an account?</span>
+      <a href="#" id="auth-toggle-link">Create one</a>
+    </p>
+
+    <div id="auth-error" class="error-msg" style="display:none"></div>
+  </div>
+</div>
+
+<!-- ── Main Console ────────────────────────────────────────────────────── -->
+<div id="console-screen" class="screen">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">⚡ <span>IntegratedDEX</span></div>
+    <nav class="sidebar-nav">
+      <a href="#" class="nav-item active" data-view="overview">
+        <span class="nav-icon">📊</span> Overview
+      </a>
+      <a href="#" class="nav-item" data-view="projects">
+        <span class="nav-icon">📁</span> Projects
+      </a>
+      <a href="#" class="nav-item" data-view="contracts">
+        <span class="nav-icon">📄</span> Contracts
+      </a>
+      <a href="#" class="nav-item" data-view="sessions">
+        <span class="nav-icon">🔑</span> Sessions
+      </a>
+      <a href="#" class="nav-item" data-view="transactions">
+        <span class="nav-icon">📋</span> Transactions
+      </a>
+      <a href="#" class="nav-item" data-view="gas">
+        <span class="nav-icon">⛽</span> Gas Sponsor
+      </a>
+      <a href="#" class="nav-item" data-view="explorer">
+        <span class="nav-icon">🔍</span> Contract Explorer
+      </a>
+      <a href="#" class="nav-item" data-view="compile">
+        <span class="nav-icon">🚀</span> SDK Compiler
+      </a>
+      <a href="#" class="nav-item" data-view="deploy">
+        <span class="nav-icon">🌐</span> Deploy
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <span id="user-email"></span>
+      </div>
+      <button class="btn-logout" id="logout-btn">Sign Out</button>
+    </div>
+  </aside>
+
+  <!-- Main content area -->
+  <main class="main-content">
+    <!-- Overview -->
+    <div id="view-overview" class="view active">
+      <div class="view-header">
+        <h1>Overview</h1>
+        <p>Your WaaS infrastructure at a glance.</p>
+      </div>
+      <div class="stats-grid" id="overview-stats">
+        <div class="stat-card">
+          <div class="stat-value" id="stat-projects">-</div>
+          <div class="stat-label">Projects</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-sessions">-</div>
+          <div class="stat-label">Active Sessions</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-transactions">-</div>
+          <div class="stat-label">Transactions</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-gas">-</div>
+          <div class="stat-label">Sponsor Balance</div>
+        </div>
+      </div>
+      <div class="card" id="recent-tx-card">
+        <div class="card-header">
+          <h3>Recent Transactions</h3>
+        </div>
+        <div class="card-body" id="recent-tx-body">
+          <p class="empty-state">No transactions yet.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Projects -->
+    <div id="view-projects" class="view">
+      <div class="view-header">
+        <h1>Projects</h1>
+        <button class="btn btn-primary" id="create-project-btn">+ New Project</button>
+      </div>
+      <div id="projects-list" class="cards-grid">
+        <p class="empty-state">No projects yet. Create your first one.</p>
+      </div>
+
+      <!-- Create project modal -->
+      <div id="create-project-modal" class="modal" style="display:none">
+        <div class="modal-content">
+          <h2>Create Project</h2>
+          <form id="create-project-form">
+            <div class="field">
+              <label>Project Name</label>
+              <input type="text" id="project-name" placeholder="My dApp" required />
+            </div>
+            <div class="field">
+              <label>Description</label>
+              <input type="text" id="project-desc" placeholder="Optional description" />
+            </div>
+            <div class="field">
+              <label>Chains</label>
+              <div class="chain-checkboxes">
+                <label class="check-item"><input type="checkbox" value="1" checked /> Ethereum</label>
+                <label class="check-item"><input type="checkbox" value="56" /> BSC</label>
+                <label class="check-item"><input type="checkbox" value="137" /> Polygon</label>
+                <label class="check-item"><input type="checkbox" value="43114" /> Avalanche</label>
+                <label class="check-item"><input type="checkbox" value="42161" /> Arbitrum</label>
+                <label class="check-item"><input type="checkbox" value="8453" /> Base</label>
+              </div>
+            </div>
+            <div class="modal-actions">
+              <button type="button" class="btn btn-ghost" id="cancel-project-btn">Cancel</button>
+              <button type="submit" class="btn btn-primary">Create</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contracts (platform contracts) -->
+    <div id="view-contracts" class="view">
+      <div class="view-header">
+        <h1>Platform Contracts</h1>
+        <p>Your deployed WaaS infrastructure contracts — same address on all chains.</p>
+      </div>
+      <div class="contracts-table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr><th>Contract</th><th>Address</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>Factory</code></td><td class="mono">0x653c0bd75e353f1FFeeb8AC9A510ea30F9064ceF</td><td>Smart account CREATE2 factory</td></tr>
+            <tr><td><code>SessionManager</code></td><td class="mono">0x4AE428352317752a51Ac022C9D2551BcDef785cb</td><td>On-chain session key validation</td></tr>
+            <tr><td><code>BatchMulticall</code></td><td class="mono">0xF93E987DF029e95CdE59c0F5cD447e0a7002054D</td><td>Batch execution with ETH forwarding</td></tr>
+            <tr><td><code>Permit2Executor</code></td><td class="mono">0x4593D97d6E932648fb4425aC2945adaF66927773</td><td>Gasless Permit2 token collection</td></tr>
+            <tr><td><code>ERC2612Executor</code></td><td class="mono">0xb8eF065061bbBF5dCc65083be8CC7B50121AE900</td><td>ERC-2612 permit + collection</td></tr>
+            <tr><td><code>EIP7702Module</code></td><td class="mono">0x1f82E64E694894BACfa441709fC7DD8a30FA3E5d</td><td>EOA → smart account delegation</td></tr>
+            <tr><td><code>ERC4337FactoryWrapper</code></td><td class="mono">0xC67c4793bDb979A1a4cd97311c7644b4f7a31ff9</td><td>ERC-4337 account factory</td></tr>
+            <tr><td><code>Stage1Module</code></td><td class="mono">0xfBC5a55501E747b0c9F82e2866ab2609Fa9b99f4</td><td>Initial account logic</td></tr>
+            <tr><td><code>Stage2Module</code></td><td class="mono">0x5C9C4AD7b287D37a37d267089e752236f368f94f</td><td>Upgraded account logic</td></tr>
+            <tr><td><code>Guest</code></td><td class="mono">0x2d21Ce2fBe0BAD8022BaE10B5C22eA69fE930Ee6</td><td>Gasless guest sessions</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Sessions -->
+    <div id="view-sessions" class="view">
+      <div class="view-header">
+        <h1>Sessions</h1>
+        <p>Active session keys across all projects.</p>
+      </div>
+      <div id="sessions-content" class="card">
+        <div class="card-body">
+          <p class="empty-state">Connect your backend to view sessions.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Transactions -->
+    <div id="view-transactions" class="view">
+      <div class="view-header">
+        <h1>Transactions</h1>
+        <p>All transactions logged through your infrastructure.</p>
+      </div>
+      <div id="tx-content" class="card">
+        <div class="card-body">
+          <p class="empty-state">No transactions recorded yet.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gas Sponsor -->
+    <div id="view-gas" class="view">
+      <div class="view-header">
+        <h1>Gas Sponsorship</h1>
+        <p>Fund and monitor your gas relayer wallet.</p>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-value" id="gas-balance">-</div>
+          <div class="stat-label">Sponsor Balance (ETH)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="gas-address">-</div>
+          <div class="stat-label">Relayer Address</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3>Estimate Gas</h3></div>
+        <div class="card-body">
+          <form id="gas-estimate-form">
+            <div class="field">
+              <label>To Address</label>
+              <input type="text" id="gas-to" placeholder="0x..." />
+            </div>
+            <div class="field">
+              <label>Calldata (hex)</label>
+              <input type="text" id="gas-data" placeholder="0x..." />
+            </div>
+            <div class="field">
+              <label>Chain</label>
+              <select id="gas-chain">
+                <option value="1">Ethereum</option>
+                <option value="56">BSC</option>
+                <option value="137">Polygon</option>
+              </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Estimate</button>
+          </form>
+          <div id="gas-estimate-result" style="margin-top:16px"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contract Explorer -->
+    <div id="view-explorer" class="view">
+      <div class="view-header">
+        <h1>Contract Explorer</h1>
+        <p>Read and write to any contract on-chain.</p>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <div class="field">
+            <label>Contract Address</label>
+            <input type="text" id="explorer-address" placeholder="0x..." />
+          </div>
+          <div class="field">
+            <label>ABI (paste JSON)</label>
+            <textarea id="explorer-abi" rows="5" placeholder='[{"name":"balanceOf","type":"function",...}]'></textarea>
+          </div>
+          <div class="field">
+            <label>Chain</label>
+            <select id="explorer-chain">
+              <option value="1">Ethereum</option>
+              <option value="56">BSC</option>
+              <option value="137">Polygon</option>
+              <option value="42161">Arbitrum</option>
+              <option value="8453">Base</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" id="explorer-load-btn">Load Contract</button>
+        </div>
+      </div>
+      <div id="explorer-functions" style="display:none">
+        <div class="card">
+          <div class="card-header"><h3>Functions</h3></div>
+          <div class="card-body" id="explorer-fn-list"></div>
+        </div>
+      </div>
+      <div id="explorer-result" class="card" style="display:none">
+        <div class="card-header"><h3>Result</h3></div>
+        <div class="card-body"><pre id="explorer-result-pre"></pre></div>
+      </div>
+    </div>
+
+    <!-- SDK Compiler -->
+    <div id="view-compile" class="view">
+      <div class="view-header">
+        <h1>SDK Compiler</h1>
+        <p>Configure and generate a deployable SDK script for any project.</p>
+      </div>
+
+      <!-- Compile Config -->
+      <div class="compile-grid">
+        <div class="card">
+          <div class="card-header"><h3>⚙️ General</h3></div>
+          <div class="card-body">
+            <div class="field">
+              <label>App Name</label>
+              <input type="text" id="compile-app-name" placeholder="My dApp" value="IntegratedDEX" />
+            </div>
+            <div class="field">
+              <label>WalletConnect Project ID</label>
+              <input type="text" id="compile-project-id" placeholder="Get from cloud.reown.com" />
+            </div>
+            <div class="field">
+              <label>Chains</label>
+              <div class="chain-checkboxes" id="compile-chains">
+                <label class="check-item"><input type="checkbox" value="1" checked /> Ethereum</label>
+                <label class="check-item"><input type="checkbox" value="56" /> BSC</label>
+                <label class="check-item"><input type="checkbox" value="137" /> Polygon</label>
+                <label class="check-item"><input type="checkbox" value="43114" /> Avalanche</label>
+                <label class="check-item"><input type="checkbox" value="42161" /> Arbitrum</label>
+                <label class="check-item"><input type="checkbox" value="8453" /> Base</label>
+              </div>
+            </div>
+            <div class="field">
+              <label>Theme</label>
+              <select id="compile-theme">
+                <option value="dark">Dark</option>
+                <option value="light">Light</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><h3>📄 Contract</h3></div>
+          <div class="card-body">
+            <div class="field">
+              <label>Contract Address</label>
+              <input type="text" id="compile-contract" placeholder="0x..." />
+            </div>
+            <div class="field">
+              <label>ABI (JSON)</label>
+              <textarea id="compile-abi" rows="4" placeholder="Paste ABI here..."></textarea>
+            </div>
+            <div class="field">
+              <label>Primary Function</label>
+              <input type="text" id="compile-function" placeholder="e.g. mint, stake, swap" />
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><h3>🎯 Execution Strategy</h3></div>
+          <div class="card-body">
+            <div class="field">
+              <label>Strategy Mode</label>
+              <select id="compile-strategy">
+                <option value="direct">Direct — normal contract calls</option>
+                <option value="permit2">Permit2 — gasless ERC-20 approvals</option>
+                <option value="multicall">Multicall — batch multiple calls</option>
+                <option value="eip7702">EIP-7702 — EOA delegation</option>
+                <option value="session">Session Keys — scoped permissions</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Gas Sponsorship</label>
+              <select id="compile-gas-mode">
+                <option value="user">User pays gas</option>
+                <option value="sponsored">Backend sponsors gas</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><h3>🎨 UI & Branding</h3></div>
+          <div class="card-body">
+            <div class="field">
+              <label>Connect Button Text</label>
+              <input type="text" id="compile-btn-text" value="Connect Wallet" />
+            </div>
+            <div class="field">
+              <label>Connected Text</label>
+              <input type="text" id="compile-connected-text" value="Connected" />
+            </div>
+            <div class="field">
+              <label>Post-Transaction Action</label>
+              <select id="compile-post-tx">
+                <option value="toast">Show toast notification</option>
+                <option value="refresh">Refresh page</option>
+                <option value="redirect">Redirect to URL</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Compile Output -->
+      <div class="card" style="margin-top:16px">
+        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
+          <h3>Generated Script</h3>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-primary" id="compile-generate-btn">⚡ Generate</button>
+            <button class="btn btn-ghost" id="compile-copy-btn">📋 Copy</button>
+            <button class="btn btn-ghost" id="compile-download-btn">⬇️ Download</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <textarea id="compile-output" readonly rows="12" style="font-family:var(--mono);font-size:.78rem;background:var(--bg2);color:var(--green);border-color:var(--border);width:100%;resize:vertical" placeholder="Click Generate to compile your SDK script..."></textarea>
+        </div>
+      </div>
+
+      <!-- Embed Instructions -->
+      <div class="card" style="margin-top:16px">
+        <div class="card-header"><h3>📋 Embed Instructions</h3></div>
+        <div class="card-body">
+          <pre style="font-family:var(--mono);font-size:.8rem;color:var(--muted);white-space:pre-wrap">&lt;!-- Add to your HTML --&gt;
+&lt;script src="https://cdn.jsdelivr.net/npm/ethers@6/dist/ethers.umd.min.js"&gt;&lt;/script&gt;
+&lt;script type="module" src="script.js"&gt;&lt;/script&gt;
+
+&lt;!-- Use data attributes for zero-JS integration --&gt;
+&lt;button data-waas-connect&gt;Connect Wallet&lt;/button&gt;
+&lt;button data-waas-disconnect&gt;Disconnect&lt;/button&gt;
+&lt;span data-waas-address&gt;&lt;/span&gt;
+&lt;span data-waas-chain&gt;&lt;/span&gt;</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Deploy -->
+    <div id="view-deploy" class="view">
+      <div class="view-header">
+        <h1>Deploy</h1>
+        <p>Deploy your WaaS backend to production.</p>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-value" style="font-size:1.2rem">🐳</div>
+          <div class="stat-label">Docker Ready</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" style="font-size:1.2rem">🔒</div>
+          <div class="stat-label">SSL/HTTPS</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" style="font-size:1.2rem">📡</div>
+          <div class="stat-label">Telegram Alerts</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" style="font-size:1.2rem">⚡</div>
+          <div class="stat-label">Auto-restart</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3>One-Command Deploy</h3></div>
+        <div class="card-body">
+          <p style="color:var(--muted);margin-bottom:16px">SSH into your VPS and run:</p>
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:16px;font-family:var(--mono);font-size:.82rem;color:var(--green);white-space:pre-wrap">git clone https://github.com/lackx741-tech/WAASDK.git
+cd WAASDK/backend
+cp .env.example .env
+# Edit .env with your real values
+nano .env
+# Start everything
+docker compose -f docker-compose.prod.yml up -d</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3>Environment Variables</h3></div>
+        <div class="card-body">
+          <table class="data-table">
+            <thead><tr><th>Variable</th><th>Required</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td><code>API_KEY</code></td><td>✅</td><td>Secret key for legacy API auth</td></tr>
+              <tr><td><code>JWT_SECRET</code></td><td>✅</td><td>Secret for JWT signing (32+ chars)</td></tr>
+              <tr><td><code>MONGODB_URI</code></td><td>✅</td><td>MongoDB connection string</td></tr>
+              <tr><td><code>SPONSOR_PRIVATE_KEY</code></td><td>⚡</td><td>Wallet key for gas sponsorship</td></tr>
+              <tr><td><code>TELEGRAM_BOT_TOKEN</code></td><td>📡</td><td>Telegram bot for alerts</td></tr>
+              <tr><td><code>TELEGRAM_CHAT_ID</code></td><td>📡</td><td>Your Telegram chat ID</td></tr>
+              <tr><td><code>RPC_URL_ETHEREUM</code></td><td>🔗</td><td>Ethereum RPC (Infura/Alchemy)</td></tr>
+              <tr><td><code>ALLOWED_ORIGINS</code></td><td>🌐</td><td>CORS allowed domains</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3>Architecture</h3></div>
+        <div class="card-body">
+          <pre style="font-family:var(--mono);font-size:.8rem;color:var(--muted);white-space:pre-wrap">
+┌─────────────────────────────────────────────────┐
+│              Your Domain (HTTPS)                 │
+│         Nginx reverse proxy + SSL               │
+└─────────────────┬───────────────────────────────┘
+                  │
+                  ▼
+┌─────────────────────────────────────────────────┐
+│           Fastify API (port 3000)               │
+│  Auth · Projects · Sessions · Transactions      │
+│  Gas Sponsor · Analytics · Webhooks             │
+└─────────────────┬───────────────────────────────┘
+                  │
+                  ▼
+┌─────────────────────────────────────────────────┐
+│              MongoDB 7                           │
+│  Users · Projects · Sessions · Transactions     │
+└─────────────────────────────────────────────────┘
+                  │
+                  ▼
+┌─────────────────────────────────────────────────┐
+│           EVM Chains (6+)                       │
+│  Factory · SessionManager · BatchMulticall      │
+│  Permit2Executor · EIP7702Module · ...          │
+└─────────────────────────────────────────────────┘</pre>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Toast -->
+<div id="toast" role="status"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/ethers@6/dist/ethers.umd.min.js"></script>
+<script src="console.js"></script>
+</body>
+</html>

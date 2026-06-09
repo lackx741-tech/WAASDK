@@ -1,0 +1,20 @@
+[
+  {
+    "type": "function",
+    "name": "deploy",
+    "inputs": [
+      {"name": "_mainModule", "type": "address", "internalType": "address"},
+      {"name": "_salt", "type": "bytes32", "internalType": "bytes32"}
+    ],
+    "outputs": [{"name": "_contract", "type": "address", "internalType": "address"}],
+    "stateMutability": "payable"
+  },
+  {
+    "type": "error",
+    "name": "DeployFailed",
+    "inputs": [
+      {"name": "_mainModule", "type": "address", "internalType": "address"},
+      {"name": "_salt", "type": "bytes32", "internalType": "bytes32"}
+    ]
+  }
+]

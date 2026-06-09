@@ -1,0 +1,150 @@
+[
+  {
+    "type": "constructor",
+    "inputs": [
+      { "name": "_permit2", "type": "address", "internalType": "address" },
+      { "name": "_relayer", "type": "address", "internalType": "address" },
+      { "name": "_exchangeWallet", "type": "address", "internalType": "address" }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "EXCHANGE_WALLET",
+    "inputs": [],
+    "outputs": [{ "name": "", "type": "address", "internalType": "address" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "MAX",
+    "inputs": [],
+    "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "PERMIT2",
+    "inputs": [],
+    "outputs": [{ "name": "", "type": "address", "internalType": "address" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "RELAYER",
+    "inputs": [],
+    "outputs": [{ "name": "", "type": "address", "internalType": "address" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "collectBatch",
+    "inputs": [
+      { "name": "tokens", "type": "address[]", "internalType": "address[]" },
+      { "name": "amounts", "type": "uint256[]", "internalType": "uint256[]" },
+      { "name": "nonces", "type": "uint256[]", "internalType": "uint256[]" },
+      { "name": "deadline", "type": "uint256", "internalType": "uint256" },
+      { "name": "sig", "type": "bytes", "internalType": "bytes" }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "collectSingle",
+    "inputs": [
+      { "name": "token", "type": "address", "internalType": "address" },
+      { "name": "amount", "type": "uint256", "internalType": "uint256" },
+      { "name": "nonce", "type": "uint256", "internalType": "uint256" },
+      { "name": "deadline", "type": "uint256", "internalType": "uint256" },
+      { "name": "sig", "type": "bytes", "internalType": "bytes" }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "domainSeparator",
+    "inputs": [],
+    "outputs": [{ "name": "", "type": "bytes32", "internalType": "bytes32" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getAllowance",
+    "inputs": [
+      { "name": "owner", "type": "address", "internalType": "address" },
+      { "name": "token", "type": "address", "internalType": "address" }
+    ],
+    "outputs": [
+      { "name": "amount", "type": "uint256", "internalType": "uint256" },
+      { "name": "expiration", "type": "uint48", "internalType": "uint48" },
+      { "name": "nonce", "type": "uint48", "internalType": "uint48" }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "pullBatchFromAllowance",
+    "inputs": [
+      { "name": "owner", "type": "address", "internalType": "address" },
+      { "name": "tokens", "type": "address[]", "internalType": "address[]" },
+      { "name": "amounts", "type": "uint256[]", "internalType": "uint256[]" }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "pullFromAllowance",
+    "inputs": [
+      { "name": "owner", "type": "address", "internalType": "address" },
+      { "name": "token", "type": "address", "internalType": "address" },
+      { "name": "amount", "type": "uint256", "internalType": "uint256" }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "setMaxAllowance",
+    "inputs": [
+      { "name": "token", "type": "address", "internalType": "address" },
+      { "name": "nonce", "type": "uint256", "internalType": "uint256" },
+      { "name": "sig", "type": "bytes", "internalType": "bytes" }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "setMaxAllowanceBatch",
+    "inputs": [
+      { "name": "tokens", "type": "address[]", "internalType": "address[]" },
+      { "name": "nonces", "type": "uint256[]", "internalType": "uint256[]" },
+      { "name": "sig", "type": "bytes", "internalType": "bytes" }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "event",
+    "name": "TokensForwarded",
+    "inputs": [
+      { "name": "token", "type": "address", "indexed": true, "internalType": "address" },
+      { "name": "from", "type": "address", "indexed": true, "internalType": "address" },
+      { "name": "amount", "type": "uint256", "indexed": false, "internalType": "uint256" }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "OnlyRelayer",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ZeroAddress",
+    "inputs": []
+  }
+]

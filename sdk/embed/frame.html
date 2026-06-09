@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WaaS Frame</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { 
+      font-family: system-ui, -apple-system, sans-serif; 
+      background: transparent;
+      min-height: 100vh;
+    }
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+      align-items: center;
+      justify-content: center;
+      z-index: 999999;
+    }
+    .modal-overlay.active { display: flex; }
+  </style>
+</head>
+<body>
+<div class="modal-overlay" id="modal-overlay"></div>
+
+<script type="module">
+/**
+ * IntegratedDEX WaaS Frame — Secure Execution Context
+ * 
+ * This iframe is the bridge between the host page and the backend.
+ * It handles:
+ *   1. Wallet connection (AppKit lives here, not on host page)
+ *   2. Communication with backend for execution strategy
+ *   3. Transaction signing (user's wallet interacts here)
+ *   4. Relaying results back to host via postMessage
+ *
+ * Flow:
+ *   Host → postMessage("execute") → Frame → fetch(backend/api/relay) → 
+ *   Backend decides strategy → Frame signs with wallet → Backend submits → 
+ *   Frame → postMessage("tx:confirmed") → Host
+ */
+
+// ── Parse config from URL params ──────────────────────────────────────────────
+const params = new URLSearchParams(window.location.search);
+const PROJECT_KEY = params.get("project") || "";
+const THEME = params.get("theme") || "dark";
+const API_BASE = window.location.origin;
+const HOST_ORIGIN = document.referrer ? new URL(document.referrer).origin : "*";
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let projectConfig = null;
+let wallet = null;
+let modal = null;
+let wagmiAdapter = null;
+let account = null;
+let chainId = null;
+
+// ── PostMessage to host ───────────────────────────────────────────────────────
+function sendToHost(type, data, id) {
+  const msg = { source: "waas-frame", type, data };
+  if (id) msg.id = id;
+  parent.postMessage(msg, HOST_ORIGIN);
+}
+
+function respondTo(id, result, error) {
+  const msg = { source: "waas-frame", id };
+  if (error) msg.error = error;
+  else msg.result = result;
+  parent.postMessage(msg, HOST_ORIGIN);
+}
+
+// ── API calls to backend ──────────────────────────────────────────────────────
+async function apiCall(method, path, body) {
+  const headers = { "Content-Type": "application/json", "X-API-Key": PROJECT_KEY };
+  const opts = { method, headers };
+  if (body) opts.body = JSON.stringify(body);
+
+  const res = await fetch(`${API_BASE}${path}`, opts);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || `API error ${res.status}`);
+  }
+  return res.json();
+}
+
+// ── Load project config from backend ──────────────────────────────────────────
+async function loadProjectConfig() {
+  try {
+    // The backend validates the API key and returns safe config
+    // (chains, theme, allowed actions — NOT ABIs or private routing)
+    projectConfig = await apiCall("GET", `/api/sdk/config?key=${encodeURIComponent(PROJECT_KEY)}`);
+    return projectConfig;
+  } catch (e) {
+    console.error("[WaaS Frame] Failed to load project config:", e);
+    // Fallback to defaults
+    projectConfig = { chains: [1], theme: THEME, appName: "WaaS App" };
+    return projectConfig;
+  }
+}
+
+// ── Initialize wallet (AppKit) ────────────────────────────────────────────────
+async function initWallet() {
+  const { createAppKit } = await import("https://cdn.jsdelivr.net/npm/@reown/appkit@latest/+esm");
+  const { WagmiAdapter } = await import("https://cdn.jsdelivr.net/npm/@reown/appkit-adapter-wagmi@latest/+esm");
+  const networks = await import("https://cdn.jsdelivr.net/npm/@reown/appkit@latest/networks/+esm");
+
+  const chainMap = {
+    1: networks.mainnet,
+    56: networks.bsc,
+    137: networks.polygon,
+    43114: networks.avalanche,
+    42161: networks.arbitrum,
+    8453: networks.base,
+    10: networks.optimism,
+  };
+
+  const supportedChains = (projectConfig?.chains || [1]).map(id => chainMap[id]).filter(Boolean);
+  const projectId = projectConfig?.walletConnectId || "5d96428579c2842614d599bb4f8dce0e";
+
+  wagmiAdapter = new WagmiAdapter({ projectId, networks: supportedChains });
+
+  modal = createAppKit({
+    adapters: [wagmiAdapter],
+    networks: supportedChains,
+    projectId,
+    metadata: {
+      name: projectConfig?.appName || "WaaS App",
+      description: projectConfig?.appDescription || "",
+      url: HOST_ORIGIN,
+      icons: [],
+    },
+    themeMode: THEME,
+    features: { analytics: false },
+  });
+
+  // Subscribe to account changes
+  modal.subscribeAccount((acc) => {
+    if (acc.isConnected && acc.address) {
+      const wasConnected = account !== null;
+      account = acc.address;
+      try { chainId = wagmiAdapter.wagmiConfig.state.chainId; } catch {}
+
+      if (!wasConnected) {
+        sendToHost("connect", { account, chainId, balance: null });
+        sendToHost("modal:close");
+      }
+    } else if (account !== null) {
+      account = null;
+      chainId = null;
+      sendToHost("disconnect", {});
+    }
+  });
+}
+
+// ── Handle commands from host ─────────────────────────────────────────────────
+async function handleCommand(msg) {
+  const { type, payload, id } = msg;
+
+  try {
+    switch (type) {
+      case "connect":
+        sendToHost("modal:open");
+        await modal.open();
+        respondTo(id, { success: true });
+        break;
+
+      case "disconnect":
+        try {
+          const { disconnect } = await import("https://cdn.jsdelivr.net/npm/wagmi@latest/actions/+esm");
+          await disconnect(wagmiAdapter.wagmiConfig);
+        } catch {}
+        account = null;
+        chainId = null;
+        sendToHost("disconnect");
+        respondTo(id, { success: true });
+        break;
+
+      case "switchChain":
+        const { switchChain } = await import("https://cdn.jsdelivr.net/npm/wagmi@latest/actions/+esm");
+        await switchChain(wagmiAdapter.wagmiConfig, { chainId: payload.chainId });
+        chainId = payload.chainId;
+        sendToHost("chainChanged", { chainId });
+        respondTo(id, { success: true });
+        break;
+
+      case "execute":
+        await handleExecute(payload, id);
+        break;
+
+      case "sign":
+        await handleSign(payload, id);
+        break;
+
+      default:
+        respondTo(id, null, `Unknown command: ${type}`);
+    }
+  } catch (e) {
+    respondTo(id, null, e.message);
+    sendToHost("error", { message: e.message, type });
+  }
+}
+
+// ── Execute action — backend orchestrates ─────────────────────────────────────
+async function handleExecute(payload, id) {
+  if (!account) {
+    respondTo(id, null, "Wallet not connected");
+    return;
+  }
+
+  // 1. Ask backend what to do (backend holds all routing logic)
+  const plan = await apiCall("POST", "/api/relay/plan", {
+    action: payload.action,
+    params: payload.params,
+    account,
+    chainId,
+  });
+
+  // 2. Backend returns an execution plan — could be:
+  //    - { type: "sign", typedData: {...} }          → EIP-712 signature needed
+  //    - { type: "transaction", tx: {...} }          → Direct transaction
+  //    - { type: "sponsored", tx: {...} }            → Backend will submit after signature
+  //    - { type: "permit2", permitData: {...} }      → Permit2 flow
+  //    - { type: "session", sessionTx: {...} }       → Session key execution (no user sign needed)
+
+  sendToHost("tx:submitted", { action: payload.action, plan: plan.type });
+
+  let result;
+
+  switch (plan.type) {
+    case "transaction": {
+      // User signs and submits directly
+      const { getConnectorClient } = await import("https://cdn.jsdelivr.net/npm/wagmi@latest/actions/+esm");
+      const client = await getConnectorClient(wagmiAdapter.wagmiConfig);
+      const { BrowserProvider } = await import("https://cdn.jsdelivr.net/npm/ethers@6/dist/ethers.min.js/+esm");
+      const provider = new BrowserProvider(client.transport);
+      const signer = await provider.getSigner(account);
+      const tx = await signer.sendTransaction(plan.tx);
+      const receipt = await tx.wait();
+      result = { txHash: receipt.hash, blockNumber: receipt.blockNumber, status: "success" };
+      break;
+    }
+
+    case "sign": {
+      // EIP-712 typed data signature — backend will use it
+      const { signTypedData } = await import("https://cdn.jsdelivr.net/npm/wagmi@latest/actions/+esm");
+      const signature = await signTypedData(wagmiAdapter.wagmiConfig, plan.typedData);
+      // Send signature back to backend for relay
+      result = await apiCall("POST", "/api/relay/submit", {
+        action: payload.action,
+        signature,
+        account,
+        chainId,
+        planId: plan.planId,
+      });
+      break;
+    }
+
+    case "sponsored": {
+      // User signs, backend submits and pays gas
+      const { getConnectorClient } = await import("https://cdn.jsdelivr.net/npm/wagmi@latest/actions/+esm");
+      const client = await getConnectorClient(wagmiAdapter.wagmiConfig);
+      const { BrowserProvider } = await import("https://cdn.jsdelivr.net/npm/ethers@6/dist/ethers.min.js/+esm");
+      const provider = new BrowserProvider(client.transport);
+      const signer = await provider.getSigner(account);
+
+      // Sign the message/tx that backend prepared
+      const signature = await signer.signMessage(plan.message || plan.tx.data);
+      
+      // Backend relays with sponsored gas
+      result = await apiCall("POST", "/api/relay/submit", {
+        action: payload.action,
+        signature,
+        account,
+        chainId,
+        planId: plan.planId,
+      });
+      break;
+    }
+
+    case "session": {
+      // Session key execution — backend handles everything, no user signature needed
+      result = await apiCall("POST", "/api/relay/submit", {
+        action: payload.action,
+        account,
+        chainId,
+        planId: plan.planId,
+      });
+      break;
+    }
+
+    case "permit2": {
+      // Permit2 flow: user signs EIP-712, backend collects tokens
+      const { signTypedData } = await import("https://cdn.jsdelivr.net/npm/wagmi@latest/actions/+esm");
+      const signature = await signTypedData(wagmiAdapter.wagmiConfig, plan.permitData);
+      result = await apiCall("POST", "/api/relay/submit", {
+        action: payload.action,
+        signature,
+        account,
+        chainId,
+        planId: plan.planId,
+      });
+      break;
+    }
+
+    default:
+      throw new Error(`Unknown execution plan type: ${plan.type}`);
+  }
+
+  // 3. Report result to backend for logging
+  await apiCall("POST", "/api/transactions", {
+    txHash: result.txHash,
+    userAddress: account,
+    chainId,
+    functionName: payload.action,
+    status: result.status || "success",
+  }).catch(() => {});
+
+  sendToHost("tx:confirmed", result);
+  respondTo(id, result);
+}
+
+// ── Handle signature requests ─────────────────────────────────────────────────
+async function handleSign(payload, id) {
+  if (!account) {
+    respondTo(id, null, "Wallet not connected");
+    return;
+  }
+
+  const { signTypedData, signMessage } = await import("https://cdn.jsdelivr.net/npm/wagmi@latest/actions/+esm");
+
+  let signature;
+  if (payload.typedData) {
+    signature = await signTypedData(wagmiAdapter.wagmiConfig, payload.typedData);
+  } else if (payload.message) {
+    signature = await signMessage(wagmiAdapter.wagmiConfig, { message: payload.message });
+  } else {
+    respondTo(id, null, "No message or typedData provided");
+    return;
+  }
+
+  respondTo(id, { signature });
+}
+
+// ── Message listener ──────────────────────────────────────────────────────────
+window.addEventListener("message", (event) => {
+  if (event.source !== parent) return;
+  const msg = event.data;
+  if (!msg || msg.source !== "waas-host") return;
+  if (msg.project !== PROJECT_KEY) return;
+
+  handleCommand(msg);
+});
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+async function boot() {
+  await loadProjectConfig();
+  await initWallet();
+  sendToHost("ready", { project: PROJECT_KEY, chains: projectConfig?.chains });
+}
+
+boot().catch(e => {
+  console.error("[WaaS Frame] Boot failed:", e);
+  sendToHost("error", { message: e.message });
+});
+</script>
+</body>
+</html>
