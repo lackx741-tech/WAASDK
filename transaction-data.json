@@ -1,0 +1,216 @@
+{
+  "name": "WAASDK Transaction Data Technical Setup",
+  "version": "1.0.0",
+  "description": "Technical setup reference for configuring, storing, and querying WAASDK transaction data.",
+  "project": {
+    "repository": "lackx741-tech/WAASDK",
+    "sdkPackage": "@integrateddex/waas-sdk",
+    "backendPackage": "waassdk-backend",
+    "runtime": "Node.js >=20",
+    "database": "MongoDB with Mongoose"
+  },
+  "setup": {
+    "root": {
+      "install": "npm install",
+      "development": "npm run dev",
+      "test": "npm test",
+      "lint": "npm run lint",
+      "build": "npm run build"
+    },
+    "backend": {
+      "workingDirectory": "backend",
+      "install": "npm install",
+      "environmentTemplate": "backend/.env.example",
+      "start": "npm start",
+      "development": "npm run dev",
+      "docker": "docker compose up -d"
+    }
+  },
+  "environment": {
+    "required": [
+      {
+        "name": "API_KEY",
+        "description": "Secret value expected in the X-API-Key request header."
+      },
+      {
+        "name": "MONGODB_URI",
+        "description": "MongoDB connection string used by the backend."
+      }
+    ],
+    "optional": [
+      {
+        "name": "PORT",
+        "default": "3000"
+      },
+      {
+        "name": "MONGODB_DB_NAME",
+        "default": "waassdk"
+      },
+      {
+        "name": "TELEGRAM_ALERTS_ENABLED",
+        "default": "true",
+        "format": "environment string",
+        "disabledValues": [
+          "false",
+          "0"
+        ],
+        "parsingRule": "Alerts are disabled only when the value is false or 0; every other value keeps alerts enabled."
+      },
+      {
+        "name": "TELEGRAM_BOT_TOKEN"
+      },
+      {
+        "name": "TELEGRAM_CHAT_ID"
+      }
+    ]
+  },
+  "transactionModel": {
+    "collection": "transactions",
+    "source": "backend/src/models/Transaction.js",
+    "fields": {
+      "txHash": {
+        "type": "string",
+        "required": true,
+        "unique": true,
+        "indexed": true,
+        "standardAlias": "transactionHash",
+        "note": "The backend schema uses txHash; ethers.js and web3.js often call the same value transactionHash."
+      },
+      "userAddress": {
+        "type": "string",
+        "required": true,
+        "indexed": true,
+        "normalized": "lowercase"
+      },
+      "contractAddress": {
+        "type": "string",
+        "normalized": "lowercase"
+      },
+      "functionName": {
+        "type": "string"
+      },
+      "args": {
+        "type": "array<mixed>",
+        "default": []
+      },
+      "value": {
+        "type": "string",
+        "default": "0",
+        "unit": "wei"
+      },
+      "chainId": {
+        "type": "number",
+        "required": true
+      },
+      "status": {
+        "type": "string",
+        "enum": [
+          "pending",
+          "success",
+          "failed"
+        ],
+        "default": "pending",
+        "indexed": true
+      },
+      "gasUsed": {
+        "type": "string"
+      },
+      "sessionKeyUsed": {
+        "type": "string"
+      },
+      "timestamp": {
+        "type": "date",
+        "default": "Date.now",
+        "indexed": true
+      },
+      "blockNumber": {
+        "type": "number"
+      }
+    }
+  },
+  "api": {
+    "authentication": {
+      "header": "X-API-Key",
+      "appliesTo": "All endpoints except GET /api/health"
+    },
+    "basePath": "/api",
+    "endpoints": [
+      {
+        "method": "POST",
+        "path": "/transactions",
+        "description": "Log a new transaction.",
+        "requiredBodyFields": [
+          "txHash",
+          "userAddress",
+          "chainId"
+        ]
+      },
+      {
+        "method": "GET",
+        "path": "/transactions",
+        "description": "List transactions with optional page, limit, status, and chainId filters."
+      },
+      {
+        "method": "GET",
+        "path": "/transactions/address/:address",
+        "description": "List transactions for a single user address."
+      },
+      {
+        "method": "GET",
+        "path": "/transactions/tx/:txHash",
+        "description": "Fetch one transaction by hash."
+      },
+      {
+        "method": "PATCH",
+        "path": "/transactions/tx/:txHash",
+        "description": "Update transaction status, gas used, or block number.",
+        "allowedStatusValues": [
+          "pending",
+          "success",
+          "failed"
+        ]
+      },
+      {
+        "method": "POST",
+        "path": "/webhook/transaction",
+        "description": "Frontend webhook for submitted transactions."
+      }
+    ]
+  },
+  "examplePayload": {
+    "txHash": "0x5c504ed432cb51138bcf09aa5e8a410dd4a1e204ef84bfed1be16dfba1b22060",
+    "userAddress": "0x742d35Cc6634C0532925a3b844Bc454e4438f44e",
+    "contractAddress": "0xF93E987DF029e95CdE59c0F5cD447e0a7002054D",
+    "functionName": "mint",
+    "args": [
+      100
+    ],
+    "value": "100000000000000000",
+    "chainId": 1,
+    "status": "pending",
+    "sessionKeyUsed": "0x1111111111111111111111111111111111111111"
+  },
+  "examplePayloadNotes": {
+    "value": "100000000000000000 wei is equivalent to 0.1 ETH.",
+    "nonStoredFields": "examplePayload contains only fields accepted by the transaction routes and documented in transactionModel.fields."
+  },
+  "validation": {
+    "duplicateHandling": "POST /api/transactions returns 409 when txHash already exists.",
+    "missingRequiredFields": "POST /api/transactions returns 400 when txHash, userAddress, or chainId is missing.",
+    "statusValidation": "PATCH /api/transactions/tx/:txHash accepts pending, success, or failed."
+  },
+  "alerts": {
+    "transactionSent": "Triggered after a transaction is saved.",
+    "telegramConfiguration": [
+      "TELEGRAM_BOT_TOKEN",
+      "TELEGRAM_CHAT_ID",
+      "TELEGRAM_ALERTS_ENABLED"
+    ]
+  },
+  "references": [
+    "backend/README.md",
+    "backend/src/models/Transaction.js",
+    "backend/src/routes/transactions.js",
+    "backend/src/routes/webhook.js"
+  ]
+}
