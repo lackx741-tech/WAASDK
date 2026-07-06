@@ -8,6 +8,9 @@ import EIP7702ModuleABI from "./EIP7702Module.json";
 import BatchMulticallABI from "./BatchMulticall.json";
 import Permit2ExecutorABI from "./Permit2Executor.json";
 import ERC2612ExecutorABI from "./ERC2612Executor.json";
+import OrchestratorABI from "./Orchestrator.json";
+import BatchModuleABI from "./BatchModule.json";
+import SessionKeyModuleABI from "./SessionKeyModule.json";
 
 export const CONTRACTS = {
   Factory: {
@@ -50,6 +53,19 @@ export const CONTRACTS = {
     address: "0xb8eF065061bbBF5dCc65083be8CC7B50121AE900",
     abi: ERC2612ExecutorABI,
   },
+  // EIP-7702 delegatecall module architecture — addresses populated after deployment
+  Orchestrator: {
+    address: "",
+    abi: OrchestratorABI,
+  },
+  BatchModule: {
+    address: "",
+    abi: BatchModuleABI,
+  },
+  SessionKeyModule: {
+    address: "",
+    abi: SessionKeyModuleABI,
+  },
 };
 
 export {
@@ -63,4 +79,7 @@ export {
   BatchMulticallABI,
   Permit2ExecutorABI,
   ERC2612ExecutorABI,
+  OrchestratorABI,
+  BatchModuleABI,
+  SessionKeyModuleABI,
 };
