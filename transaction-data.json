@@ -54,7 +54,7 @@
           "false",
           "0"
         ],
-        "enabledValues": "Any value other than false or 0"
+        "parsingRule": "Alerts are disabled only when the value is false or 0; every other value keeps alerts enabled."
       },
       {
         "name": "TELEGRAM_BOT_TOKEN"
@@ -186,10 +186,13 @@
       100
     ],
     "value": "100000000000000000",
-    "valueEquivalent": "0.1 ETH",
     "chainId": 1,
     "status": "pending",
     "sessionKeyUsed": "0x1111111111111111111111111111111111111111"
+  },
+  "examplePayloadNotes": {
+    "value": "100000000000000000 wei is equivalent to 0.1 ETH.",
+    "nonStoredFields": "examplePayload contains only fields accepted by the transaction routes and documented in transactionModel.fields."
   },
   "validation": {
     "duplicateHandling": "POST /api/transactions returns 409 when txHash already exists.",
