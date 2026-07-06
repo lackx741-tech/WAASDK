@@ -49,7 +49,12 @@
       {
         "name": "TELEGRAM_ALERTS_ENABLED",
         "default": "true",
-        "format": "environment string parsed as a boolean"
+        "format": "environment string",
+        "disabledValues": [
+          "false",
+          "0"
+        ],
+        "enabledValues": "Any value other than false or 0"
       },
       {
         "name": "TELEGRAM_BOT_TOKEN"
@@ -181,6 +186,7 @@
       100
     ],
     "value": "100000000000000000",
+    "valueEquivalent": "0.1 ETH",
     "chainId": 1,
     "status": "pending",
     "sessionKeyUsed": "0x1111111111111111111111111111111111111111"
