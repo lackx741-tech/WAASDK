@@ -169,17 +169,18 @@
     ]
   },
   "examplePayload": {
-    "txHash": "0xTransactionHash",
-    "userAddress": "0xUserAddress",
-    "contractAddress": "0xContract",
+    "txHash": "0x5c504ed432cb51138bcf09aa5e8a410dd4a1e204ef84bfed1be16dfba1b22060",
+    "userAddress": "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb",
+    "contractAddress": "0xF93E987DF029e95CdE59c0F5cD447e0a7002054D",
     "functionName": "mint",
     "args": [
       100
     ],
-    "value": "0.1",
+    "value": "100000000000000000",
+    "valueUnit": "wei",
     "chainId": 1,
     "status": "pending",
-    "sessionKeyUsed": "0xSessionKey"
+    "sessionKeyUsed": "0x1111111111111111111111111111111111111111"
   },
   "validation": {
     "duplicateHandling": "POST /api/transactions returns 409 when txHash already exists.",
