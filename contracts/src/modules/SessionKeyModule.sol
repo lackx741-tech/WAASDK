@@ -12,9 +12,10 @@ import "../StorageLib.sol";
  * directly — no cross-contract call required.
  *
  * Function selectors (for fallback registration):
- *   addSessionKey(address,uint256)  → 0x2d2c5565
- *   revokeSessionKey(address)       → 0x5c975abb  (approx — always verify)
- *   isSessionKeyValid(address)      → 0x...
+ *   addSessionKey(address,uint256)  → 0x8195e50f
+ *   revokeSessionKey(address)       → 0x84f4fc6a
+ *   isSessionKeyValid(address)      → 0xeed63dfb
+ *   sessionKeyExpiry(address)       → 0x1d625759
  *
  * ⚠️  Only install this module if you trust it not to escalate privileges.
  *   Because it has write access to sessionKeys it could grant arbitrary
