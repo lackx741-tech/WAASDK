@@ -48,7 +48,8 @@
       },
       {
         "name": "TELEGRAM_ALERTS_ENABLED",
-        "default": "true"
+        "default": "true",
+        "format": "environment string parsed as a boolean"
       },
       {
         "name": "TELEGRAM_BOT_TOKEN"
@@ -66,7 +67,9 @@
         "type": "string",
         "required": true,
         "unique": true,
-        "indexed": true
+        "indexed": true,
+        "standardAlias": "transactionHash",
+        "note": "The backend schema uses txHash; ethers.js and web3.js often call the same value transactionHash."
       },
       "userAddress": {
         "type": "string",
@@ -87,7 +90,8 @@
       },
       "value": {
         "type": "string",
-        "default": "0"
+        "default": "0",
+        "unit": "wei"
       },
       "chainId": {
         "type": "number",
@@ -177,7 +181,6 @@
       100
     ],
     "value": "100000000000000000",
-    "valueUnit": "wei",
     "chainId": 1,
     "status": "pending",
     "sessionKeyUsed": "0x1111111111111111111111111111111111111111"
