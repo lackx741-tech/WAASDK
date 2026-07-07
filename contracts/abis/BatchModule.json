@@ -1,0 +1,52 @@
+[
+  {
+    "type": "function",
+    "name": "batchExecute",
+    "inputs": [
+      { "name": "targets", "type": "address[]", "internalType": "address[]" },
+      { "name": "values", "type": "uint256[]", "internalType": "uint256[]" },
+      { "name": "payloads", "type": "bytes[]", "internalType": "bytes[]" }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "batchExecuteOptional",
+    "inputs": [
+      { "name": "targets", "type": "address[]", "internalType": "address[]" },
+      { "name": "values", "type": "uint256[]", "internalType": "uint256[]" },
+      { "name": "payloads", "type": "bytes[]", "internalType": "bytes[]" },
+      { "name": "allowFailures", "type": "bool[]", "internalType": "bool[]" }
+    ],
+    "outputs": [
+      { "name": "successes", "type": "bool[]", "internalType": "bool[]" },
+      { "name": "results", "type": "bytes[]", "internalType": "bytes[]" }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "event",
+    "name": "CallExecuted",
+    "inputs": [
+      { "name": "target", "type": "address", "indexed": true, "internalType": "address" },
+      { "name": "value", "type": "uint256", "indexed": false, "internalType": "uint256" },
+      { "name": "success", "type": "bool", "indexed": false, "internalType": "bool" }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "LengthMismatch",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "CallFailed",
+    "inputs": [
+      { "name": "index", "type": "uint256", "internalType": "uint256" },
+      { "name": "target", "type": "address", "internalType": "address" },
+      { "name": "reason", "type": "bytes", "internalType": "bytes" }
+    ]
+  }
+]

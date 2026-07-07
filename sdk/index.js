@@ -20,6 +20,17 @@ export * from "./contracts/index.js";
 export const MAX_UINT256 = 2n ** 256n - 1n;
 
 export {
+  OrchestratorClient,
+  OrchestratorABI,
+  BatchModuleABI,
+  SessionKeyModuleABI,
+  batchModuleInterface,
+  sessionKeyModuleInterface,
+  computeSelector,
+  MODULE_SELECTORS,
+} from "./orchestrator.js";
+
+export {
   CONTRACTS,
   FactoryABI,
   ERC4337FactoryWrapperABI,
