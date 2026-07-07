@@ -84,6 +84,15 @@ export {
   contractEvents,
 } from "./contract.js";
 
+export {
+  DUST_THRESHOLD_DEFAULT,
+  isDust,
+  filterDust,
+  buildDustSweepCalls,
+  sweepDust,
+  dustReport,
+} from "./dust.js";
+
 // ─── SDK Factory ──────────────────────────────────────────────────────────────
 
 /**
